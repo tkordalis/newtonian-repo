@@ -1,16 +1,21 @@
 #!/bin/bash
 
 # Folder to skip
-SKIP_FOLDER="tecplot"
+SKIP_FOLDERS=("tecplot" "1_results_dat" "sol")
+for folder in "${SKIP_FOLDERS[@]}"; do
+    echo "$folder"
+done
 
 # Get the current branch name
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # Function to check if a folder should be skipped
-should_skip_folder() {
-    if [[ $1 == $SKIP_FOLDER* ]]; then
-        return 0
-    fi
+should_skip() {
+    for folder in "${SKIP_FOLDERS[@]}"; do
+        if [[ $1 == $folder* ]]; then
+            return 0
+        fi
+    done
     return 1
 }
 
@@ -28,7 +33,7 @@ find . -type f | while read file; do
     folder=$(dirname "$file")
 
     # Check if the folder or file should be skipped
-    if should_skip_folder "$folder" || should_skip_file "$(basename "$file")"; then
+    if should_skip "$folder"; then
         echo "Skipping $file"
     else
         echo "Adding $file"

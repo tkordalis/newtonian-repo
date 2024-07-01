@@ -7,7 +7,6 @@ rm -rf *.bck
 rm -rf Boundaries
 rm -rf solution
 #rm -rf tecplot
-rm -rf tags
 rm tags
 rm -rf nohup.out
 rm -rf .read_unv.py
@@ -20,4 +19,4 @@ rm -f  ./BubbleVariables/Bubble2/*
 rm -f  *_genmod.f90
 rm -rf  .UnBounded.unv/
 rm -rf  .time_*.unv/
-ctags -R .
+# ctags -R .
