@@ -139,7 +139,7 @@ Module BubbleOutput
     contains
     Subroutine openBubbleFiles
         Implicit None
-        character(*), parameter :: fileplace  = "./BubbleVariables/"
+        character(*), parameter :: fileplace  = "./1_results_dat/"
         
             call check_dir(fileplace)
             Open(20,File=fileplace//'Flowrate.dat')
