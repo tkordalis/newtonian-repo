@@ -1,0 +1,28 @@
+# Fortran specific files
+*.mod
+*.smod
+*.o
+*.obj
+*.a
+*.lib
+exe
+*.dll
+*.so
+*.dylib
+*.mod.dSYM
+*.pdb
+Iteration_*.plt
+
+# Compiled executables
+*.out
+*.app
+
+# Ignore editor-specific files
+*~
+*.swp
+
+# ignore folders also
+1_results_dat/
+__pycache__/
+sol/
+tecplot/
