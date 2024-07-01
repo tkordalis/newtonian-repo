@@ -157,7 +157,7 @@ PROGRAM FEM2D
 
       if ( (mod(increment,10) .eq. 0) ) then
       call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
-      call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt
+      call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt 
       endif
       
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

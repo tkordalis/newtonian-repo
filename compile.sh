@@ -5,9 +5,7 @@ echo $NEXE
 
 #----------------------------------------------------------------------------
 
-# OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -warn interfaces -debug all -implicitnone -assume realloc_lhs -fstack-protector -assume protect_parens"
-# OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -assume realloc_lhs -fstack-protector -assume protect_parens"
-# OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector -assume protect_parens"
+
 OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
 
 
@@ -16,8 +14,8 @@ OPT="-O3 -cpp -traceback -standard-realloc-lhs"
 echo $OPT
 
 #----------------------------------------------------------------------------
-
-MKL="-mkl=parallel"
+# gia na doume
+MKL="-qmkl=parallel"
 
 #----------------------------------------------------------------------------
 
@@ -25,6 +23,7 @@ rm -f $NEXE
 rm -f nohup.out
 
  ifort $OPT -o $NEXE                           \
+								./src/utilities/system_tools.f90 \
 								./src/utilities/formats.f90    \
 				 				./src/utilities/arraytools.f90 \
 								./src/utilities/FileModule.f90 \

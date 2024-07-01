@@ -30,7 +30,7 @@ import SALOMEDS
 
 # Domain Construction
 
-Height_needle = 15
+Height_needle = 5
 # Radius_needle = 1.31
 Radius_needle = 1.448
 
@@ -47,9 +47,9 @@ dH_ref = 4
 
 h_s = 5e-05
 
-NumSegmentsOnInflatedBubble = 60
-Main_maxSize_element = 3	
-Main_minSize_element = 0.1
+NumSegmentsOnInflatedBubble = 10
+Main_maxSize_element = 10	
+Main_minSize_element = 0.8
 
 edgeSizeOnInflatedBubble = (Radius_needle-Needle_thickness)/NumSegmentsOnInflatedBubble
 
