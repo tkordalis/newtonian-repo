@@ -135,21 +135,22 @@ end module solveAllExtraConstraints
 Module BubbleOutput
     Use BoundaryConditions
     Use ELEMENTS_MODULE, only : Nex_f
+    Use system_tools, only: check_dir
     contains
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./BubbleVariables/"
         
             call check_dir(fileplace)
-            Open(20,File=fileplace//'Flowrate.DAT')
-            Open(21,File=fileplace//'Pressure_BubbleSB.DAT')
-            Open(22,File=fileplace//'MaxZ.DAT')
-            Open(23,File=fileplace//'MaxR.DAT')
+            Open(20,File=fileplace//'Flowrate.dat')
+            Open(21,File=fileplace//'Pressure_BubbleSB.dat')
+            Open(22,File=fileplace//'MaxZ.dat')
+            Open(23,File=fileplace//'MaxR.dat')
            
         
     end Subroutine openBubbleFiles            
     Subroutine calculateBubbleVariables(DT)
-        Use Physical_module
+        Use Physical_module  
         Implicit none
         real(8), intent(in) :: DT
         Real(8)             :: displacement1_dt, displacement2_dt

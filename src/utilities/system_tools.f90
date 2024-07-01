@@ -24,10 +24,10 @@ contains
 
     	call execute_command(command)
 
-    	command ="touch " // trim(directory_name) // "/results.dat" 
+    	! command ="touch " // trim(dir) // "/results.dat" 
 
-    	call execute_command(command)
+    	! call execute_command(command)
 
-    end subroutine check_dir(dir)
+    end subroutine check_dir
 
 end module system_tools

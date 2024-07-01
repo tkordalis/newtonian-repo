@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm -rf *.plt
+rm -rf pp0*
 rm -rf *.mod
 rm -rf *.bck
 rm -rf Boundaries

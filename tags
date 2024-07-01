@@ -433,6 +433,7 @@ calculateBubbleVariables	src/InitializeTypes.f90	/^    Subroutine calculateBubbl
 calculateFlowrate	src/Fem2D_mod.f90	/^    function calculateFlowrate(/;"	f	module:PHYSICAL_MODULE
 capillary_stress	src/Fem2D_mod.f90	/^    Real(8), parameter       :: capillary_stress /;"	v	module:PHYSICAL_MODULE
 checkAndRemesh	src/Remesh/RemeshProcedure.f90	/^    Subroutine checkAndRemesh(/;"	s	module:RemeshProcedure
+check_dir	src/utilities/system_tools.f90	/^    subroutine check_dir(/;"	s	module:system_tools
 check_parameter	mesh/remesh.py	/^check_parameter = max(Bubble1PointCoordinatesSorted, key=lambda tup: tup[1])$/;"	v
 clear	src/export/WriteTecplot.f90	/^        Subroutine clear(/;"	s	module:WriteTecplot
 close	src/Interpolation/TecplotInterpolation.f90	/^    Subroutine close(/;"	s
@@ -440,6 +441,7 @@ close	src/Remesh/MeshGeneration.f90	/^        Subroutine close(/;"	s	module:Mesh
 close	src/export/ReadTecplot.f90	/^    Subroutine close(/;"	s	module:ReadTecplot
 close	src/export/unv.f90	/^    Subroutine close(/;"	s	module:UNV
 close	src/export/unv_previous.f90	/^    Subroutine close(/;"	s	module:UNV
+command	program_create_directory_example.f90	/^    character(len=100) :: command$/;"	v	program:create_directory_example
 commitBoundary	src/Fem2D_mod.f90	/^  Subroutine commitBoundary(/;"	s	module:BOUNDARY_ENUMERATION_MODULE
 concatenate_str_2	src/utilities/formats.f90	/^            Function concatenate_str_2 /;"	f	module:Formats
 concatenate_str_3	src/utilities/formats.f90	/^            Function concatenate_str_3 /;"	f	module:Formats
@@ -463,6 +465,7 @@ copyArrayToLocalValues_dim2	src/utilities/arraytools.f90	/^    Subroutine copyAr
 copy_integer_dim_1	src/utilities/arraytools.f90	/^    Subroutine copy_integer_dim_1(/;"	s	module:ArrayTools
 countNumberOfRows	src/utilities/FileModule.f90	/^    Function countNumberOfRows(/;"	f	module:FileModule
 createFolder	src/utilities/formats.f90	/^            Subroutine createFolder(/;"	s	module:Formats
+create_directory_example	program_create_directory_example.f90	/^program create_directory_example$/;"	p
 dArN	src/Fem2D_mod.f90	/^    REAL(8)            :: dArN /;"	v	module:CONTINUATION_MODULE
 dArNo	src/Fem2D_mod.f90	/^    REAL(8)            ::       dArNo,/;"	v	module:CONTINUATION_MODULE
 dArNodS	src/Fem2D_mod.f90	/^    REAL(8)            ::       dArNo, dArNodS$/;"	v	module:CONTINUATION_MODULE
@@ -489,6 +492,7 @@ deconstructor	src/BoundaryEquations/SymmetryBoundary.f90	/^    Subroutine decons
 deconstructor	src/export/WriteTecplot.f90	/^        Subroutine deconstructor(/;"	s	module:WriteTecplot
 dfdx1	src/Fem2D_mod.f90	/^      Real(8), Dimension(NBF_2d,NBF_2d) :: dfdx1$/;"	k	type:BasisFunctions
 dfdx2	src/Fem2D_mod.f90	/^      Real(8), Dimension(NBF_2d,NBF_2d) :: dfdx2$/;"	k	type:BasisFunctions
+directory_name	program_create_directory_example.f90	/^    character(len=100) :: directory_name$/;"	v	program:create_directory_example
 distance_array	src/utilities/geometry.f90	/^        Subroutine distance_array(/;"	s	module:geometry
 dumpTecplotToFolders	src/export/ReadTecplot.f90	/^    Subroutine dumpTecplotToFolders(/;"	s	module:ReadTecplot
 dumpToFile	src/export/WriteTecplot.f90	/^        Subroutine dumpToFile(/;"	s	module:WriteTecplot
@@ -520,6 +524,8 @@ execute	src/Remesh/MeshGeneration.f90	/^        Subroutine execute(/;"	s	module:
 executePythonScript	src/export/unv.f90	/^  Subroutine executePythonScript /;"	s	module:UNV
 executePythonScript	src/export/unv_previous.f90	/^  Subroutine executePythonScript /;"	s	module:UNV
 executeScript	src/Interpolation/TecplotInterpolation.f90	/^    Subroutine executeScript(/;"	s
+execute_command	program_create_directory_example.f90	/^    subroutine execute_command(/;"	s	program:create_directory_example
+execute_command	src/utilities/system_tools.f90	/^    subroutine execute_command(/;"	s	module:system_tools
 existInFile	src/utilities/FileModule.f90	/^    Function existInFile(/;"	f	module:FileModule
 exportFiles	src/io_module.f90	/^    Subroutine exportFiles(/;"	s	module:IO_module
 fFile	src/utilities/FileModule.f90	/^    Type fFile$/;"	t	module:FileModule
@@ -797,6 +803,7 @@ storage	src/storage.f90	/^module storage$/;"	m
 surface_elements	src/export/unv.f90	/^    Integer, Dimension(:,:), Allocatable :: surface_elements /;"	k	type:unvFileReader
 surface_elements	src/export/unv_previous.f90	/^    Integer, Dimension(:,:), Allocatable :: surface_elements /;"	k	type:unvFileReader
 surface_tension	src/Fem2D_mod.f90	/^    Real(8), parameter       :: surface_tension /;"	v	module:PHYSICAL_MODULE
+system_tools	src/utilities/system_tools.f90	/^module system_tools$/;"	m
 tec	src/Interpolation/TecplotInterpolation.f90	/^        Type(Tecplot_File)                              :: tec$/;"	k	type:TecplotInterpolator
 tecplot	src/Interpolation/TecplotInterpolation.f90	/^    Character(len=*), Parameter :: tecplot /;"	v	module:TecplotInterpolation
 test1	mesh/remesh.py	/^test1 = geompy.MakeFaceHW(Height_tank, Radius_tank, 1)$/;"	v
