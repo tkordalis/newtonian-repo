@@ -168,7 +168,7 @@ GSM6	mesh/remesh.py	/^GSM6 = SM6.GetSubMesh()$/;"	v
 GSM7	mesh/InitialUninflatedBubble.py	/^GSM7 = SM7.GetSubMesh()$/;"	v
 GaN	src/Fem2D_mod.f90	/^    Real(8)                  :: BoN, GaN,/;"	v	module:PHYSICAL_MODULE
 HB_exponent	src/Fem2D_mod.f90	/^    Real(8), parameter       :: HB_exponent /;"	v	module:PHYSICAL_MODULE
-Height_needle	mesh/Geometry_Mesh_Parameters.py	/^Height_needle = 15$/;"	v
+Height_needle	mesh/Geometry_Mesh_Parameters.py	/^Height_needle = 5$/;"	v
 Height_needle_modified	mesh/remesh.py	/^Height_needle_modified = Height_needle + dz_ambient$/;"	v
 Height_tank	mesh/Geometry_Mesh_Parameters.py	/^Height_tank = 100$/;"	v
 Height_tank	mesh/Geometry_Mesh_Parameters.py	/^Height_tank = Height_tank + Height_needle$/;"	v
@@ -227,8 +227,8 @@ MESH_MODULE	src/Fem2D_mod.f90	/^ MODULE MESH_MODULE$/;"	m
 MNUM_f	src/Fem2D_mod.f90	/^   INTEGER                              :: NZ_f, N_f, NRHS_f, MAXFCT_f, MNUM_f,/;"	v	module:CSR_STORAGE
 MSGLVL_f	src/Fem2D_mod.f90	/^                                           MTYPE_f, PHASE_f, MSGLVL_f,/;"	v	module:CSR_STORAGE
 MTYPE_f	src/Fem2D_mod.f90	/^                                           MTYPE_f,/;"	v	module:CSR_STORAGE
-Main_maxSize_element	mesh/Geometry_Mesh_Parameters.py	/^Main_maxSize_element = 3	$/;"	v
-Main_minSize_element	mesh/Geometry_Mesh_Parameters.py	/^Main_minSize_element = 0.1$/;"	v
+Main_maxSize_element	mesh/Geometry_Mesh_Parameters.py	/^Main_maxSize_element = 10	$/;"	v
+Main_minSize_element	mesh/Geometry_Mesh_Parameters.py	/^Main_minSize_element = 0.8$/;"	v
 MeshGeneration	src/Remesh/MeshGeneration.f90	/^Module MeshGeneration$/;"	m
 MeshParameters	mesh/InitialUninflatedBubble.py	/^def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: float): $/;"	f
 MeshParameters	mesh/remesh.py	/^def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: float): $/;"	f
@@ -275,7 +275,7 @@ NiN	src/Fem2D_mod.f90	/^    Real(8)                  :: NiN /;"	v	module:PHYSICA
 NsuN1	src/Fem2D_mod.f90	/^    INTEGER, ALLOCATABLE, DIMENSION(:) :: EsuN1, NsuN1$/;"	v	module:ENUMERATION_MODULE
 NsuN2	src/Fem2D_mod.f90	/^    INTEGER, ALLOCATABLE, DIMENSION(:) :: EsuN2, NsuN2$/;"	v	module:ENUMERATION_MODULE
 NumJac	src/NumericalExtraJacobian.f90	/^  Subroutine NumJac(/;"	s	module:NumericalBoundaryJacobian
-NumSegmentsOnInflatedBubble	mesh/Geometry_Mesh_Parameters.py	/^NumSegmentsOnInflatedBubble = 60$/;"	v
+NumSegmentsOnInflatedBubble	mesh/Geometry_Mesh_Parameters.py	/^NumSegmentsOnInflatedBubble = 10$/;"	v
 NumSegmentsOnSymmetry	mesh/Geometry_Mesh_Parameters.py	/^NumSegmentsOnSymmetry = int(dR_ref\/edgeSizeOnInflatedBubble)$/;"	v
 NumericalBoundaryJacobian	src/NumericalExtraJacobian.f90	/^Module NumericalBoundaryJacobian$/;"	m
 NumericalJacobian_Simple	src/NumericalExtraJacobian.f90	/^  Subroutine NumericalJacobian_Simple(/;"	s	module:NumericalBoundaryJacobian

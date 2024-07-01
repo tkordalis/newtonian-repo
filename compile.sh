@@ -21,6 +21,7 @@ rm -f $NEXE
 rm -f nohup.out
 
  ifort $OPT -o $NEXE                           \
+								./src/utilities/system_tools.f90 \
 								./src/utilities/formats.f90    \
 				 				./src/utilities/arraytools.f90 \
 								./src/utilities/FileModule.f90 \
