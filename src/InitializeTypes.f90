@@ -139,9 +139,8 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./BubbleVariables/"
-        character(*), parameter :: fileplace1 = "./BubbleVariables/Bubble1/",&
-                                    fileplace2 = "./BubbleVariables/Bubble2/"
-           
+        
+            call check_dir(fileplace)
             Open(20,File=fileplace//'Flowrate.DAT')
             Open(21,File=fileplace//'Pressure_BubbleSB.DAT')
             Open(22,File=fileplace//'MaxZ.DAT')
