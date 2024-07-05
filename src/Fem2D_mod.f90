@@ -39,10 +39,7 @@ Module VariableMapping
         Case('P'  ) ; Vid = 3
         Case('Z'  ) ; Vid = 4
         Case('R'  ) ; Vid = 5
-        Case('Srr') ; Vid = 6
-        Case('Srz') ; Vid = 7
-        Case('Szz') ; Vid = 8
-        Case('Stt') ; Vid = 9
+        
         Case Default; Vid = -1
         End Select 
       End Function getVariableId
@@ -59,10 +56,7 @@ Module VariableMapping
         Case(3)      ; Var = 'P'  
         Case(4)      ; Var = 'Z'  
         Case(5)      ; Var = 'R'  
-        Case(6)      ; Var = 'Srr'
-        Case(7)      ; Var = 'Srz'
-        Case(8)      ; Var = 'Szz'
-        Case(9)      ; Var = 'Stt'
+        
         Case Default ; Var = ''
         End Select 
       End Function getVariableName
@@ -80,7 +74,7 @@ MODULE PHYSICAL_MODULE
     ! ----------------------------------------------------------------------
     ! Mohamadigouski and Shoele use needle radii from 76 microm - 850 microm
     ! ----------------------------------------------------------------------
-    Real(8), parameter       :: Rnozzle   =  0.0002894645d0           ! 1 mm is the upper limit for the nozzle in order to keep the inflated bubble spherical (Mohammadigoushki et al. 2023)
+    Real(8), parameter       :: Rnozzle   =  0.002d0           ! 1 mm is the upper limit for the nozzle in order to keep the inflated bubble spherical (Mohammadigoushki et al. 2023)
     Real(8)                  :: Rtank                       ! WARNING: mesh dependent parameter 
     Real(8), parameter       :: g_grav    =  9.81d0           ! m/s2:  gravitational acceleration
     Real(8)                  :: ho                          ! m: position of the domain with respect to the inflation point
@@ -89,24 +83,21 @@ MODULE PHYSICAL_MODULE
     ! -----------------------------------------------
     ! material properties from the non-linear fit of Carbopol Ultrez-10 0.5% Mohammadigoushki
     ! -----------------------------------------------
-    Real(8), parameter       :: yield_stress    = 94d0
-    Real(8), parameter       :: consist_index   = 80.30d0
-    Real(8), parameter       :: elastic_modulus = 560d0
-    Real(8), parameter       :: HB_exponent     = 0.294d0
+    Real(8), parameter       :: viscosity = 1.d0
     Real(8), parameter       :: surface_tension = 0.073d0
 
 
     ! --------------------------------------------------------------
     ! Mohamadigouski and Shoele use flowrates from 0.1 - 10 microL/h
     ! --------------------------------------------------------------
-    Real(8), parameter       :: volumetric_flowrate =  0.3d-9/3600.d0                       ! m/s
+    Real(8), parameter       :: volumetric_flowrate =  1.d-5                       ! m/s
     Real(8), parameter       :: velocity_char       =  volumetric_flowrate/(pi*Rnozzle**2)  ! m/s
     
     Real(8), parameter       :: time_char           = Rnozzle/velocity_char            ! s
 
     !_______________________________________________________________________________
 
-    Real(8), parameter       :: viscous_stress      = consist_index*(time_char)**(-HB_exponent)
+    Real(8), parameter       :: viscous_stress      = viscosity/time_char
 
     Real(8), parameter       :: inertial_stress     = rho * ( velocity_char )**2
 
@@ -117,7 +108,6 @@ MODULE PHYSICAL_MODULE
 
 
     Real(8), parameter       :: Pambient          =  101325.d0                ! Pa
-    Real(8), parameter       :: Pexternal         =  1.015d0*Pambient         ! Pa
 
     Real(8), parameter       :: Pchar             = viscous_stress
     
@@ -162,14 +152,10 @@ MODULE PHYSICAL_MODULE
         ! ambient_position =  ho/Rnozzle
 
         ReN   =  inertial_stress/Pchar
-        BnN   =  yield_stress/Pchar
         BoN   =  Pchar/capillary_stress    ! fyi by using the viscous nondim we acquire capillary number
-        Bullshit_Archimedes = Pchar/viscous_stress
-        WiN   =  Pchar/elastic_modulus
-      
+     
         BvN   = 0.0D0
         
-        NiN   = HB_exponent
 
         write(*,"(A6,2X,F16.8)") "Reff ="    , Rnozzle
         write(*,"(A6,2X,F16.8)") "ReN  ="    , ReN
@@ -264,7 +250,7 @@ Module ELEMENTS_MODULE
  Integer, Parameter:: NED_2d = 3             ! NUMBER OF EDGES PER 2d ELEMENT
     
  !   NUMBER OF EQUATIONS
- Integer, Parameter:: NEQ_f = 9             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
+ Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
  Integer, Parameter:: NEX_f = 1 
 
  !   NUMBER OF ELEMENTS
@@ -315,7 +301,7 @@ End Module Elements_Module
      logical :: success
      CHARACTER(LEN=100) :: STR_ITER_TMP, THREADS, FN
 
-     NTHREADS = 24 ! number of threads that pardiso will use and the loop of the jacobian
+     NTHREADS = 1 ! number of threads that pardiso will use and the loop of the jacobian
 
      WRITE(STR_ITER_TMP,'(I4)') NTHREADS
 
@@ -1360,12 +1346,6 @@ MODULE BOUNDARY_ENUMERATION_MODULE
     call commitBoundary(unvfile, 'Symmetry'        , 2, bnd2_elements, bnd2_faces)
     call commitBoundary(unvfile, 'InflatedBubble'  , 3, bnd3_elements, bnd3_faces)
     call commitBoundary(unvfile, 'Ambient'         , 4, bnd4_elements, bnd4_faces)
-    
-    ! if ( Remesh_counter .eq. 0 ) then
-    !   call commitBoundary(unvfile, 'InternalEq_R'    , 5, bnd5_elements, bnd5_faces)
-    !   call commitBoundary(unvfile, 'InternalEq_Z'    , 6, bnd6_elements, bnd6_faces)
-    ! endif
-    
 
      !call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)
      !call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)

@@ -11,7 +11,7 @@ exe
 *.dylib
 *.mod.dSYM
 *.pdb
-Iteration_*.plt
+*.plt
 
 # Compiled executables
 *.out
@@ -23,6 +23,7 @@ Iteration_*.plt
 
 # ignore folders also
 1_results_dat/
-__pycache__/
+mesh/__pycache__/
 sol/
 tecplot/
+meshq/

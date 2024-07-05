@@ -53,18 +53,12 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8)  :: JacT
    Real(8)  :: dVrdR , dVrdZ, dVrdt, dVzdR , dVzdZ, dVzdt
    Real(8)  :: dPdR  , dPdZ
-   Real(8)  :: dTrrdR, dTrrdZ, dTrrdt, dTrzdR, dTrzdZ, dTrzdt
-   Real(8)  :: dTzzdR, dTzzdZ, dTzzdt, dTttdR, dTttdZ, dTttdt
-   Real(8)  :: dSrrdR, dSrrdZ, dSrrdt, dSrzdR, dSrzdZ, dSrzdt
-   Real(8)  :: dSzzdR, dSzzdZ, dSzzdt, dSttdR, dSttdZ, dSttdt
-   Real(8)  :: dVrdRo , dVrdZo, dVzdRo , dVzdZo
-   Real(8)  :: dSrrdRo, dSrrdZo, dSrzdRo, dSrzdZo
-   Real(8)  :: dSzzdRo, dSzzdZo, dSttdRo, dSttdZo
+
    Real(8)  :: dZdKsi, dZdEta, dRdKsi, dRdEta
    Real(8)  :: dKsidR, dKsidZ, dEtadR, dEtadZ
-   Real(8)  :: Vzo, Vzb, dUzdM
-   Real(8)  :: Vro, Vrb, dUrdM
-   Real(8)  :: Srro, Srzo, Szzo, Stto
+   Real(8)  :: Vzo, Vzb, dUzdM, dVrdZo, dVrdRo
+   Real(8)  :: Vro, Vrb, dUrdM, dVzdZo, dVzdRo
+
    Real(8)  :: Continuity_Equ
    Real(8)  :: Drr , Drz , Dzr , Dzz , Dtt
    Real(8)  :: Gdot_rr , Gdot_rz , Gdot_zz , Gdot_tt
@@ -175,14 +169,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
 
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("P"))  , KK, Z_nodes_elem(:), R_nodes_elem(:),  P  , dPdZ  , dPdR   )
 
-     call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Srr")), KK, Z_nodes_elem(:), R_nodes_elem(:),  Srr, dSrrdZ, dSrrdR )
-
-     call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Srz")), KK, Z_nodes_elem(:), R_nodes_elem(:),  Srz, dSrzdZ, dSrzdR )
-
-     call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Szz")), KK, Z_nodes_elem(:), R_nodes_elem(:),  Szz, dSzzdZ, dSzzdR )
-
-     call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Stt")), KK, Z_nodes_elem(:), R_nodes_elem(:),  Stt, dSttdZ, dSttdR )
-
+     
 
      ! ************************************************************************
      ! Local variables and its ferivatives calculated at the previous timestep
@@ -191,15 +178,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
 
      call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Vz")) , KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Vzo , dVzdZo , dVzdRo  )
 
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Srr")), KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Srro, dSrrdZo, dSrrdRo )
-
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Srz")), KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Srzo, dSrzdZo, dSrzdRo )
-
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Szz")), KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Szzo, dSzzdZo, dSzzdRo )
-
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Stt")), KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Stto, dSttdZo, dSttdRo )
-
-    
+     
      call FEMinterpolation(Zo  , Zo_nodes_elem(:), BFN(:))
      call FEMinterpolation(Zb  , Zo_nodes_elem(:), BFN(:))
 
@@ -237,48 +216,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
 
      dVrdt  = (Vr - Vro)/DT   ;   dVzdt  = (Vz - Vzo)/DT
      
-     dSrrdt = (Srr- Srro)/DT  ;   dSrzdt = (Srz- Srzo)/DT
-     dSzzdt = (Szz- Szzo)/DT  ;   dSttdt = (Stt- Stto)/DT
-     
-     
-     ! GUT follows the following definition 
-     GUT(1,1) = Drr
-     GUT(1,2) = Dzr
-     GUT(2,1) = Drz
-     GUT(2,2) = Dzz
-
-     S(1,1) = Srr
-     S(1,2) = Srz
-     S(2,1) = S(1,2)
-     S(2,2) = Szz
-     
-     GU = transpose(GUT)
-
-     call SR_CONFORMATION( S, GUT, ST, SI)
-     S_tensor = 0.d0
-     S_tensor(1:2,1:2) = S
-     S_tensor(3,3)     = Stt
-
-  
-    call set_S_get_Stress( S_tensor  , Stress_tensor   )
-    Trr = Stress_tensor(1,1)
-    Trz = Stress_tensor(1,2)
-    Tzz = Stress_tensor(2,2)
-    Ttt = Stress_tensor(3,3)
-
-    dTzzdR = ( 2.D0*Szz*dSzzdR  + 2.D0*Srz*dSrzdR ) / WiN
-    dTzzdZ = ( 2.D0*Szz*dSzzdZ  + 2.D0*Srz*dSrzdZ ) / WiN
-    
-    dTrzdR = ( dSrzdR*(Srr+Szz) + Srz*(dSrrdR+dSzzdR) ) / WiN
-    dTrzdZ = ( dSrzdZ*(Srr+Szz) + Srz*(dSrrdZ+dSzzdZ) ) / WiN
-    
-    dTrrdR = ( 2.D0*Srr*dSrrdR  + 2.D0*Srz*dSrzdR ) / WiN
-    dTrrdZ = ( 2.D0*Srr*dSrrdZ  + 2.D0*Srz*dSrzdZ ) / WiN
-    
-    dTttdR = ( 2.D0*Stt*dSttdR ) / WiN
-    dTttdZ = ( 2.D0*Stt*dSttdZ ) / WiN
-    
-     
+         
 
     !---------------------------------------------------------------------     
     !    DEFINE MATERIAL DERIVATIVES FOR MOMENTUM
@@ -293,50 +231,36 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     !-----------------------------------------------------------------------
     !     DEFINE DEVIATORIC TENSOR
     !-----------------------------------------------------------------------
-    Trace_Stress_Tensor   = Trr  + Tzz  + Ttt
 
-    TraceStress   = 0.d0
-    do ii = 1,3
-        TraceStress   = TraceStress   + ( Stress_tensor(ii,ii)  - Trace_Stress_Tensor/3.d0   )**2
-    enddo
 
-    TraceStress   = TraceStress   + 2.d0*Stress_tensor(1,2)**2
-
-    T_t  = sqrt( 0.5d0*TraceStress   ) 
-
-        
-      Max_Term   =   max(0.0d0, Bullshit_Archimedes*(T_t - BnN))**(1.d0/NiN)
-      Max_Term   = ( Max_Term / (T_t + 1.d-10) )
-
-     
-     ZZcon = dSzzdt + (Vz-dZdt)*dSzzdZ + (Vr-dRdt)*dSzzdR + ST(2,2)      + Max_Term*(S(2,2)-SI(2,2))/(2.D0*WiN)
-     RZcon = dSrzdt + (Vz-dZdt)*dSrzdZ + (Vr-dRdt)*dSrzdR + ST(1,2)      + Max_Term*(S(1,2)-SI(1,2))/(2.D0*WiN)
-     RRcon = dSrrdt + (Vz-dZdt)*dSrrdZ + (Vr-dRdt)*dSrrdR + ST(1,1)      + Max_Term*(S(1,1)-SI(1,1))/(2.D0*WiN)
-     TTcon = dSttdt + (Vz-dZdt)*dSttdZ + (Vr-dRdt)*dSttdR - Stt*Gdot_tt/2.D0 + Max_Term*(Stt  -1.D0/Stt)/(2.D0*WiN)
 
     !---------------------------------------------------------------------     
     !    DEFINE EXTRA STRESS TENSOR (DEVSS-G FORMULATION)
     !---------------------------------------------------------------------
-     Prr = Trr
-     Prz = Trz
-     Pzz = Tzz
-     Ptt = Ttt
-     
-     mag_ce = sqrt( 0.5d0* ( ZZcon**2 + 2.d0*RZcon**2 + RRcon**2 + TTcon**2 ))
+     Trr = Gdot_rr
+     Trz = Gdot_rz
+     Tzz = Gdot_zz
+     Ttt = Gdot_tt
+
+     Prr =Trr  
+     Prz =Trz  
+     Pzz =Tzz  
+     Ptt =Ttt  
 
 
-     Rmom = dUrdM + dPdR - (dTrrdr + Trr/R - Ttt/R + dTrzdZ)               
-     Zmom = dUzdM + dPdZ - (dTrzdr + Trz/R         + dTzzdZ) - Gravity_Term
+
+     Rmom = dUrdM + dPdR !- (dTrrdr + Trr/R - Ttt/R + dTrzdZ)               
+     Zmom = dUzdM + dPdZ !- (dTrzdr + Trz/R         + dTzzdZ) - Gravity_Term
 
 
 
 
     Helem = DSQRT(DABS(E_TR))
     
-    call Hugn_calculation((Vz-dZdt), (Vr-dRdt), KK, Z_nodes_elem(:), R_nodes_elem(:), Hugn)
+    ! call Hugn_calculation((Vz-dZdt), (Vr-dRdt), KK, Z_nodes_elem(:), R_nodes_elem(:), Hugn)
     
     ! **************************************************************************************************
-    Ha = DSQRT( 1.d0 + 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 + Ttt    **2) ) / &
+    Ha = DSQRT( 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 + Ttt    **2) ) / &
         DSQRT(  1.D0    + 0.5D0*( Gdot_rr**2 + 2.D0*Gdot_rz**2 + Gdot_zz**2 + Gdot_tt**2) )
     
     ! **************************************************************************************************
@@ -346,19 +270,10 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     tlsic = (Helem**2)/tlsme
     
     ! **************************************************************************************************
-    if (increment .le. 5) then
-    tlsce = 1.d0/DSQRT( (BnN*WiN)**2 * ((1.d0/dt)**2 + (DSQRT(Vz**2+Vr**2)/Helem)**2 + (Max_Term/(BnN*WiN))**2) )
-    else
-    tlsce = 1.d0/DSQRT( (BnN*WiN)**2 * ((1.d0/dt)**2 + (Uelem/(Hugn + 1.d-7))**2 + (DSQRT(0.5D0*(Gdot_zz**2+2.D0*Gdot_rz**2+Gdot_rr**2+Gdot_tt**2)))**2 + (Max_Term/(BnN*WiN))**2) )
-    endif
-    
+    tlsce = tlsic
     ! **************************************************************************************************
-    taudc = Helem**2 
     
-    S_ddot_S = Szz**2 + 2.d0*Srz**2 + Srr**2 + Stt**2
-    S_ddot_S = sqrt(0.5d0*S_ddot_S)
-    taudc = taudc / S_ddot_S
-    
+
     ! **************************************************************************************************
     
 
@@ -369,23 +284,16 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     
         BIFN = BFN   (IW)  ;  DBIZ = dBFNdZ(IW)  ;  DBIR = dBFNdR(IW)
            
-        SBFN = BIFN + tlsce*( (Vr-dRdt) * DBIR + (Vz-dZdt) * DBIZ )
+        SBFN = BIFN
     
     
         TERM_RES                        = 0.d0
-        TERM_RES(getVariableId("Vr" ))  = (  dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ   +  (Ptt-P)*BIFN/R   &
-                                                +  tlsic*Continuity_Equ*( DBIR + BIFN/R )  -  tlsce*( RRcon*DBIR + RZcon*DBIZ + TTcon*BIFN/R )  )*R
+        TERM_RES(getVariableId("Vr" ))  = (  dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ   +  (Ptt-P)*BIFN/R )*R
     
-        TERM_RES(getVariableId("Vz" ))  = ( dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR  - Gravity_Term*BIFN & 
-                                                +  tlsic*Continuity_Equ*( DBIZ )  -  tlsce*( RZcon*DBIR + ZZcon*DBIZ )  )*R
+        TERM_RES(getVariableId("Vz" ))  = ( dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR  - Gravity_Term*BIFN  )*R
     
         TERM_RES(getVariableId("P"  ))  = (  Continuity_Equ*BIFN + tlsme*(Rmom*DBIR+Zmom*DBIZ)  )*R 
        
-        TERM_RES(getVariableId("Srr"))  = (  RRcon*SBFN + taudc*mag_ce*(dSrrdR*DBIR+dSrrdZ*DBIZ) - tlsme*(Rmom*(DBIR + BIFN/R)             )  )*R
-        TERM_RES(getVariableId("Srz"))  = (  RZcon*SBFN + taudc*mag_ce*(dSrzdR*DBIR+dSrzdZ*DBIZ) - tlsme*(Zmom*(DBIR + BIFN/R) + Rmom*DBIZ )  )*R
-        TERM_RES(getVariableId("Szz"))  = (  ZZcon*SBFN + taudc*mag_ce*(dSzzdR*DBIR+dSzzdZ*DBIZ) - tlsme*(                       Zmom*DBIZ )  )*R
-        TERM_RES(getVariableId("Stt"))  = (  TTcon*SBFN + taudc*mag_ce*(dSttdR*DBIR+dSttdZ*DBIZ) + tlsme*(        Rmom*BIFN/R              )  )*R
-    
         TERM_RES(getVariableId("Z"  ))  = ( eo1*SKsi + (1.d0 -eo1))*( dKsidR * DBIR + dKsidZ * DBIZ )
         TERM_RES(getVariableId("R"  ))  = ( eo2*SEta + (1.d0 -eo2))*( dEtadR * DBIR + dEtadZ * DBIZ )
     

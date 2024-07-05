@@ -104,6 +104,7 @@ PROGRAM FEM2D
   !  ! ----------------------------------------------------------------------
   !  ! ASSIGN INITIAL CONDITIONS
   !  ! ----------------------------------------------------------------------
+   Call DefineTheBoundaries()
    call setInitalConditions()
 
    INCREMENT      = 0
@@ -119,7 +120,6 @@ PROGRAM FEM2D
       call sol  %getSolutionVars(time , TL , increment, Remesh_counter, pressure_bubble  )
    endif
    
-   Call DefineTheBoundaries()
 
 
    if (.not. ReadSolutionFromFile) call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )

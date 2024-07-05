@@ -29,18 +29,6 @@ Module BoundaryConditions
         topSurface     = NewAmbient ( bnd4_elements, bnd4_faces )
         call topSurface%setDatumPressure( Pambient_o_Pchar )
         
-        ! if (Remesh_counter_structuredInTheFront .eq. 0) then
-        !     InternalEquidistributionR = NewIntEquidistribution( bnd5_elements, bnd5_faces )
-        !     call InternalEquidistributionR%setPosition('Y')
-        ! endif
-        
-        if ( Remesh_counter .eq. 0 ) then
-            InternalEquidistributionZ = NewIntEquidistribution( bnd6_elements, bnd6_faces )
-            call InternalEquidistributionZ%setPosition('X')
-
-            InternalEquidistributionR = NewIntEquidistribution( bnd5_elements, bnd5_faces )
-            call InternalEquidistributionR%setPosition('Y')
-        endif
 
     End Subroutine DefineTheBoundaries
 End Module BoundaryConditions
@@ -60,9 +48,6 @@ Module InitialConditions
     ! I should print in the title of the .plts the Remesh_counter to read and define the boundaries correctly regardless
     Remesh_counter = 0
     TLo(:,:) = 0.D0
-    TLo(:,getVariableId("Srr"))   = 1.d0
-    TLo(:,getVariableId("Szz"))   = 1.d0
-    TLo(:,getVariableId("Stt"))   = 1.d0
     TLo(:,getVariableId("Z"))   = Xm
     TLo(:,getVariableId("R"))   = Ym
     TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( -initial_position + TLo(:,getVariableId("Z")) )

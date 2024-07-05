@@ -291,7 +291,6 @@ module WriteTecplot
             Integer                         :: v
             Integer                         :: i
             Integer                         :: j
-            Integer                         :: k
 
             this%filename    = filename
 
@@ -313,8 +312,7 @@ module WriteTecplot
 
 
             do j = 1, this%nelements
-                ! write(tfile,"(*(i6,1x))") this%elements(j,:)
-                write(tfile,"(i6,1x)") (this%elements(j,k), k=1,size(this%elements,2))
+                write(tfile,"(*(i6,1x))") this%elements(j,:)
             end do 
 
             close(tfile)

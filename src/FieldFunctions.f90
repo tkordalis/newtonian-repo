@@ -195,7 +195,7 @@ contains
 
             Magnitude = sqrt( 0.5d0*(Stress_dot_Stress(1,1) + Stress_dot_Stress(2,2) + Stress_dot_Stress(3,3)) )
 
-            output(J)  =  max(0.0d0, Magnitude - BnN)
+            output(J)  =  0.d0 !max(0.0d0, Magnitude - BnN)
         end do
 
     End Function YieldedRegion
@@ -256,21 +256,22 @@ contains
 
             SM = 0.d0
 
-            SM(1,1) = Solution_(j, getVariableId("Srr"))
-            SM(1,2) = Solution_(j, getVariableId("Srz"))
-            SM(2,1) = Solution_(j, getVariableId("Srz"))
-            SM(2,2) = Solution_(j, getVariableId("Szz"))
-            SM(3,3) = Solution_(j, getVariableId("Stt"))
+            ! SM(1,1) = Solution_(j, getVariableId("Srr"))
+            ! SM(1,2) = Solution_(j, getVariableId("Srz"))
+            ! SM(2,1) = Solution_(j, getVariableId("Srz"))
+            ! SM(2,2) = Solution_(j, getVariableId("Szz"))
+            ! SM(3,3) = Solution_(j, getVariableId("Stt"))
 
 
-            CM = matmul(SM,SM)
+            ! CM = matmul(SM,SM)
 
-            Stress_Tensor = (CM - unity_tensor)/WiN
+            ! Stress_Tensor = (CM - unity_tensor)/WiN
 
-            output(j,1)  =  Stress_Tensor(1,1)
-            output(j,2)  =  Stress_Tensor(1,2)
-            output(j,3)  =  Stress_Tensor(2,2)
-            output(j,4)  =  Stress_Tensor(3,3)
+            ! output(j,1)  =  Stress_Tensor(1,1)
+            ! output(j,2)  =  Stress_Tensor(1,2)
+            ! output(j,3)  =  Stress_Tensor(2,2)
+            ! output(j,4)  =  Stress_Tensor(3,3)
+            output = 0.d0
 
         enddo
     end function fromSgetStresses

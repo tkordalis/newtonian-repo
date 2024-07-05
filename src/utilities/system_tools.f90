@@ -5,6 +5,7 @@ contains
     subroutine execute_command(cmd)
         character(len=100), intent(in) :: cmd
         integer :: status
+        integer, external :: system
         
         ! Execute command
         status = system(cmd)
