@@ -20,6 +20,7 @@ exe
 # Ignore editor-specific files
 *~
 *.swp
+*.unv
 
 # ignore folders also
 1_results_dat/

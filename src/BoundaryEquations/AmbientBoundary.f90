@@ -96,7 +96,7 @@ Module AmbientBoundary
 
             call ApplyDirichletAtNode_(node, "Z", ambient_position, FlagNr )
             call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
-            call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
+            call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
         enddo
 
         node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )

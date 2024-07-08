@@ -107,7 +107,7 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
 
 
-    Real(8), parameter       :: Pambient          =  101325.d0                ! Pa
+    Real(8), parameter       :: Pambient          =  0.d0                ! Pa
 
     Real(8), parameter       :: Pchar             = viscous_stress
     

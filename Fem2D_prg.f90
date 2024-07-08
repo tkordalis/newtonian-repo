@@ -363,18 +363,20 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
           ! print*,'global_node=', kk
         endif
         
-        ! if ( getVariableName(jj) == 'P' ) then
-        ! print*,'global_node=', kk
-        ! print*, ' ' 
-        ! print*,'(X,Y) =', Xm(kk), Ym(kk) 
-        ! print*, ' ' 
-        ! print*, 'variable','     ', 'residual' 
-        ! print*, getVariableName(jj), '     ',B_f(ii) 
-        ! print*, ' ' 
-        ! print*, ' ' 
-        ! print*, ' //////////////////////////////////////////////////////// ' 
-        ! pause
-        ! endif
+        if ( getVariableName(jj) == 'Vr' ) then
+        print*,'global_node=', kk
+        print*, ' ' 
+        print*,'(X,Y) =', Xm(kk), Ym(kk) 
+        print*, ' ' 
+        print*, 'variable','     ', 'residual' 
+        print*, getVariableName(jj), '     ',B_f(ii) 
+        print*, ' ' 
+        print*, ' ' 
+        print*, ' //////////////////////////////////////////////////////// ' 
+        if ( abs(B_f(ii)) .gt. 1.d+2) then 
+        pause
+      endif
+        endif
         jj=jj+1
      enddo
      ! ----------------------------------------------------------------------
