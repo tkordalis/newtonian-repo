@@ -154,8 +154,8 @@ Module BubbleOutput
 
         write(20,'(4(f20.15,3x))') TIME, flowrate,        time_char*time, volumetric_flowrate*flowrate
         write(21,'(4(f18.11,3x))') TIME, Pressure_Bubble, time_char*time, Pchar*Pressure_Bubble
-        write(22,'(4(f18.11,3x))') TIME, Bubble1%getMaxZcoordinate(), time_char*time, Rnozzle*Bubble1%getMaxZcoordinate()
-        write(23,'(4(f18.11,3x))') TIME, Bubble1%getMaxRcoordinate(), time_char*time, Rnozzle*Bubble1%getMaxRcoordinate()
+        write(22,'(4(f18.11,3x))') TIME, Bubble1%getMaxZcoordinate(), time_char*time, length_char*Bubble1%getMaxZcoordinate()
+        write(23,'(4(f18.11,3x))') TIME, Bubble1%getMaxRcoordinate(), time_char*time, length_char*Bubble1%getMaxRcoordinate()
        
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

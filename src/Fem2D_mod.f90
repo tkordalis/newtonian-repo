@@ -74,7 +74,7 @@ MODULE PHYSICAL_MODULE
     ! ----------------------------------------------------------------------
     ! Mohamadigouski and Shoele use needle radii from 76 microm - 850 microm
     ! ----------------------------------------------------------------------
-    Real(8), parameter       :: Rnozzle   =  0.002d0           ! 1 mm is the upper limit for the nozzle in order to keep the inflated bubble spherical (Mohammadigoushki et al. 2023)
+    Real(8), parameter       :: length_char   =  0.002d0           ! 1 mm is the upper limit for the nozzle in order to keep the inflated bubble spherical (Mohammadigoushki et al. 2023)
     Real(8)                  :: Rtank                       ! WARNING: mesh dependent parameter 
     Real(8), parameter       :: g_grav    =  9.81d0           ! m/s2:  gravitational acceleration
     Real(8)                  :: ho                          ! m: position of the domain with respect to the inflation point
@@ -91,9 +91,9 @@ MODULE PHYSICAL_MODULE
     ! Mohamadigouski and Shoele use flowrates from 0.1 - 10 microL/h
     ! --------------------------------------------------------------
     Real(8), parameter       :: volumetric_flowrate =  1.d-5                       ! m/s
-    Real(8), parameter       :: velocity_char       =  volumetric_flowrate/(pi*Rnozzle**2)  ! m/s
+    Real(8), parameter       :: velocity_char       =  volumetric_flowrate/(pi*length_char**2)  ! m/s
     
-    Real(8), parameter       :: time_char           = Rnozzle/velocity_char            ! s
+    Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
 
     !_______________________________________________________________________________
 
@@ -101,9 +101,9 @@ MODULE PHYSICAL_MODULE
 
     Real(8), parameter       :: inertial_stress     = rho * ( velocity_char )**2
 
-    Real(8), parameter       :: gravity_stress      = rho*g_grav*Rnozzle
+    Real(8), parameter       :: gravity_stress      = rho*g_grav*length_char
 
-    Real(8), parameter       :: capillary_stress    = surface_tension/Rnozzle
+    Real(8), parameter       :: capillary_stress    = surface_tension/length_char
     !_______________________________________________________________________________
 
 
@@ -148,8 +148,8 @@ MODULE PHYSICAL_MODULE
         Real(8) :: DUM
 
       
-        ! initial_position =  ho/Rnozzle
-        ! ambient_position =  ho/Rnozzle
+        ! initial_position =  ho/length_char
+        ! ambient_position =  ho/length_char
 
         ReN   =  inertial_stress/Pchar
         BoN   =  Pchar/capillary_stress    ! fyi by using the viscous nondim we acquire capillary number
@@ -157,7 +157,7 @@ MODULE PHYSICAL_MODULE
         BvN   = 0.0D0
         
 
-        write(*,"(A6,2X,F16.8)") "Reff ="    , Rnozzle
+        write(*,"(A6,2X,F16.8)") "Reff ="    , length_char
         write(*,"(A6,2X,F16.8)") "ReN  ="    , ReN
         write(*,"(A6,2X,F16.8)") "BnN  ="    , BnN
         write(*,"(A6,2X,F16.8)") "BoN  ="    , BoN
