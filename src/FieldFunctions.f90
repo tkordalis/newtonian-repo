@@ -146,94 +146,94 @@ contains
 
 
 
-   Function YieldedRegion(Stresses_nodes) Result(output)
-        Use VariableMapping, only: getVariableId
-        Use PHYSICAL_MODULE, Only: BnN, WiN
-        Implicit None 
-        Real(8), Dimension(:,:), Intent(In) :: Stresses_nodes
-        Real(8), Dimension(:), Allocatable  :: output
-        Integer                             :: nodtol_ 
+   ! Function YieldedRegion(Stresses_nodes) Result(output)
+   !      Use VariableMapping, only: getVariableId
+   !      Use PHYSICAL_MODULE, Only: BnN, WiN
+   !      Implicit None 
+   !      Real(8), Dimension(:,:), Intent(In) :: Stresses_nodes
+   !      Real(8), Dimension(:), Allocatable  :: output
+   !      Integer                             :: nodtol_ 
 
-        Integer                             :: j
-        Real(8), Dimension(3,3)             :: Deviatoric_Stress_Tensor
-        Real(8)                             :: Trace_Stress_Tensor
-        Real(8)                             :: Magn_Stress_Dev
-        Real(8)                             :: Trace_Deviatoric_Stress_Tensor
-        Real(8)                             :: TraceStress
-        Real(8)                             :: Magnitude
-        Real(8)                             :: Trr, Trz, Tzz, Ttt
-        Real(8), Dimension(3,3)             :: unity_tensor, SM, CM, Stress_Tensor, Stress_dot_Stress
+   !      Integer                             :: j
+   !      Real(8), Dimension(3,3)             :: Deviatoric_Stress_Tensor
+   !      Real(8)                             :: Trace_Stress_Tensor
+   !      Real(8)                             :: Magn_Stress_Dev
+   !      Real(8)                             :: Trace_Deviatoric_Stress_Tensor
+   !      Real(8)                             :: TraceStress
+   !      Real(8)                             :: Magnitude
+   !      Real(8)                             :: Trr, Trz, Tzz, Ttt
+   !      Real(8), Dimension(3,3)             :: unity_tensor, SM, CM, Stress_Tensor, Stress_dot_Stress
         
 
-        unity_tensor = 0.d0
-        do j=1,3
-            unity_tensor(j,j) = 1.d0
-        enddo
+   !      unity_tensor = 0.d0
+   !      do j=1,3
+   !          unity_tensor(j,j) = 1.d0
+   !      enddo
 
-        nodtol_ = size(Stresses_nodes,1)
-        Allocate( output (nodtol_) )
+   !      nodtol_ = size(Stresses_nodes,1)
+   !      Allocate( output (nodtol_) )
 
-        do j = 1, nodtol_
+   !      do j = 1, nodtol_
 
-            Stress_Tensor = 0.d0
+   !          Stress_Tensor = 0.d0
 
-            Stress_Tensor(1,1) = Stresses_nodes(j,1)
+   !          Stress_Tensor(1,1) = Stresses_nodes(j,1)
 
-            Stress_Tensor(1,2) = Stresses_nodes(j,2)
-            Stress_Tensor(2,1) = Stresses_nodes(j,2)
+   !          Stress_Tensor(1,2) = Stresses_nodes(j,2)
+   !          Stress_Tensor(2,1) = Stresses_nodes(j,2)
 
-            Stress_Tensor(2,2) = Stresses_nodes(j,3)
+   !          Stress_Tensor(2,2) = Stresses_nodes(j,3)
 
-            Stress_Tensor(3,3) = Stresses_nodes(j,4)
-
-
-            Trace_Stress_Tensor = Stress_Tensor(1,1) + Stress_Tensor(2,2) + Stress_Tensor(3,3)
-
-            Deviatoric_Stress_Tensor = Stress_Tensor - (Trace_Stress_Tensor/3.0d0)*Unity_Tensor
-
-            Stress_dot_Stress = matmul(Deviatoric_Stress_Tensor,Deviatoric_Stress_Tensor)
-
-            Magnitude = sqrt( 0.5d0*(Stress_dot_Stress(1,1) + Stress_dot_Stress(2,2) + Stress_dot_Stress(3,3)) )
-
-            output(J)  =  0.d0 !max(0.0d0, Magnitude - BnN)
-        end do
-
-    End Function YieldedRegion
+   !          Stress_Tensor(3,3) = Stresses_nodes(j,4)
 
 
-    Function dynamicPressure(Solution_) Result(output)
-        Use VariableMapping, only: getVariableId
-        Use PHYSICAL_MODULE, Only: Pambient_o_Pchar, position, ratio_of_pressures
-        Implicit None 
-        Real(8), Dimension(:,:), Intent(In) :: Solution_
-        Real(8), Dimension(:), Allocatable  :: output
-        Integer                             :: nodtol_
+   !          Trace_Stress_Tensor = Stress_Tensor(1,1) + Stress_Tensor(2,2) + Stress_Tensor(3,3)
 
-        Real(8)                             :: Pressure, Dynamic_Pressure, Z_coord
-        Integer                             :: j
+   !          Deviatoric_Stress_Tensor = Stress_Tensor - (Trace_Stress_Tensor/3.0d0)*Unity_Tensor
 
+   !          Stress_dot_Stress = matmul(Deviatoric_Stress_Tensor,Deviatoric_Stress_Tensor)
 
-        nodtol_ = size(Solution_,1)
-        Allocate( output (nodtol_) )
+   !          Magnitude = sqrt( 0.5d0*(Stress_dot_Stress(1,1) + Stress_dot_Stress(2,2) + Stress_dot_Stress(3,3)) )
+
+   !          output(J)  =  0.d0 !max(0.0d0, Magnitude - BnN)
+   !      end do
+
+   !  End Function YieldedRegion
 
 
-        do j = 1, nodtol_
+    ! Function dynamicPressure(Solution_) Result(output)
+    !     Use VariableMapping, only: getVariableId
+    !     Use PHYSICAL_MODULE, Only: Pambient_o_Pchar, position, ratio_of_pressures
+    !     Implicit None 
+    !     Real(8), Dimension(:,:), Intent(In) :: Solution_
+    !     Real(8), Dimension(:), Allocatable  :: output
+    !     Integer                             :: nodtol_
 
-            Pressure = Solution_(j, getVariableId("P"))
+    !     Real(8)                             :: Pressure, Dynamic_Pressure, Z_coord
+    !     Integer                             :: j
 
-            Z_coord  = Solution_(j, getVariableId("Z"))
+
+    !     nodtol_ = size(Solution_,1)
+    !     Allocate( output (nodtol_) )
+
+
+    !     do j = 1, nodtol_
+
+    !         Pressure = Solution_(j, getVariableId("P"))
+
+    !         Z_coord  = Solution_(j, getVariableId("Z"))
             
-            Dynamic_Pressure   =   Pressure - ( Pambient_o_Pchar + ratio_of_pressures*(position + Z_coord) )
+    !         Dynamic_Pressure   =   Pressure - ( Pambient_o_Pchar + ratio_of_pressures*(position + Z_coord) )
 
-            output(j)  =  Dynamic_Pressure
+    !         output(j)  =  Dynamic_Pressure
 
-        enddo
-    end function dynamicPressure
+    !     enddo
+    ! end function dynamicPressure
 
 
     function fromSgetStresses(Solution_) Result(output)
         Use VariableMapping, only: getVariableId
-        Use PHYSICAL_MODULE, only: WiN 
+        ! Use PHYSICAL_MODULE, only: WiN 
         Implicit None
         Real(8), Dimension(:,:), Intent(In) :: Solution_
         Real(8), Dimension(:,:), Allocatable:: output
