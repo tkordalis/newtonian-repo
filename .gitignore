@@ -12,6 +12,9 @@ exe
 *.mod.dSYM
 *.pdb
 *.plt
+Iteration_*.plt
+Iteration_*.plt_
+fort.*
 
 # Compiled executables
 *.out
