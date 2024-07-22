@@ -290,7 +290,8 @@ module WriteTecplot
             Type(TecVar)                    :: variable
             Integer                         :: v
             Integer                         :: i
-            Integer                         :: j
+            Integer                         :: j,k
+            Integer                         :: size_nodes_elem
 
             this%filename    = filename
 
@@ -310,11 +311,12 @@ module WriteTecplot
             else if (this%datapacking == "POINT" )Then; call this%writePointStructure(tfile)
             end  if 
 
+            size_nodes_elem = size(this%elements,2)
+
 
             do j = 1, this%nelements
-                write(tfile,"(*(i6,1x))") this%elements(j,:)
+                    write(tfile,"(i6,1x)") (this%elements(j,k), k=1,size_nodes_elem)
             end do 
-            
 
             close(tfile)
 
