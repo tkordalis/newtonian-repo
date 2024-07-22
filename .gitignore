@@ -15,6 +15,7 @@ exe
 Iteration_*.plt
 Iteration_*.plt_
 fort.*
+.Unbounded
 
 # Compiled executables
 *.out
