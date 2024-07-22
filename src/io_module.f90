@@ -3,8 +3,8 @@ Module IO_module
     Type Solution
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: TL
-        Real(8)                              :: Pressure_Bubble
-        Integer                              :: Increment, RemeshCounter, RemeshCounter_strctInFront
+
+        Integer                              :: Increment
 
         contains 
             procedure :: getSolutionVars
@@ -13,22 +13,22 @@ Module IO_module
     contains
 
 
-    Subroutine getSolutionVars(this, time, sol, increment, RemeshCounter, Pressure_Bubble)
+    Subroutine getSolutionVars(this, time, sol, increment, RemeshCounter)
         Implicit None 
         Class(Solution), Intent(In)          :: this
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: sol
         Real(8)                              :: Pressure_Bubble
         Integer                              :: increment
-        Integer                              :: RemeshCounter
+        Integer, optional                    :: RemeshCounter
 
         if ( allocated(sol) ) deallocate(sol) 
 
         allocate( sol , source = this%TL    )
         time              = this%time
         increment         = this%increment
-        RemeshCounter     = this%RemeshCounter
-        Pressure_Bubble   = this%Pressure_Bubble
+        
+        
 
     End Subroutine getSolutionVars
 
@@ -65,12 +65,9 @@ Module IO_module
         var = "Vz" ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         var = "P"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         
-        var = "Srr"; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
-        var = "Srz"; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
-        var = "Szz"; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         var = "Z"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         var = "R"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
-        var = "Stt"; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
+        
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! The Globals are constained in the title of the file 
         ! split the title to extract the variables 
@@ -88,8 +85,8 @@ Module IO_module
 
         ! pause
         this%increment         = toInt   ( remove( strGlobal(1), ["Increment        ", "="]) )
-        this%RemeshCounter     = toInt   ( remove( strGlobal(2), ["Remesh_counter    ", "="]) )
-        this%Pressure_Bubble   = toDouble( remove( strGlobal(3), ["Bubble_Pressure_1", "="]) )
+        
+
       
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! The zone title (zonename) contains the dimensionless time of the simulation
@@ -184,37 +181,23 @@ Module IO_module
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         select case(datapack)
             case("POINT")
-                Pressure_Bubble  = Pressure_Bubble
                 
                 tecfile  = Tecplot_File( datapacking = datapack, femtype = "FETRIANGLE")
         
                 title = "" 
-                title = replace("Increment = *, Remesh_counter = *, Bubble_Pressure_1 = *", "*", &
-                       [ toStr(Increment), toStr(Remesh_counter),  toStr(Pressure_Bubble) ] )
+                title = replace("Increment = *, time = *", "*", &
+                       [ toStr(Increment), toStr(time) ] )
                 
         
                 call tecfile%setTitle   (title)
                 call tecfile%setZonename(toStr(time))
-                call tecfile%addVariable("Z"      , Solution(:, getVariableId("Z"  )))
-                call tecfile%addVariable("R"      , Solution(:, getVariableId("R"  )))
-                call tecfile%addVariable("Vr"     , Solution(:, getVariableId("Vr" )))
-                call tecfile%addVariable("Vz"     , Solution(:, getVariableId("Vz" )))
-                call tecfile%addVariable("P"      , Solution(:, getVariableId("P"  )))
+                call tecfile%addVariable("Z"      , length_char*Solution(:, getVariableId("Z"  )))
+                call tecfile%addVariable("R"      , length_char*Solution(:, getVariableId("R"  )))
+                call tecfile%addVariable("Vr"     , velocity_char*Solution(:, getVariableId("Vr" )))
+                call tecfile%addVariable("Vz"     , velocity_char*Solution(:, getVariableId("Vz" )))
+                call tecfile%addVariable("P"      , (Pchar)*Solution(:, getVariableId("P"  )))
+                call tecfile%addVariable("Pdiarho"      , (Pchar/rho)*Solution(:, getVariableId("P"  )))
 
-                call tecfile%addVariable("Srr"    , Solution(:, getVariableId("Srr")))
-                call tecfile%addVariable("Srz"    , Solution(:, getVariableId("Srz")))
-                call tecfile%addVariable("Szz"    , Solution(:, getVariableId("Szz")))
-                call tecfile%addVariable("Stt"    , Solution(:, getVariableId("Stt")))
-
-                stresses_nodes = fromSgetStresses(Solution)
-                call tecfile%addVariable("Trr"    , stresses_nodes(:,1))
-                call tecfile%addVariable("Trz"    , stresses_nodes(:,2))
-                call tecfile%addVariable("Tzz"    , stresses_nodes(:,3))
-                call tecfile%addVariable("Ttt"    , stresses_nodes(:,4))
-
-                call tecfile%addVariable("Yielded", YieldedRegion(stresses_nodes) )
-                call tecfile%addVariable("Dynamic Pressure", dynamicPressure(Solution) )
-        
                 call tecfile%addElements( elements )
         
                 call tecfile%dumpToFile(replace("./tecplot/time_*.plt", "*", toStr(time) ) )
@@ -232,7 +215,7 @@ Module IO_module
 
                 call tecfile%addVariable("Z"      , Solution(:, getVariableId("Z"                ))                       )
                 call tecfile%addVariable("R"      , Solution(:, getVariableId("R"                ))                       )
-                call tecfile%addVariable("Stretch", (180d0/3.141599265d0)*minimumAngleOfTriangle(Solution, elements), cellcentered = .True.)
+                ! call tecfile%addVariable("Stretch", (180d0/3.141599265d0)*minimumAngleOfTriangle(Solution, elements), cellcentered = .True.)
 
                 call tecfile%addElements( elements )
 

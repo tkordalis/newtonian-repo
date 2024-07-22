@@ -68,32 +68,25 @@ End Module VariableMapping
 MODULE PHYSICAL_MODULE
   
     Real(8), PARAMETER       :: pi        = 3.141592653589793D0
-    Real(8), parameter       :: rho       = 1000.d0                          ! kg/m3: density of water
-    
-
-    ! ----------------------------------------------------------------------
-    ! Mohamadigouski and Shoele use needle radii from 76 microm - 850 microm
-    ! ----------------------------------------------------------------------
-    Real(8), parameter       :: Rnozzle   =  0.002d0           ! 1 mm is the upper limit for the nozzle in order to keep the inflated bubble spherical (Mohammadigoushki et al. 2023)
-    Real(8)                  :: Rtank                       ! WARNING: mesh dependent parameter 
     Real(8), parameter       :: g_grav    =  9.81d0           ! m/s2:  gravitational acceleration
-    Real(8)                  :: ho                          ! m: position of the domain with respect to the inflation point
-
-
-    ! -----------------------------------------------
-    ! material properties from the non-linear fit of Carbopol Ultrez-10 0.5% Mohammadigoushki
-    ! -----------------------------------------------
-    Real(8), parameter       :: viscosity = 1.d0
-    Real(8), parameter       :: surface_tension = 0.073d0
-
-
-    ! --------------------------------------------------------------
-    ! Mohamadigouski and Shoele use flowrates from 0.1 - 10 microL/h
-    ! --------------------------------------------------------------
-    Real(8), parameter       :: volumetric_flowrate =  1.d-5                       ! m/s
-    Real(8), parameter       :: velocity_char       =  volumetric_flowrate/(pi*Rnozzle**2)  ! m/s
     
-    Real(8), parameter       :: time_char           = Rnozzle/velocity_char            ! s
+
+    Real(8), parameter       :: rho       = 1000.d0                          ! kg/m3: density of water
+    Real(8), parameter       :: length_char   =  1.d0
+    
+
+
+    Real(8), parameter       :: velocity_char       =  0.01d0  ! m/s
+  
+    Real(8), parameter       :: viscosity = 0.01d0
+
+
+    !_______________________________________________________________________________
+  
+
+    Real(8), parameter       :: surface_tension = 0.073d0
+    
+    Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
 
     !_______________________________________________________________________________
 
@@ -101,37 +94,19 @@ MODULE PHYSICAL_MODULE
 
     Real(8), parameter       :: inertial_stress     = rho * ( velocity_char )**2
 
-    Real(8), parameter       :: gravity_stress      = rho*g_grav*Rnozzle
+    Real(8), parameter       :: gravity_stress      = rho*g_grav*length_char
 
-    Real(8), parameter       :: capillary_stress    = surface_tension/Rnozzle
+    Real(8), parameter       :: capillary_stress    = surface_tension/length_char
     !_______________________________________________________________________________
 
-
-    Real(8), parameter       :: Pambient          =  0.d0                ! Pa
 
     Real(8), parameter       :: Pchar             = viscous_stress
     
     
-    Real(8), parameter       :: Pambient_o_Pchar     =  Pambient/Pchar
-
-
     Real(8), parameter       :: ratio_of_pressures = gravity_stress/Pchar
-
-
-
-
-    Real(8)                  :: initial_position, position_o, position, ambient_position, vm_ambient
 
     Real(8)                  :: ReN  !  REYNOLDS NUMBER
     
-    Real(8)                  :: BvN  !  SOLVENT  /TOTAL VISCOSITY RATIO
-    Real(8)                  :: WiN  !  ELASTIC MODULUS
-    Real(8)                  :: BnN  !  Bingham NUMBER
-    Real(8)                  :: NiN  !  Shear thinning Exponent
-    Real(8)                  :: BoN, GaN, Bullshit_Archimedes
-
-
-    Real(8)                  :: Pressure_Bubble, Pressure_Bubbleo
 
     Real(8)                  :: eo1, eo2
     Real(8)                  :: es1, es2
@@ -148,31 +123,44 @@ MODULE PHYSICAL_MODULE
         Real(8) :: DUM
 
       
-        ! initial_position =  ho/Rnozzle
-        ! ambient_position =  ho/Rnozzle
+        ! initial_position =  ho/length_char
+        ! ambient_position =  ho/length_char
 
         ReN   =  inertial_stress/Pchar
-        BoN   =  Pchar/capillary_stress    ! fyi by using the viscous nondim we acquire capillary number
-     
-        BvN   = 0.0D0
-        
-
-        write(*,"(A6,2X,F16.8)") "Reff ="    , Rnozzle
-        write(*,"(A6,2X,F16.8)") "ReN  ="    , ReN
-        write(*,"(A6,2X,F16.8)") "BnN  ="    , BnN
-        write(*,"(A6,2X,F16.8)") "BoN  ="    , BoN
-        write(*,"(A6,2X,F16.8)") "Archim  =" , Bullshit_Archimedes
-        write(*,"(A6,2X,F16.8)") "WiN  ="    , WiN
-        write(*,"(A6,2X,F16.8)") "NiN  ="    , NiN
-        write(*,"(A6,2X,F16.8)") "BvN  ="    , BvN
-
-        write(*,*) "Pchar  =", Pchar
-        write(*,*) "volumetric_flowrate  =", volumetric_flowrate
-        write(*,*) "velocity_char  =", velocity_char
-        write(*,*) "time_char  =", time_char
-
+        ! print*, "pi  =", pi
+        ! print*, " "
+        ! print*, "rho  =", rho
+        ! print*, " "
+        ! print*, "length_char  =", length_char
+        ! print*, " "
+        ! print*, "g_grav  =", g_grav
+        ! print*, " "
+        ! print*, "viscosity  =", viscosity
+        ! print*, " "
+        ! print*, "surface_tension  =", surface_tension
+        ! print*, " "
+        ! print*, "velocity_char  =", velocity_char
+        ! print*, " "
+        ! print*, "time_char  =", time_char
+        ! print*, " "
+        ! print*, "viscous_stress  =", viscous_stress
+        ! print*, " "
+        ! print*, "inertial_stress  =", inertial_stress
+        ! print*, " "
+        ! print*, "gravity_stress  =", gravity_stress
+        ! print*, " "
+        ! print*, "capillary_stress  =", capillary_stress
+        ! print*, " "
+        ! print*, "Pchar  =", Pchar
+        ! print*, " "
+        ! print*, "ratio_of_pressures  =", ratio_of_pressures
+        ! print*, " "
+        ! print*, "ReN  =", ReN
+        ! print*, " "
         ! pause
-        ! write(*,*) "ratio_of_pressures  =", ratio_of_pressures
+        write(*,"(A6,2X,F16.8)") "Reff ="    , length_char
+        write(*,"(A6,2X,F16.8)") "ReN  ="    , ReN
+        
         eo1   = 0.0D0
         eo2   = 0.1D0
         e_bnd = - 1.0D+4
@@ -219,7 +207,7 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.01d0
+      Dt_constant = 0.05d0
   end subroutine set_DT
   
 
@@ -251,7 +239,7 @@ Module ELEMENTS_MODULE
     
  !   NUMBER OF EQUATIONS
  Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
- Integer, Parameter:: NEX_f = 1 
+ Integer, Parameter:: NEX_f = 0 
 
  !   NUMBER OF ELEMENTS
  Integer :: NEL_1d                 ! TOTAL NUMBER OF 1D ELEMENTS
@@ -301,7 +289,7 @@ End Module Elements_Module
      logical :: success
      CHARACTER(LEN=100) :: STR_ITER_TMP, THREADS, FN
 
-     NTHREADS = 1 ! number of threads that pardiso will use and the loop of the jacobian
+     NTHREADS = 12 ! number of threads that pardiso will use and the loop of the jacobian
 
      WRITE(STR_ITER_TMP,'(I4)') NTHREADS
 
@@ -466,8 +454,8 @@ End Module Elements_Module
   MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 2.3d-7
-    REAL(8), PARAMETER :: ERROR_STR = 2.3d-7
+    REAL(8), PARAMETER :: ERROR_NR  = 5.d-9
+    
     
     INTEGER            :: ITER_f
     REAL(8)            :: RES_NORM, COR_NORM_OLD_f, COR_NORM_NEW_f
@@ -1342,10 +1330,9 @@ MODULE BOUNDARY_ENUMERATION_MODULE
 
 
 
-    call commitBoundary(unvfile, 'Wall'            , 1, bnd1_elements, bnd1_faces)
-    call commitBoundary(unvfile, 'Symmetry'        , 2, bnd2_elements, bnd2_faces)
-    call commitBoundary(unvfile, 'InflatedBubble'  , 3, bnd3_elements, bnd3_faces)
-    call commitBoundary(unvfile, 'Ambient'         , 4, bnd4_elements, bnd4_faces)
+    call commitBoundary(unvfile, 'FixWall'        , 1, bnd1_elements, bnd1_faces)
+    call commitBoundary(unvfile, 'MovingWall'     , 2, bnd2_elements, bnd2_faces)
+    
 
      !call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)
      !call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)
@@ -1827,9 +1814,13 @@ MODULE GAUSS_MODULE
       Allocate( dfde(nbf_2d_, npoints_) )
 
       Select Case(face)
-      Case(1); bfn(:,:) = bfn_e(:,:,1); dfdc = dfdc_e(:,:,1); dfde = dfde_e(:,:,1)
-      Case(2); bfn(:,:) = bfn_e(:,:,3); dfdc = dfdc_e(:,:,3); dfde = dfde_e(:,:,3)
-      Case(3); bfn(:,:) = bfn_e(:,:,2); dfdc = dfdc_e(:,:,2); dfde = dfde_e(:,:,2)
+
+        Case(1); bfn(:,:) = bfn_e(:,:,1); dfdc = dfdc_e(:,:,1); dfde = dfde_e(:,:,1)
+
+        Case(2); bfn(:,:) = bfn_e(:,:,3); dfdc = dfdc_e(:,:,3); dfde = dfde_e(:,:,3)
+
+        Case(3); bfn(:,:) = bfn_e(:,:,2); dfdc = dfdc_e(:,:,2); dfde = dfde_e(:,:,2)
+
       Case Default
       Print*, 'Wrong value of face. Possible values 1,2,3'
       Print*, 'Current Value of face :',face
@@ -2265,23 +2256,23 @@ module sr_representation
 
 
 
-  subroutine set_S_get_Stress( S, Stress)
-    implicit none
-    real(8), dimension(3,3), intent(in)  :: s
-    real(8), dimension(3,3), intent(out) :: Stress
+  ! subroutine set_S_get_Stress( S, Stress)
+  !   implicit none
+  !   real(8), dimension(3,3), intent(in)  :: s
+  !   real(8), dimension(3,3), intent(out) :: Stress
 
     
-    real(8), dimension(3,3) :: conformation, unity   
+  !   real(8), dimension(3,3) :: conformation, unity   
     
-    unity = 0.d0
+  !   unity = 0.d0
 
-    unity(1,1) = 1.d0  ;  unity(2,2) = 1.d0  ;  unity(3,3) = 1.d0 
+  !   unity(1,1) = 1.d0  ;  unity(2,2) = 1.d0  ;  unity(3,3) = 1.d0 
     
-    conformation = matmul(S,S)
+  !   conformation = matmul(S,S)
 
-    Stress = (conformation - unity) / WiN
+  !   Stress = (conformation - unity) / WiN
 
-  end subroutine set_S_get_Stress
+  ! end subroutine set_S_get_Stress
 
 end module sr_representation
 

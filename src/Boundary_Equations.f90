@@ -122,8 +122,8 @@ Module Boundary_Equations
                     ! -n * T = + P_bubble n + 1/Bo * (I-nn)\nabla \cdot \phi
         
                     TERM_RES     = 0.D0
-                    TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
-                    TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
+                    ! TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
+                    ! TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK) * dS
@@ -967,196 +967,196 @@ Module Boundary_Equations
 ! ********************************************************************
 
 
-SUBROUTINE OUTFLOW_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
-      Use VariableMapping
-      USE CONTINUATION_MODULE,     only: INCREMENT
-      USE PHYSICAL_MODULE
-      USE ELEMENTS_MODULE,         only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
-      USE GAUSS_MODULE,            only: WO_1d, NGAUSS_1d, BFN_E, DFDC_E,&
-                                         DFDE_E, &
-                                                 getBasisFunctionsAtFace
-      USE ENUMERATION_MODULE,      only: NM_MESH, NM_f
-      USE GLOBAL_ARRAYS_MODULE,    only: TLo, TLb, DpL
-      USE FLOW_ARRAYS_MODULE,      only: B_f
-      USE MESH_MODULE,             only: Xm, Ym
-      USE sr_representation,       only: set_S_get_Stress
-      USE TIME_INTEGRATION,        only: Dt
-      IMPLICIT NONE
+! SUBROUTINE OUTFLOW_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
+!       Use VariableMapping
+!       USE CONTINUATION_MODULE,     only: INCREMENT
+!       USE PHYSICAL_MODULE
+!       USE ELEMENTS_MODULE,         only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
+!       USE GAUSS_MODULE,            only: WO_1d, NGAUSS_1d, BFN_E, DFDC_E,&
+!                                          DFDE_E, &
+!                                                  getBasisFunctionsAtFace
+!       USE ENUMERATION_MODULE,      only: NM_MESH, NM_f
+!       USE GLOBAL_ARRAYS_MODULE,    only: TLo, TLb, DpL
+!       USE FLOW_ARRAYS_MODULE,      only: B_f
+!       USE MESH_MODULE,             only: Xm, Ym
+!       USE sr_representation,       only: set_S_get_Stress
+!       USE TIME_INTEGRATION,        only: Dt
+!       IMPLICIT NONE
       
-    !  ARGUMENTS
-      INTEGER,                           INTENT(IN)  :: NELEM, NED
-      REAL(8), DIMENSION(NBF_2d, NEQ_f), INTENT(IN)  :: TEMP_TL
-      REAL(8), DIMENSION(NBF_2d, NEQ_f), INTENT(OUT) :: TEMP_RES
-      LOGICAL,                           INTENT(IN)  :: STORE
+!     !  ARGUMENTS
+!       INTEGER,                           INTENT(IN)  :: NELEM, NED
+!       REAL(8), DIMENSION(NBF_2d, NEQ_f), INTENT(IN)  :: TEMP_TL
+!       REAL(8), DIMENSION(NBF_2d, NEQ_f), INTENT(OUT) :: TEMP_RES
+!       LOGICAL,                           INTENT(IN)  :: STORE
                   
-    !  LOCAL VARIABLES
-      INTEGER :: KK, II, JJ, LL, IW, JW, I, J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
-      INTEGER :: IROW, JCOL
+!     !  LOCAL VARIABLES
+!       INTEGER :: KK, II, JJ, LL, IW, JW, I, J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
+!       INTEGER :: IROW, JCOL
 
-      REAL(8)  :: WET
-      REAL(8)  :: Z, dZdC, dZdE
-      REAL(8)  :: R, dRdC, dRdE
-      REAL(8)  :: CJAC, AJAC, JacT, dL, nr, nz, nl
+!       REAL(8)  :: WET
+!       REAL(8)  :: Z, dZdC, dZdE
+!       REAL(8)  :: R, dRdC, dRdE
+!       REAL(8)  :: CJAC, AJAC, JacT, dL, nr, nz, nl
   
-      REAL(8)  :: BIFN, DBIR, DBIZ
-      REAL(8)  :: BJFN, DBJX, DBJY, DBJZ
+!       REAL(8)  :: BIFN, DBIR, DBIZ
+!       REAL(8)  :: BJFN, DBJX, DBJY, DBJZ
       
-      REAL(8)  :: P
+!       REAL(8)  :: P
       
     
-      REAL(8)  :: Prr, Prz, Pzz
-      Real(8)  :: Trr, Trz, Tzz, Ttt
-      Real(8)  :: Srr, Srz, Szz, Stt
+!       REAL(8)  :: Prr, Prz, Pzz
+!       Real(8)  :: Trr, Trz, Tzz, Ttt
+!       Real(8)  :: Srr, Srz, Szz, Stt
 
-      Real(8), Dimension(3,3)     :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
-
-      
-      INTEGER, DIMENSION(NBF_2d) :: NM 
-      REAL(8), DIMENSION(NBF_2d) :: X_loc, Y_loc
-      REAL(8), DIMENSION(NBF_2d) :: DFDR,  DFDZ
-      REAL(8), DIMENSION(NEQ_f)  :: TERM_RES
-      
-      ! REAL(8), DIMENSION(NBF_2d,NGAUSS_1d) :: BFN, DFDC, DFDE
-      Real(8), Dimension(:,:), Allocatable ::  bfn
-      Real(8), Dimension(:,:), Allocatable :: dfdc, dfde 
-    !  VARIABLES for the EVP HB MODEL
-      
-      
-
-    !---------------------------------------------------------------------
-    !  COPY X VECTOR TO LOCAL VECTOR
-    !---------------------------------------------------------------------
-      DO II = 1, NBF_2d
-              JJ = NM_MESH(NELEM,II)
-      
-              X_loc(II) = Xm(JJ)
-              Y_loc(II) = Ym(JJ)
-      ENDDO
-      
-      call getBasisFunctionsAtFace(ned, bfn, dfdc, dfde)
+!       Real(8), Dimension(3,3)     :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
 
       
+!       INTEGER, DIMENSION(NBF_2d) :: NM 
+!       REAL(8), DIMENSION(NBF_2d) :: X_loc, Y_loc
+!       REAL(8), DIMENSION(NBF_2d) :: DFDR,  DFDZ
+!       REAL(8), DIMENSION(NEQ_f)  :: TERM_RES
+      
+!       ! REAL(8), DIMENSION(NBF_2d,NGAUSS_1d) :: BFN, DFDC, DFDE
+!       Real(8), Dimension(:,:), Allocatable ::  bfn
+!       Real(8), Dimension(:,:), Allocatable :: dfdc, dfde 
+!     !  VARIABLES for the EVP HB MODEL
+      
+      
 
-      TEMP_RES = 0.D0
+!     !---------------------------------------------------------------------
+!     !  COPY X VECTOR TO LOCAL VECTOR
+!     !---------------------------------------------------------------------
+!       DO II = 1, NBF_2d
+!               JJ = NM_MESH(NELEM,II)
+      
+!               X_loc(II) = Xm(JJ)
+!               Y_loc(II) = Ym(JJ)
+!       ENDDO
+      
+!       call getBasisFunctionsAtFace(ned, bfn, dfdc, dfde)
+
+      
+
+!       TEMP_RES = 0.D0
 
 
    
-      LOOP_GAUSS: DO KK = 1, NGAUSS_1d
+!       LOOP_GAUSS: DO KK = 1, NGAUSS_1d
 
 
-          CALL BASIS_2d&
-          ( KK, TEMP_TL(:,getVariableId("Z")), TEMP_TL(:,getVariableId("R")), BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-                  CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
+!           CALL BASIS_2d&
+!           ( KK, TEMP_TL(:,getVariableId("Z")), TEMP_TL(:,getVariableId("R")), BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
+!                   CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
 
-              SELECT CASE(NED)
+!               SELECT CASE(NED)
               
-                      CASE(1)
-                              dL = DSQRT(DRDC**2+DZDC**2)
-                              nz =   DRDC/dL
-                              nr = - DZDC/dL
+!                       CASE(1)
+!                               dL = DSQRT(DRDC**2+DZDC**2)
+!                               nz =   DRDC/dL
+!                               nr = - DZDC/dL
 
               
-                      CASE(2)
-                              dL = DSQRT((DRDC-DRDE)**2+(DZDC-DZDE)**2)
-                              nr = - (DZDC-DZDE)/dL
-                              nz =   (DRDC-DRDE)/dL
+!                       CASE(2)
+!                               dL = DSQRT((DRDC-DRDE)**2+(DZDC-DZDE)**2)
+!                               nr = - (DZDC-DZDE)/dL
+!                               nz =   (DRDC-DRDE)/dL
               
-                      CASE(3)
+!                       CASE(3)
                       
-                      ! I mutually changed case 2 and case 3 and it worked
-                      ! in the future i need to call subroutines to do the procedure automatically
+!                       ! I mutually changed case 2 and case 3 and it worked
+!                       ! in the future i need to call subroutines to do the procedure automatically
                               
-                              dL = DSQRT(DRDE**2+DZDE**2)
-                              nr = + DZDE/dL
-                              nz = - DRDE/dL
-              END SELECT
-              ! dL = 1.d0
-              ! nr = 0.d0
-              ! nz = 1.d0
-               ! if (kk .eq. 1) then
-               ! print*, ned
-               ! print*, nr, nz
-               ! pause
-               ! endif
+!                               dL = DSQRT(DRDE**2+DZDE**2)
+!                               nr = + DZDE/dL
+!                               nz = - DRDE/dL
+!               END SELECT
+!               ! dL = 1.d0
+!               ! nr = 0.d0
+!               ! nz = 1.d0
+!                ! if (kk .eq. 1) then
+!                ! print*, ned
+!                ! print*, nr, nz
+!                ! pause
+!                ! endif
                 
               
-              WET = WO_1d(KK)*dL
+!               WET = WO_1d(KK)*dL
               
-        !---------------------------------------------------------------------
-        !    CALCULATE DEPENDENT VARIABLE AND PARTIAL DERIVATIVES AT
-        !    THE GAUSSIAN INTEGRATION POINTS
-        !---------------------------------------------------------------------
+!         !---------------------------------------------------------------------
+!         !    CALCULATE DEPENDENT VARIABLE AND PARTIAL DERIVATIVES AT
+!         !    THE GAUSSIAN INTEGRATION POINTS
+!         !---------------------------------------------------------------------
 
-              P   = 0.D0  ;    
+!               P   = 0.D0  ;    
 
-              Srr = 0.D0  ;
-              Srz = 0.D0  ;
-              Szz = 0.D0  ;
-              Stt = 0.D0  ;
+!               Srr = 0.D0  ;
+!               Srz = 0.D0  ;
+!               Szz = 0.D0  ;
+!               Stt = 0.D0  ;
               
-              DO II = 1, NBF_2d
+!               DO II = 1, NBF_2d
               
-                      JJ = NM_MESH(NELEM,II)
+!                       JJ = NM_MESH(NELEM,II)
                       
-                      P     = P     + TEMP_TL(II,getVariableId("P"))*BFN(II,KK)
+!                       P     = P     + TEMP_TL(II,getVariableId("P"))*BFN(II,KK)
                       
-                      Srr    = Srr  + TEMP_TL(II,getVariableId("Srr"))*BFN(II,KK)
+!                       Srr    = Srr  + TEMP_TL(II,getVariableId("Srr"))*BFN(II,KK)
                       
-                      Srz    = Srz  + TEMP_TL(II,getVariableId("Srz"))*BFN(II,KK)
+!                       Srz    = Srz  + TEMP_TL(II,getVariableId("Srz"))*BFN(II,KK)
 
-                      Szz    = Szz  + TEMP_TL(II,getVariableId("Szz"))*BFN(II,KK)
-              ENDDO
+!                       Szz    = Szz  + TEMP_TL(II,getVariableId("Szz"))*BFN(II,KK)
+!               ENDDO
 
-            S_tensor = 0.d0
-            Stt      = 0.d0 ! Stt is not present in the current weak form so i dont care to retrieve its value
-                            ! i just give a nominal value 0 to calculate the matrix Stress
-            S_tensor(1,1) = Srr ; S_tensor(1,2) = Srz 
-            S_tensor(2,1) = Srz ; S_tensor(2,2) = Szz 
-            S_tensor(3,3) = Stt
+!             S_tensor = 0.d0
+!             Stt      = 0.d0 ! Stt is not present in the current weak form so i dont care to retrieve its value
+!                             ! i just give a nominal value 0 to calculate the matrix Stress
+!             S_tensor(1,1) = Srr ; S_tensor(1,2) = Srz 
+!             S_tensor(2,1) = Srz ; S_tensor(2,2) = Szz 
+!             S_tensor(3,3) = Stt
 
-            call set_S_get_Stress( S_tensor  , Stress_tensor   )
-            Trr = Stress_tensor(1,1)
-            Trz = Stress_tensor(1,2)
-            Tzz = Stress_tensor(2,2)
-        !---------------------------------------------------------------------     
-        !    DEFINE EXTRA STRESS TENSOR
-        !---------------------------------------------------------------------
-              Prr = - P + Trr
-              Prz =       Trz
-              Pzz = - P + Tzz
+!             call set_S_get_Stress( S_tensor  , Stress_tensor   )
+!             Trr = Stress_tensor(1,1)
+!             Trz = Stress_tensor(1,2)
+!             Tzz = Stress_tensor(2,2)
+!         !---------------------------------------------------------------------     
+!         !    DEFINE EXTRA STRESS TENSOR
+!         !---------------------------------------------------------------------
+!               Prr = - P + Trr
+!               Prz =       Trz
+!               Pzz = - P + Tzz
     
-              LOOP_RESIDUALS_f:DO IW = 1, NBF_2d
+!               LOOP_RESIDUALS_f:DO IW = 1, NBF_2d
 
-                      BIFN = BFN(IW,KK)
-                      DBIR = DFDR(IW)
-                      DBIZ = DFDZ(IW)
+!                       BIFN = BFN(IW,KK)
+!                       DBIR = DFDR(IW)
+!                       DBIZ = DFDZ(IW)
 
-                      TERM_RES     = 0.D0
+!                       TERM_RES     = 0.D0
 
-                      TERM_RES(getVariableId("Vr"))  = - ( nr*(Prr  ) + nz*(Prz  ))*BIFN*R
+!                       TERM_RES(getVariableId("Vr"))  = - ( nr*(Prr  ) + nz*(Prz  ))*BIFN*R
 
-                      TERM_RES(getVariableId("Vz"))  = - ( nr*(Prz )  + nz*(Pzz  ))*BIFN*R
+!                       TERM_RES(getVariableId("Vz"))  = - ( nr*(Prz )  + nz*(Pzz  ))*BIFN*R
 
 
-                      TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)*WET 
+!                       TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)*WET 
                       
-              ENDDO LOOP_RESIDUALS_f
+!               ENDDO LOOP_RESIDUALS_f
               
 
-      ENDDO LOOP_GAUSS
+!       ENDDO LOOP_GAUSS
       
 
    
-      IF ( STORE ) THEN
+!       IF ( STORE ) THEN
       
-              NM = NM_f(NELEM,1:NBF_2d)
+!               NM = NM_f(NELEM,1:NBF_2d)
               
-              CALL MATRIX_STORAGE_RESIDUAL&
-              ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
+!               CALL MATRIX_STORAGE_RESIDUAL&
+!               ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
               
-      ENDIF
+!       ENDIF
 
-    END SUBROUTINE OUTFLOW_RESIDUAL_f
+!     END SUBROUTINE OUTFLOW_RESIDUAL_f
 
 
 

@@ -20,6 +20,7 @@ Module BulkEquations
   !                  SUBROUTINE   DOMI_RESIDUAL_f
   !---------------------------------------------------------------------
 Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
+   use check_for_floating_point_exceptions
    Use VariableMapping
    Use basis_calculations
    Use SR_REPRESENTATION
@@ -49,7 +50,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
 
    Real(8)  :: Vr ,Vz , P
    Real(8)  :: Trr, Trz, Tzz, Ttt, Ksi, Eta, Z, R
-   Real(8)  :: Srr, Srz, Szz, Stt
+   
    Real(8)  :: JacT
    Real(8)  :: dVrdR , dVrdZ, dVrdt, dVzdR , dVzdZ, dVzdt
    Real(8)  :: dPdR  , dPdZ
@@ -64,7 +65,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8)  :: Gdot_rr , Gdot_rz , Gdot_zz , Gdot_tt
    Real(8)  :: Prr, Prz, Pzz, Ptt
    Real(8)  :: BIFN, DBIR, DBIZ, SBFN
-   Real(8)  :: E_TR, Helem, Uelem, Ha, Rmom, Zmom, Hugn, tlsme, tlsic, tlsce, taudc
+   Real(8)  :: E_TR, Helem, Helem2, Uelem, Ha, Rmom, Zmom, Hugn, tlsme, tlsic, tlsce, taudc
    Real(8)  :: U1, U2, U3
 
    Real(8), Dimension(NBF_2d)           :: Ksi_loc, Eta_loc, dBFNdZ, dBFNdR
@@ -74,12 +75,12 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8), Dimension(NBF_2d)           :: Uz_nodes_elem, Ur_nodes_elem, dZdt_nodes_elem, dRdt_nodes_elem
    
    Real(8), Dimension(NEQ_f)            :: TERM_RES
-   Real(8), Dimension(NBF_2d)           :: BFN
+   Real(8), Dimension(NBF_2d)           :: BFN, DFDX, DFDY
    Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc
    Real(8), Dimension(2,2)              :: S, GU, GUT, ST, SI
    Real(8), Dimension(3,3)              :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
   
-
+   Real(8)                              :: X, dXdC, dXdE, Y, dYdC, dYdE, CJAC, AJAC
     !  VARIABLES for the EVP HB MODEL
    Real(8)                              :: Trace_Stress_Tensor
    Real(8)                              :: TraceStress, S_ddot_S
@@ -101,7 +102,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      TLb_loc(II,:) = TLb(JJ,:)
    ENDDO
   
-   Gravity_Term = 1.d0
+   Gravity_Term = 0.d0
    Gravity_Term = Gravity_Term*ratio_of_pressures
 
     !---------------------------------------------------------------------   
@@ -127,14 +128,11 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
    do II=1, NBF_2d
         Uelem = Uelem + SQRT( ( Uz_nodes_elem(II)-dZdt_nodes_elem(II) )**2 &
                                 + ( Ur_nodes_elem(II)-dRdt_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
+        ! Uelem = Uelem + SQRT( ( Uz_nodes_elem(II) )**2 &
+        !                         + ( Ur_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
    enddo
 
    
-   E_TR  = ( Z_nodes_elem(1)*R_nodes_elem(2) - Z_nodes_elem(2)*R_nodes_elem(1) &
-             + Z_nodes_elem(2)*R_nodes_elem(3) - Z_nodes_elem(3)*R_nodes_elem(2) &
-               + Z_nodes_elem(3)*R_nodes_elem(1) - Z_nodes_elem(1)*R_nodes_elem(3) ) / 2.d0
-
-
     !---------------------------------------------------------------------
     !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
     !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
@@ -150,7 +148,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      BFN = BFN_2d(:,KK)
 
      ! calculate the derivatives of basis functions with respect to physical coordinates at current timestep
-     call basis_spatial_derivatives( KK, Z_nodes_elem(:) , R_nodes_elem(:) , dBFNdZ , dBFNdR , JacT  )
+     call basis_spatial_derivatives( KK, Ksi_loc(:) , Eta_loc(:) , dBFNdZ , dBFNdR , JacT  )
 
     
      ! give TEMP_TL to the subroutine and take back the variable calculated at the current gauss point
@@ -174,9 +172,9 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      ! ************************************************************************
      ! Local variables and its ferivatives calculated at the previous timestep
      ! ************************************************************************
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Vr")) , KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Vro , dVrdZo , dVrdRo  )
+     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Vr")) , KK, Z_nodes_elem(:), R_nodes_elem(:),  Vro , dVrdZo , dVrdRo  )
 
-     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Vz")) , KK, Zo_nodes_elem(:), Ro_nodes_elem(:),  Vzo , dVzdZo , dVzdRo  )
+     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("Vz")) , KK, Z_nodes_elem(:), R_nodes_elem(:),  Vzo , dVzdZo , dVzdRo  )
 
      
      call FEMinterpolation(Zo  , Zo_nodes_elem(:), BFN(:))
@@ -198,14 +196,12 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      Drz = dVzdR
      Dzr = dVrdZ
      Dzz = dVzdZ
-     Dtt = Vr/R 
 
-     Continuity_Equ = dVrdR + Vr/R + dVzdZ
+     Continuity_Equ = dVrdR + dVzdZ
 
      Gdot_rr = 2.d0 * ( Drr       )
      Gdot_rz =        ( Drz + Dzr )
      Gdot_zz = 2.d0 * ( Dzz       )
-     Gdot_tt = 2.d0 * ( Dtt       )
 
         
     !---------------------------------------------------------------------     
@@ -223,6 +219,9 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     !---------------------------------------------------------------------
      dUrdM  = dVrdt  + ( Vr - dRdt ) * dVrdR   + ( Vz - dZdt ) * dVrdZ
      dUzdM  = dVzdt  + ( Vr - dRdt ) * dVzdR   + ( Vz - dZdt ) * dVzdZ
+
+     ! dUrdM  = dVrdt  + Vr * dVrdR   + Vz * dVrdZ
+     ! dUzdM  = dVzdt  + Vr * dVzdR   + Vz * dVzdZ 
      
      dUrdM  = ReN*dUrdM
      dUzdM  = ReN*dUzdM
@@ -240,12 +239,10 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      Trr = Gdot_rr
      Trz = Gdot_rz
      Tzz = Gdot_zz
-     Ttt = Gdot_tt
 
      Prr =Trr  
      Prz =Trz  
      Pzz =Tzz  
-     Ptt =Ttt  
 
 
 
@@ -253,18 +250,17 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      Zmom = dUzdM + dPdZ !- (dTrzdr + Trz/R         + dTzzdZ) - Gravity_Term
 
 
+     helem = sum([ (sqrt( dBFNdZ(ii)**2 + dBFNdR(ii)**2 ),ii=1,NBF_2d) ])
+     helem = 1.d0/helem
 
-
-    Helem = DSQRT(DABS(E_TR))
-    
-    ! call Hugn_calculation((Vz-dZdt), (Vr-dRdt), KK, Z_nodes_elem(:), R_nodes_elem(:), Hugn)
-    
+     
     ! **************************************************************************************************
-    Ha = DSQRT( 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 + Ttt    **2) ) / &
-        DSQRT(  1.D0    + 0.5D0*( Gdot_rr**2 + 2.D0*Gdot_rz**2 + Gdot_zz**2 + Gdot_tt**2) )
+    Ha = DSQRT( 1.d0 + 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 ) ) / &
+        DSQRT(  1.D0    + 0.5D0*( Gdot_rr**2 + 2.D0*Gdot_rz**2 + Gdot_zz**2) )
     
     ! **************************************************************************************************
     tlsme = 1.D0/DSQRT( (ReN/Dt)**2 + (ReN*Uelem/Helem)**2 + (Ha/Helem**2)**2 )
+    ! if ( store) write(404,'(I5,2X,F12.8, 2X,F12.8, 2X,F12.8, 2X,F12.8, 2X,F12.8, 2X)') nelem, Uelem, Helem, Ha, DSQRT( (ReN/Dt)**2 + (ReN*Uelem/Helem)**2 + (Ha/Helem**2)**2 ), tlsme
     
     ! **************************************************************************************************
     tlsic = (Helem**2)/tlsme
@@ -284,15 +280,13 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     
         BIFN = BFN   (IW)  ;  DBIZ = dBFNdZ(IW)  ;  DBIR = dBFNdR(IW)
            
-        SBFN = BIFN
-    
-    
+   
         TERM_RES                        = 0.d0
-        TERM_RES(getVariableId("Vr" ))  = (  dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ   +  (Ptt-P)*BIFN/R )*R
+        TERM_RES(getVariableId("Vz" ))  = dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR !  - Gravity_Term*BIFN 
     
-        TERM_RES(getVariableId("Vz" ))  = ( dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR  - Gravity_Term*BIFN  )*R
+        TERM_RES(getVariableId("Vr" ))  = dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ 
     
-        TERM_RES(getVariableId("P"  ))  = (  Continuity_Equ*BIFN + tlsme*(Rmom*DBIR+Zmom*DBIZ)  )*R 
+        TERM_RES(getVariableId("P"  ))  = Continuity_Equ*BIFN + tlsme*(Rmom*DBIR+Zmom*DBIZ) 
        
         TERM_RES(getVariableId("Z"  ))  = ( eo1*SKsi + (1.d0 -eo1))*( dKsidR * DBIR + dKsidZ * DBIZ )
         TERM_RES(getVariableId("R"  ))  = ( eo2*SEta + (1.d0 -eo2))*( dEtadR * DBIR + dEtadZ * DBIZ )
@@ -301,8 +295,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
         TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_2d(KK) * JacT
     ENDDO LOOP_RESIDUALS_f
          
-    !---------------------------------------------------------------------
-    
+        
     ENDDO LOOP_GAUSS
        
     

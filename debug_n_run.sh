@@ -1,4 +1,4 @@
-#---------------------------------------------------------------------------0
+#---------------------------------------------------------------------------
 
 NEXE="exe"
 echo $NEXE
@@ -6,7 +6,7 @@ echo $NEXE
 #----------------------------------------------------------------------------
 
 
-OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
+OPT="-O0 -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector -warn none"
 
 
 echo $OPT
@@ -20,7 +20,9 @@ MKL="-qmkl=parallel"
 rm -f $NEXE
 rm -f nohup.out
 
+								# ./src/Remesh/RemeshProcedure.f90\
  ifort $OPT -o $NEXE                           \
+								./src/utilities/check_for_floating_point_exceptions.f90 \
 								./src/utilities/system_tools.f90 \
 								./src/utilities/formats.f90    \
 				 				./src/utilities/arraytools.f90 \
@@ -39,13 +41,9 @@ rm -f nohup.out
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations.f90     	 \
 								./src/BoundaryEquations/FixWallBoundary.f90 \
-								./src/BoundaryEquations/SymmetryBoundary.f90 \
-				        		./src/BoundaryEquations/InflatedBubbleBoundary.f90  \
-								./src/BoundaryEquations/AmbientBoundary.f90 \
-								./src/BoundaryEquations/InternalEquidistribution.f90 \
+								./src/BoundaryEquations/MovingWallBoundary.f90 \
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
-								./src/Remesh/RemeshProcedure.f90\
 							./src/InitializeTypes.f90\
                      Fem2D_prg.f90            \
 	             $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++

@@ -32,7 +32,7 @@ PROGRAM FEM2D
    Use Formats
    Use Tecplot
    Use MeshGeneration
-   Use RemeshProcedure
+   ! Use RemeshProcedure
    Use BubbleOutput
    Use InitialConditions
    USE OMP_PARALLEL
@@ -115,9 +115,9 @@ PROGRAM FEM2D
    Dtb            = DT
 
    if (ReadSolutionFromFile) then
-      call sol_b%getSolutionVars(timeb, TLb, increment, Remesh_counter, pressure_bubble  )
-      call sol_o%getSolutionVars(timeo, TLo, increment, Remesh_counter, Pressure_Bubbleo )
-      call sol  %getSolutionVars(time , TL , increment, Remesh_counter, pressure_bubble  )
+      ! call sol_b%getSolutionVars(timeb, TLb, increment, Remesh_counter, pressure_bubble  )
+      ! call sol_o%getSolutionVars(timeo, TLo, increment, Remesh_counter, Pressure_Bubbleo )
+      ! call sol  %getSolutionVars(time , TL , increment, Remesh_counter, pressure_bubble  )
    endif
    
 
@@ -131,9 +131,6 @@ PROGRAM FEM2D
       INCREMENT_STEP    = INCREMENT_STEP + 1
       TIME              = TIME + DT
       
-      vm_ambient        = -( calculateFlowrate(time) ) / ( (Rtank)**2 - 1.d0 )
-      ambient_position  = ambient_position + vm_ambient*dt
-
 
       Write(*,*)'======================================================================'
       Write(*,*)'======================================================================'
@@ -141,30 +138,29 @@ PROGRAM FEM2D
                     "*", [toStr(INCREMENT),         toStr(TIME),            toStr(DT)])
       Write(*,*)'======================================================================'
       Write(*,*)''
-      print*, "vm_ambient=",vm_ambient
-      print*, "ambient_position=",ambient_position
-      print*, "Rtank=",Rtank
+
+
       Write(*,*)''
 
       
     ! SOLVE THE NONLINEAR PDE SYSTEM
       Call NEWTON_RAPSHON_f(ReallocateForRemesh)
 
-      call calculateBubbleVariables(DT)
+      call calculateVariables(DT)
       
       call WriteBubbleFiles(TIME)
       
 
-      if ( (mod(increment,10) .eq. 0) ) then
+      if ( (mod(increment,100) .eq. 0) ) then
       call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
-      call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt 
+      ! call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt 
       endif
       
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       ! Check Criteria for Remeshing  
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-      call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
+      ! call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
 
       call UPDATE_SOLUTION( INCREMENT )
       
@@ -220,7 +216,7 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
    use enumeration_module, only: gntr
    use VariableMapping
    Use RemeshVariables
-   Use RemeshProcedure, only: AfterRemesh_counter
+   ! Use RemeshProcedure, only: AfterRemesh_counter
    IMPLICIT NONE
    
    Logical,  Intent(in):: ReallocateForRemesh
@@ -236,8 +232,8 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
    real(8)          :: Res_Norm_First_Iteration
    
    INTEGER, DIMENSION(NEX_f)  :: IPVT
-   Real(8) :: Volume
-   Real(8) :: Centroid 
+   
+   
    Character(len=:)     , Allocatable :: filename
    Character(len=:)     , Allocatable :: title
    Character(len=:)     , Allocatable :: zone
@@ -247,9 +243,9 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
    Integer                            :: nelements, ii, jj, kk
    Integer, Dimension(:), Allocatable :: all_nodes
 
-   Integer, Dimension(:)  , Allocatable :: globnodes
-   Real(8), Dimension(:)  , Allocatable :: Z
-   Real(8), Dimension(:)  , Allocatable :: R
+   
+   
+   
 
    integer              :: n_timer, n_timer_o, time, time_in_seconds, counter_print
 
@@ -272,7 +268,7 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
 
      xERROR_NR          = 1.D+0*ERROR_NR
      TL                 = TLp
-     Pressure_Bubble    = Pressure_Bubbleo
+
      WRITE(*,*) 'xF=', xF
    ELSE
      xNITER = NITER
@@ -312,7 +308,7 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
                         FLAG_NR='NRP'
                       ENDIF CHECK_EMERGENCY
      IF (MNR_FAILED) FLAG_NR='NRP'
-     if (AfterRemesh_counter .eq. 1) FLAG_NR='NRP' 
+     ! if (AfterRemesh_counter .eq. 1) FLAG_NR='NRP' 
 
      
      ! INITIALIZE LINEAR SYSTEM'S MATRICES & VECTORS
@@ -334,19 +330,19 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
   
       ! print*, bubble1%pressure
       ! pause
-     !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-     !$OMP& DEFAULT (SHARED)&
-     !$OMP& PRIVATE (IEL)
+    !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+    !$OMP& DEFAULT (SHARED)&
+    !$OMP& PRIVATE (IEL)
       DO IEL = 1, NEL_2d
        CALL FLOW_EQUATIONS(IEL, FLAG_NR)
       ENDDO
-     !$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
      
 
      
-      call applyBCs_and_solveExtraConstraints( FLAG_NR, Ah_f, Be_f, Pressure_Bubble )
-     
+      call applyBCs_and_solveExtraConstraints( FLAG_NR )
 
+    
      ! CALCULATE RESIDUAL NORM
      RES_NORM = DOT_PRODUCT(B_f,B_f)+DOT_PRODUCT(Be_f,Be_f)
      RES_NORM = DSQRT(RES_NORM)
@@ -355,30 +351,31 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
      ! print *, DOT_PRODUCT(Be_f,Be_f)
      jj=1
      kk=0
-     do ii = 1, size(B_f)
-        if (jj .gt. NEQ_f) jj=1
-        
-        if (jj .eq. 1) then
-          kk=kk+1
-          ! print*,'global_node=', kk
-        endif
-        
-        if ( getVariableName(jj) == 'Vr' ) then
-        print*,'global_node=', kk
-        print*, ' ' 
-        print*,'(X,Y) =', Xm(kk), Ym(kk) 
-        print*, ' ' 
-        print*, 'variable','     ', 'residual' 
-        print*, getVariableName(jj), '     ',B_f(ii) 
-        print*, ' ' 
-        print*, ' ' 
-        print*, ' //////////////////////////////////////////////////////// ' 
-        if ( abs(B_f(ii)) .gt. 1.d+2) then 
-        pause
-      endif
-        endif
-        jj=jj+1
-     enddo
+     ! do ii = 1, size(B_f)
+       !    if (jj .gt. NEQ_f) jj=1
+          
+       !    if (jj .eq. 1) then
+       !      kk=kk+1
+       !      ! print*,'global_node=', kk
+       !    endif
+          
+       !    ! if ( getVariableName(jj) == 'P' ) then
+       !      print*,'global_node=', kk
+       !      print*, ' ' 
+       !      print*,'(X,Y) =', Xm(kk), Ym(kk) 
+       !      print*, ' ' 
+       !      print*, 'variable','     ', 'residual' 
+       !      print*, getVariableName(jj), '     ',B_f(ii) 
+       !      print*, ' ' 
+       !      print*, ' ' 
+       !      print*, ' ' 
+       !      print*, ' //////////////////////////////////////////////////////// ' 
+       !      pause
+       !      ! if ( abs(B_f(ii)) .gt. 1.d+2) then 
+       !      ! endif
+       !    ! endif
+       !    jj=jj+1
+     ! enddo
      ! ----------------------------------------------------------------------
      !    LU DECOMPOSITION
      ! ----------------------------------------------------------------------
@@ -404,73 +401,85 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
      !--------------------------------------------------------------
      !    CALCULATE Sa_f = A_f(-1).Ac_f
      !--------------------------------------------------------------
-     PHASE_f     = 33  ! ONLY SOLUTION
-     IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
-     NRHS_f      = Nex_f
+     ! PHASE_f     = 33  ! ONLY SOLUTION
+     ! IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
+     ! NRHS_f      = Nex_f
 
 
-     CALL PARDISO&
-     (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
-     IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Ac_f, Sa_f, ERROR_f)
+     ! CALL PARDISO&
+     ! (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
+     ! IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Ac_f, Sa_f, ERROR_f)
      
 
      !--------------------------------------------------------------
      !    CALCULATE Sb_f = A_f(-1).B_f
      !--------------------------------------------------------------
-     PHASE_f     = 33  ! ONLY SOLUTION
-     IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
-     NRHS_f      = 1
+     ! PHASE_f     = 33  ! ONLY SOLUTION
+     ! IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
+     ! NRHS_f      = 1
 
-     CALL PARDISO&
-     (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
-     IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, B_f, Sb_f, ERROR_f)
+     ! CALL PARDISO&
+     ! (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
+     ! IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, B_f, Sb_f, ERROR_f)
      
      !--------------------------------------------------------------      
      !    SOLVE INTERMEDIATE SYSTEM Ai_f.Se_f = Bi_f
      !--------------------------------------------------------------
-     DO I = 1, SIZE(Ai_f,1)
-       DO J = 1, SIZE(Ai_f,2)
-         Ai_f(I,J) = DOT_PRODUCT(Ar_f(I,:),Sa_f(:,J)) - Ah_f(I,J)
-       ENDDO
-     ENDDO
+     ! DO I = 1, SIZE(Ai_f,1)
+     !   DO J = 1, SIZE(Ai_f,2)
+     !     Ai_f(I,J) = DOT_PRODUCT(Ar_f(I,:),Sa_f(:,J)) - Ah_f(I,J)
+     !   ENDDO
+     ! ENDDO
      
 
-     DO I = 1, SIZE(Bi_f)
-       Bi_f(I) = DOT_PRODUCT(Ar_f(I,:),Sb_f) - Be_f(I)
-     ENDDO
+     ! DO I = 1, SIZE(Bi_f)
+     !   Bi_f(I) = DOT_PRODUCT(Ar_f(I,:),Sb_f) - Be_f(I)
+     ! ENDDO
      
      N_dense = Nex_f
 
      ! PERFORM LU DECOMPOSITION AND CALCULATE CONDITIONING NUMBER
-     CALL DGETRF( N_dense, N_dense, Ai_f, N_dense, IPVT, INFO )
-     IF (INFO.NE.0) PRINT*, '[Error] NEWTON_RAPSHON_f / Dense matrix is singular to working precision'
-     IF (INFO.NE.0) STOP
+     ! CALL DGETRF( N_dense, N_dense, Ai_f, N_dense, IPVT, INFO )
+     ! IF (INFO.NE.0) PRINT*, '[Error] NEWTON_RAPSHON_f / Dense matrix is singular to working precision'
+     ! IF (INFO.NE.0) STOP
 
      ! PERFORM BACK-SUBSTITUTION
-     CALL DGETRS( 'N', N_dense, 1, Ai_f, N_dense, IPVT, Bi_f, N_dense, INFO )
+     ! CALL DGETRS( 'N', N_dense, 1, Ai_f, N_dense, IPVT, Bi_f, N_dense, INFO )
      
      ! CORRECTION VECTOR
-     Se_f = Bi_f
+     ! Se_f = Bi_f
      
       
      !-------------------------------------------------------------
      !    CALCULATE WHOLE SOLUTION
      !-------------------------------------------------------------
-     DO I = 1, SIZE(Bw_f)
-       Bw_f(I) = B_f(I) - DOT_PRODUCT(Ac_f(I,:),Se_f)
-     ENDDO
+     ! DO I = 1, SIZE(Bw_f)
+     !   Bw_f(I) = B_f(I) - DOT_PRODUCT(Ac_f(I,:),Se_f)
+     ! ENDDO
 
-     PHASE_f     = 33  ! ONLY SOLUTION
-     IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
+     ! PHASE_f     = 33  ! ONLY SOLUTION
+     ! IPARM_f(8)  = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
+
+    PHASE_f    = 33  ! ONLY SOLUTION
+    IPARM_f(8) = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
+
+    !Solve for S_f = A_f(-1).Bw_f
+    IF(NEX_f == 0)THEN
+      CALL PARDISO(PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
+                   IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, B_f, S_f, ERROR_f)
+    ELSE
+      CALL PARDISO(PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
+                   IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Bw_f, S_f, ERROR_f)
+    END IF
 
      ! CALL PARDISO&
      ! (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
      ! IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Bw_f, S_f, ERROR_f)
 
      
-     DO I = 1, SIZE(S_f)
-       S_f(I) = Sb_f(I) - DOT_PRODUCT(Sa_f(I,:),Se_f)
-     ENDDO
+     ! DO I = 1, SIZE(S_f)
+     !   S_f(I) = Sb_f(I) - DOT_PRODUCT(Sa_f(I,:),Se_f)
+     ! ENDDO
      
       n_timer         = time()
       time_in_seconds = n_timer - n_timer_o
@@ -502,33 +511,23 @@ SUBROUTINE NEWTON_RAPSHON_f(ReallocateForRemesh)
      ENDDO
      
      
-      Pressure_Bubble    = Pressure_Bubble     - xF * Se_f(1)
-      call Bubble1%setPressure(Pressure_Bubble)
 
             
       filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 
-      title = replace("Bubble_Pressure_1 = *", "*", toStr(Pressure_Bubble))
+      
+      title = replace("Solution_*", "*", toStr(iter_f))
 
       zone     = toStr(ITER_f)
 
       call WriteTecplotFile(filename, title, zone, TL, NM_MESH)
+      
 
    ENDDO LOOP_NEWTON_RAPSHON_f
 
-   call Bubble1%setPressure(Pressure_Bubble)
+
    ! call Bubble1%setMaxRcoordinateOfInterfaceAndLogicalOperator(StructMeshOnlyInTheFront, TL)
 
-   StructMeshOnlyInTheFront = .false.
-   do k = 1, size(Bubble1%nodes)
-        kk = Bubble1%nodes(k)
-            if (TL(kk, getVariableId("R")) .gt. 1.15d0) then 
-                print*, 'global node and R coordinate =',kk, TL(kk, getVariableId("R"))
-                StructMeshOnlyInTheFront = .true.
-                 print*, StructMeshOnlyInTheFront
-                exit
-            endif
-        enddo
-
+   
    ! If convergence is achieved, remove iteration_*.plt
    call execute_command_line("rm -f Iteration_*.plt")
     
@@ -640,130 +639,145 @@ END SUBROUTINE FLOW_EQUATIONS
 SUBROUTINE CHECK_CONVERGENCE&
 (ITER, MITER, FLAG_NR, CCL, FoM, RSUM_NEW, RSUM_OLD, B, Be, IDIM_B, IDIM_Be,&
        RES_NRM, LMSG, MNR_FAILED, Res_Norm_First_Iteration, time_in_seconds )
+    
+    use check_for_floating_point_exceptions
+    USE NRAPSHON_MODULE,         only: ERROR_NR, NITER
+    use TIME_INTEGRATION,        only: TIME
+    IMPLICIT NONE
 
-   USE NRAPSHON_MODULE,         only: ERROR_NR, NITER
-   use TIME_INTEGRATION,        only: TIME
-   IMPLICIT NONE
+    ! ARGUMENTS
+    LOGICAL,          INTENT(INOUT) :: LMSG, MNR_FAILED
+    INTEGER,          INTENT(IN)    :: ITER, MITER
+    CHARACTER(len=3), INTENT(INOUT) :: FLAG_NR
+    CHARACTER(len=1), INTENT(OUT)   :: CCL
+    CHARACTER(len=1), INTENT(IN)    :: FoM
+    REAL(8),          INTENT(OUT)   :: RSUM_NEW
+    REAL(8),          INTENT(INOUT) :: RSUM_OLD, RES_NRM, Res_Norm_First_Iteration
 
-   ! ARGUMENTS
-   LOGICAL,          INTENT(INOUT) :: LMSG, MNR_FAILED
-   INTEGER,          INTENT(IN)    :: ITER, MITER
-   CHARACTER(len=3), INTENT(INOUT) :: FLAG_NR
-   CHARACTER(len=1), INTENT(OUT)   :: CCL
-   CHARACTER(len=1), INTENT(IN)    :: FoM
-   REAL(8),          INTENT(OUT)   :: RSUM_NEW
-   REAL(8),          INTENT(INOUT) :: RSUM_OLD, RES_NRM, Res_Norm_First_Iteration
-
-   INTEGER,                     INTENT(IN) :: IDIM_B, IDIM_Be
-   REAL(8), DIMENSION(IDIM_B),  INTENT(IN) :: B
-   REAL(8), DIMENSION(IDIM_Be), INTENT(IN) :: Be
-   INTEGER   ,                  INTENT(IN) :: time_in_seconds
+    INTEGER,                     INTENT(IN) :: IDIM_B, IDIM_Be
+    REAL(8), DIMENSION(IDIM_B),  INTENT(IN) :: B
+    REAL(8), DIMENSION(IDIM_Be), INTENT(IN) :: Be
+    INTEGER   ,                  INTENT(IN) :: time_in_seconds
 
 
-   ! LOCAL VARIABLES
-   REAL(8)  :: ERROR_NEW
-   INTEGER  :: I, IJ
-   real(8), PARAMETER  :: Weak_Criterion_MNR   = 1.d-3
-   real(8), PARAMETER  :: Strong_Criterion_MNR = 1.d-6
-   real(8)  :: Criterion_MNR
-   LMSG = .FALSE.
+    ! LOCAL VARIABLES
+    REAL(8)  :: ERROR_NEW
+    INTEGER  :: I, IJ
+    
+    
+    
+    LMSG = .FALSE.
 
-   CCL = 'N'
-   
+    CCL = 'N'
+    
 
-   RSUM_NEW  = DSQRT(DOT_PRODUCT(B,B)+DOT_PRODUCT(Be,Be))
-   ERROR_NEW = MAX(MAXVAL(DABS(B)),MAXVAL(DABS(Be)))
-   If (ITER==1)   Res_Norm_First_Iteration = RSUM_NEW
-   Criterion_MNR = Weak_Criterion_MNR
-   If (TIME.GT.10.89d0) Criterion_MNR = Strong_Criterion_MNR
-   IF (RSUM_NEW.NE.RSUM_NEW) THEN
-     WRITE(*,*) 'NaN ENCOUNTERED, GENERAL STOP'
-     LMSG = .TRUE.
-     RETURN
-   ENDIF
+    
+    RSUM_NEW  = DSQRT(DOT_PRODUCT(B,B)+DOT_PRODUCT(Be,Be))
+    
+    ERROR_NEW = MAX(MAXVAL(DABS(B)),MAXVAL(DABS(Be)))
+    
+    If (ITER==1)   Res_Norm_First_Iteration = RSUM_NEW
+    
+    
+    ! call check_fp_exceptions(RSUM_NEW, "RSUM_NEW")
+    ! call check_fp_exceptions(RSUM_OLD, "RSUM_OLD")
+    ! call check_fp_exceptions(RES_NRM, "RES_NRM")
+    ! call check_fp_exceptions(Res_Norm_First_Iteration, "Res_Norm_First_Iteration")
+    ! call check_fp_exceptions(B, "B")
+    ! call check_fp_exceptions(Be, "Be")
+    ! call check_fp_exceptions(ERROR_NEW, "ERROR_NEW")
+    
+    
+
+    IF (RSUM_NEW.NE.RSUM_NEW) THEN
+        WRITE(*,*) 'NaN ENCOUNTERED, GENERAL STOP'
+        LMSG = .TRUE.
+        RETURN
+    ENDIF
    
    
    ! SELECT AMONG FULL AND MODIFIED NEWTON-RAPHSON
-   KIND_OF_NEWTON_RAPHSON: SELECT CASE(FLAG_NR)
-   
-     CASE('NRP')
-   ! ---------------------------------------------------------------------
-     IF( RSUM_NEW .LT. 1.0D-1 )THEN
+    KIND_OF_NEWTON_RAPHSON: SELECT CASE(FLAG_NR)
 
-       IF( RSUM_NEW .GT. ERROR_NR ) THEN
-         FLAG_NR = 'MNR'
-       ELSE
-         FLAG_NR = 'NRP'
-       ENDIF
+        CASE('NRP')
 
-     ELSE
+            IF( RSUM_NEW .LT. 1.0D-1 )THEN
 
-       FLAG_NR = 'NRP'
+                IF( RSUM_NEW .GT. ERROR_NR ) THEN
+                    FLAG_NR = 'MNR'
+                ELSE
+                    FLAG_NR = 'NRP'
+                ENDIF
 
-     ENDIF
+            ELSE
 
+                FLAG_NR = 'NRP'
 
-     WRITE(*, 50)ITER, time_in_seconds
-     WRITE(*, 51)RES_NRM, RSUM_NEW
-    
-      
-     CASE('MNR')
-   ! ---------------------------------------------------------------------
-     IF( RSUM_NEW .GE. 1.0D-2 )THEN
-
-       FLAG_NR = 'NRP'
-       WRITE(*, 52)ITER, time_in_seconds
-       WRITE(*, 51)RES_NRM, RSUM_NEW
-       MNR_FAILED = .TRUE.
-       CCL = 'Y'
-       RETURN
-      
-     ELSE
-       IF(RSUM_NEW/RSUM_OLD .GE.0.5D0)THEN
-         MNR_FAILED = .TRUE.
-         FLAG_NR = 'NRP'
-       ELSE
-         FLAG_NR = 'MNR'
-       ENDIF
-
-     ENDIF
-         
-     IF (( RSUM_NEW .LE. ERROR_NR ).AND.(Res_Norm_First_Iteration.GT.1.d-3)) THEN
-       FLAG_NR = 'NRP'
-     ENDIF
-
-     IF( (NITER - 7) .LT. ITER ) MNR_FAILED = .TRUE.
-     WRITE(*, 52)ITER, time_in_seconds
-     WRITE(*, 51)RES_NRM, RSUM_NEW
-     
-     
-     CASE DEFAULT
-     WRITE(*,*)' INCORRECT CHOICE OF NEWTON RAPHSON FLAG '
+            ENDIF
 
 
-     END SELECT KIND_OF_NEWTON_RAPHSON
+            WRITE(*, 50)ITER, time_in_seconds
+            WRITE(*, 51)RES_NRM, RSUM_NEW
+
+
+        CASE('MNR')
+
+            IF( RSUM_NEW .GE. 1.0D-2 )THEN
+
+                FLAG_NR = 'NRP'
+                WRITE(*, 52)ITER, time_in_seconds
+                WRITE(*, 51)RES_NRM, RSUM_NEW
+                MNR_FAILED = .TRUE.
+                CCL = 'Y'
+                RETURN
+
+            ELSE
+                IF(RSUM_NEW/RSUM_OLD .GE.0.5D0)THEN
+                    MNR_FAILED = .TRUE.
+                    FLAG_NR = 'NRP'
+                ELSE
+                    FLAG_NR = 'MNR'
+                ENDIF
+
+            ENDIF
+               
+                IF (( RSUM_NEW .LE. ERROR_NR ).AND.(Res_Norm_First_Iteration.GT.1.d-3)) THEN
+                    FLAG_NR = 'NRP'
+                ENDIF
+
+            IF( (NITER - 7) .LT. ITER ) MNR_FAILED = .TRUE.
+            
+            WRITE(*, 52)ITER, time_in_seconds
+            WRITE(*, 51)RES_NRM, RSUM_NEW
+
+
+        CASE DEFAULT
+            WRITE(*,*)' INCORRECT CHOICE OF NEWTON RAPHSON FLAG '
+
+
+    END SELECT KIND_OF_NEWTON_RAPHSON
      
       
     ! ONLY FULL NEWTON RAPHSON 
-    ! FLAG_NR = 'NRP'
+    FLAG_NR = 'NRP'
 
 
-   IF( RSUM_NEW .GT. 5.0D+9 )THEN
-     WRITE(*,*)'PROGRAM UNABLE TO CONVERGE'
-     WRITE(*,*)'TOO LARGE NORMA !!!'
-     WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
-     LMSG = .TRUE.
-     RETURN
-   ENDIF
+    IF( RSUM_NEW .GT. 5.0D+9 )THEN
+        WRITE(*,*)'PROGRAM UNABLE TO CONVERGE'
+        WRITE(*,*)'TOO LARGE NORMA !!!'
+        WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
+        LMSG = .TRUE.
+        RETURN
+    ENDIF
 
 
-   IF( ITER .GT. MITER )THEN
-     WRITE(*,*)'PROGRAM UNABLE TO CONVERGE'
-     WRITE(*,*)'TOO MANY ITERATIONS !!!'
-     WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
-     LMSG = .TRUE.
-     RETURN
-   ENDIF
+    IF( ITER .GT. MITER )THEN
+        WRITE(*,*)'PROGRAM UNABLE TO CONVERGE'
+        WRITE(*,*)'TOO MANY ITERATIONS !!!'
+        WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
+        LMSG = .TRUE.
+        RETURN
+    ENDIF
      
 
    RSUM_OLD = RSUM_NEW
@@ -893,7 +907,7 @@ END SUBROUTINE BASIS_2d
 
 SUBROUTINE UPDATE_SOLUTION( INCREMENT )
 
-   USE PHYSICAL_MODULE,  only: Pressure_Bubble, Pressure_Bubbleo 
+
 
 
    USE GLOBAL_ARRAYS_MODULE
@@ -925,7 +939,7 @@ SUBROUTINE UPDATE_SOLUTION( INCREMENT )
  
   endif 
 
-  Pressure_Bubbleo = Pressure_Bubble
+
 
 END SUBROUTINE UPDATE_SOLUTION
 

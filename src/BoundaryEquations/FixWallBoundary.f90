@@ -5,7 +5,7 @@ Module FixWallBoundary
     Use DirichletBoundaries,         only: ApplyDirichletAtNode_
     use boundary_enumeration_module, only: getBoundaryNodesOfWholeBoundary
     use MESH_MODULE, only: Xm, Ym
-    use physical_module, only: Rtank
+    ! use physical_module, only: Rtank
     
     private 
 
@@ -47,7 +47,7 @@ Module FixWallBoundary
 
         this%maximumRcoord = maxval(Ym(this%nodes))
 
-        Rtank = this%maximumRcoord
+        ! Rtank = this%maximumRcoord
 
     End Function NewFixWall
 
@@ -78,6 +78,9 @@ Module FixWallBoundary
             call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
             call ApplyDirichletAtNode_(node, "Z", Ksi(node), FlagNr )
             call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
+
+            
+            if ( (abs( Ksi(node) ) .lt. 1.d-3) .and. (Eta(node) .lt. 1d-3) ) call ApplyDirichletAtNode_(node, "P", 0.d0, FlagNr )
         end do 
 
     End Subroutine applyBoundaryConditions

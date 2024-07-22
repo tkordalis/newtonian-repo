@@ -29,37 +29,9 @@ import SALOMEDS
 
 
 # Domain Construction
-
-Height_needle = 5
-# Radius_needle = 1.31
-Radius_needle = 1.448
-
-Needle_thickness = Radius_needle-1.0
-Needle_thickness08 = 0.95*Needle_thickness
-
-Height_tank = 20
-Height_tank = Height_tank + Height_needle
-Radius_tank = 10
-
-dR_ref = Needle_thickness08
-dH_ref = 4
-
+cavity_edge = 1
 
 h_s = 5e-05
 
-NumSegmentsOnInflatedBubble = 5
-Main_maxSize_element = 10	
-Main_minSize_element = 0.8
+NumSegmentsOnCavityEdge = 64
 
-edgeSizeOnInflatedBubble = (Radius_needle-Needle_thickness)/NumSegmentsOnInflatedBubble
-
-NumSegmentsOnSymmetry = int(dR_ref/edgeSizeOnInflatedBubble)
-
-startLengthOnSurroundings =   edgeSizeOnInflatedBubble
-# endLengthOnSurroundings   =   edgeSizeOnInflatedBubble
-endLengthOnSurroundings   = edgeSizeOnInflatedBubble
-
-minSquareElementLength = 4*startLengthOnSurroundings
-maxSquareElementLength = 4*startLengthOnSurroundings
-# minSquareElementLength = 8*startLengthOnSurroundings
-# maxSquareElementLength = 8*startLengthOnSurroundings
