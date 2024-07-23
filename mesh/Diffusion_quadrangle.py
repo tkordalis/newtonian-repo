@@ -87,7 +87,7 @@ Number_of_Segments_1 = Regular_1D.NumberOfSegments(NumSegmentsOnCavityEdge)
 Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 isDone = Mesh_1.Compute()
 
-# isDone = Mesh_1.SplitQuadObject( Mesh_1, 2 )
+isDone = Mesh_1.SplitQuadObject( Mesh_1, 2 )
 # isDone = Mesh_1.QuadTo4Tri()
 
 

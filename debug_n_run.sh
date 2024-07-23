@@ -45,6 +45,7 @@ rm -f nohup.out
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
 							./src/InitializeTypes.f90\
+							./src/former_external_subroutines.f90\
                      Fem2D_prg.f90            \
 	             $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++
  

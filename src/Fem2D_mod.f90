@@ -462,6 +462,19 @@ End Module Elements_Module
     REAL(8)            :: ERR_nr
     CHARACTER(LEN=3)   :: FLAG_NR = 'NRP'
 
+    contains
+    REAL(8) FUNCTION F_DX ( X )
+        IMPLICIT NONE
+
+        REAL(8), INTENT(IN)  :: X
+        REAL(8) :: EP_RES = 1.0D-9
+
+
+        F_DX = EP_RES*DMAX1(1.0D0,DABS(X))*SIGN(1.0D0,X)
+
+    END FUNCTION F_DX
+
+
   END MODULE NRAPSHON_MODULE
     
 
@@ -2206,6 +2219,66 @@ module basis_calculations
     Hugn  = DSQRT(velocity_z**2+velocity_r**2)/(Dummy + 1.d-8 )
 
   end subroutine Hugn_calculation
+
+      SUBROUTINE BASIS_2d&
+        ( IG, X_loc, Y_loc, BFN_2d, DFDC_2d, DFDE_2d, XX, DXDC, DXDE, YY, DYDC,&
+        DYDE, CJAC, AJAC, DFDX, DFDY, NGAUSS )
+
+        USE ELEMENTS_MODULE, only: NBF_2d
+
+        IMPLICIT NONE
+        ! ARGUMENTS
+        INTEGER, INTENT(IN)                            :: IG, NGAUSS
+        REAL(8), INTENT(IN), DIMENSION(NBF_2d)         :: X_loc, Y_loc
+        REAL(8), INTENT(IN), DIMENSION(NBF_2d, NGAUSS) :: BFN_2d, DFDC_2d, DFDE_2d
+
+        REAL(8), INTENT(INOUT) :: XX, DXDC, DXDE
+        REAL(8), INTENT(INOUT) :: YY, DYDC, DYDE
+        REAL(8), INTENT(INOUT) :: CJAC, AJAC
+
+        REAL(8), INTENT(INOUT), DIMENSION(NBF_2d) :: DFDX, DFDY
+
+        ! LOCAL VARIABLES
+        INTEGER :: I
+        REAL(8) :: X,  Y
+        REAL(8) :: Cx, Cy
+        REAL(8) :: Ex, Ey
+
+
+        ! CALCULATE PARTIAL DERIVATIVES OF TRANSFORMATION
+        ! AT A POINT C,E IN NELEM
+
+        XX = 0.D0 ; DXDC = 0.D0 ; DXDE = 0.D0
+
+        DO I = 1, NBF_2d
+            X    = X_loc(I)
+            XX   = XX   +  BFN_2d(I,IG)*X
+            DXDC = DXDC + DFDC_2d(I,IG)*X
+            DXDE = DXDE + DFDE_2d(I,IG)*X
+        ENDDO
+
+
+        YY = 0.D0 ; DYDC = 0.D0 ; DYDE = 0.D0
+
+        DO I = 1, NBF_2d
+            Y    = Y_loc(I)
+            YY   = YY   +  BFN_2d(I,IG)*Y
+            DYDC = DYDC + DFDC_2d(I,IG)*Y
+            DYDE = DYDE + DFDE_2d(I,IG)*Y
+        ENDDO
+
+
+        ! CALCULATE JACOBIAN OF THE TRANSFORMATION
+        CJAC = DXDC*DYDE-DXDE*DYDC
+        AJAC = DABS(CJAC)
+
+        ! CALCULATE DERIVATIVES OF BASIS FUNCTIONS WRT X,Y COORDINATES
+        DO I = 1, NBF_2d
+            DFDX(I) = (DFDC_2d(I,IG)*DYDE-DFDE_2d(I,IG)*DYDC)/CJAC
+            DFDY(I) = (DFDE_2d(I,IG)*DXDC-DFDC_2d(I,IG)*DXDE)/CJAC
+        ENDDO
+
+    END SUBROUTINE BASIS_2d
 
 end module basis_calculations
 

@@ -1,6 +1,8 @@
 Module NumericalBoundaryJacobian
   
   use storage,    only: MATRIX_STORAGE_JACOBIAN
+  use NRAPSHON_MODULE, only: f_dx
+
 
   Interface CalculateJacobianContributionsOf
     Module Procedure NumericalJacobian_Simple
@@ -49,7 +51,8 @@ Module NumericalBoundaryJacobian
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       Integer                                                    :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
       Integer                                                    :: IROW, JCOL, ICOL, IAD, L
-      Real(8)                                                    :: F_DX, EPS_JAC
+      ! Real(8)                                                    :: F_DX, EPS_JAC
+      Real(8)                                                    :: EPS_JAC
       Integer, Dimension(NBF_2d)                                 :: NM
       Integer, Dimension(NBF_2d*NBF_2d)                          :: CSC
       Real(8), Dimension(NBF_2d,NEQ_f)                           :: dTEMP_RES
@@ -127,7 +130,8 @@ Module NumericalBoundaryJacobian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
     Integer                                         :: IROW, JCOL, ICOL, IAD, L
-    Real(8)                                         :: F_DX, EPS_JAC
+    ! Real(8)                                         :: F_DX, EPS_JAC
+    Real(8)                                         :: EPS_JAC
     Integer, Dimension(NBF_2d)                      :: NM
     Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
     Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
@@ -210,7 +214,7 @@ Module NumericalBoundaryJacobian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
     Integer                                         :: IROW, JCOL, ICOL, IAD, L
-    Real(8)                                         :: F_DX 
+    ! Real(8)                                         :: F_DX 
     Real(8)                                         :: eps
     Integer, Dimension(NBF_2d)                      :: NM
     Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
@@ -296,7 +300,7 @@ Module NumericalBoundaryJacobian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
     Integer                                         :: IROW, JCOL, ICOL, IAD, L
-    Real(8)                                         :: F_DX 
+    ! Real(8)                                         :: F_DX 
     Real(8)                                         :: eps
     Integer, Dimension(NBF_2d)                      :: NM
     Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
@@ -387,7 +391,8 @@ Module NumericalBoundaryJacobian
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       Integer                                                    :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
       Integer                                                    :: IROW, JCOL, ICOL, IAD, L
-      Real(8)                                                    :: F_DX, EPS_JAC
+      ! Real(8)                                                    :: F_DX, EPS_JAC
+      Real(8)                                                    :: EPS_JAC
       Integer, Dimension(NBF_2d)                                 :: NM
       Integer, Dimension(NBF_2d*NBF_2d)                          :: CSC
       Real(8), Dimension(NBF_2d,NEQ_f)                           :: dTEMP_RES
@@ -462,6 +467,8 @@ End Module NumericalBoundaryJacobian
  
 module constrainJacobians 
     use storage,    only: MATRIX_STORAGE_RESIDUAL
+    use NRAPSHON_MODULE, only: f_dx
+
     contains
 
       Subroutine jacobianOfConstrain(gid, nelem, ned, Constrain )
@@ -491,7 +498,8 @@ module constrainJacobians
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         INTEGER :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
         INTEGER :: IROW, JCOL, ICOL, IAD, L
-        REAL(8) :: F_DX, EPS_JAC
+        ! REAL(8) :: F_DX, EPS_JAC
+        REAL(8) :: EPS_JAC
            
         INTEGER, DIMENSION(NBF_2d)        :: NM
         INTEGER, DIMENSION(NBF_2d*NBF_2d) :: CSC

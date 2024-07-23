@@ -46,26 +46,20 @@ def returnIDofShape( x_tilt, TypeofShape ):
 	return idShape
 
 
-idTopWall = []
-TopWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idTopWall.append( returnIDofShape( [          h_s    ,     cavity_edge, 0] , "EDGE" ) )
-Wall_union = geompy.UnionIDs( TopWall, idTopWall )
+idMovingWall = []
+MovingWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
+idMovingWall.append( returnIDofShape( [          h_s    ,     cavity_edge, 0] , "EDGE" ) )
+Wall_union = geompy.UnionIDs( MovingWall, idMovingWall )
 
 
-idBottomWall = []
-BottomWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idBottomWall.append( returnIDofShape( [             cavity_edge,     h_s, 0] , "EDGE" ) )
-BottomWall_union = geompy.UnionIDs( BottomWall, idBottomWall )
+idFixWall = []
+FixWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
+idFixWall.append( returnIDofShape( [             cavity_edge,     h_s, 0] , "EDGE" ) )
+idFixWall.append( returnIDofShape( [             h_s,     0, 0] , "EDGE" ) )
+idFixWall.append( returnIDofShape( [             0,     h_s, 0] , "EDGE" ) )
+FixWall_union = geompy.UnionIDs( FixWall, idFixWall )
 
-idRightWall = []
-RightWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idRightWall.append( returnIDofShape( [             h_s,     0, 0] , "EDGE" ) )
-RightWall_union = geompy.UnionIDs( RightWall, idRightWall )
 
-idLeftWall = []
-LeftWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idLeftWall.append( returnIDofShape( [             0,     h_s, 0] , "EDGE" ) )
-LeftWall_union = geompy.UnionIDs( LeftWall, idLeftWall )
 
 
 
@@ -87,18 +81,14 @@ Number_of_Segments_1 = Regular_1D.NumberOfSegments(NumSegmentsOnCavityEdge)
 Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 isDone = Mesh_1.Compute()
 
-# isDone = Mesh_1.SplitQuadObject( Mesh_1, 2 )
+isDone = Mesh_1.SplitQuadObject( Mesh_1, 2 )
 # isDone = Mesh_1.QuadTo4Tri()
 
 
-BottomWall_1    				=  Mesh_1.GroupOnGeom( BottomWall 	,'BottomWall' 	 ,SMESH.EDGE )
-TopWall_1 		                =  Mesh_1.GroupOnGeom( TopWall     ,'TopWall'      ,SMESH.EDGE )
-LeftWall_1                      =  Mesh_1.GroupOnGeom( LeftWall     ,'LeftWall'      ,SMESH.EDGE )
-RightWall_1                      =  Mesh_1.GroupOnGeom( RightWall     ,'RightWall'      ,SMESH.EDGE )
+MovingWall_1 		                =  Mesh_1.GroupOnGeom( MovingWall     ,'MovingWall'      ,SMESH.EDGE )
+FixWall_1    				=  Mesh_1.GroupOnGeom( FixWall 	,'FixWall' 	 ,SMESH.EDGE )
 
 
-
-isDone = Mesh_1.Compute()
 
 
 try:

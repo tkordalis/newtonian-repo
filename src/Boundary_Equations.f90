@@ -1,6 +1,7 @@
 Module Boundary_Equations
     Use ArrayTools, Only: copyArrayToLocalValues
     use storage,    only: MATRIX_STORAGE_RESIDUAL
+    use basis_calculations, only: BASIS_2d
 
 
     Contains
@@ -331,6 +332,145 @@ Module Boundary_Equations
         end if
 
     End Subroutine Kinematic
+
+    Subroutine fixConcentrationFlux( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
+        Use VariableMapping
+        Use PHYSICAL_MODULE
+        Use CONTINUATION_MODULE,     Only: INCREMENT
+        Use ELEMENTS_MODULE,         Only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
+        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, BFN_E, &
+                                            getBasisFunctionsAtFace, &
+                                            getNormalVectorAtFace
+        Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
+        Use FLOW_ARRAYS_MODULE,      Only: B_f
+        Implicit None
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+        !  ARGUMENTS
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+        Integer,                           Intent(In)  :: NELEM, NED
+        Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)  :: TEMP_TL
+        Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out) :: TEMP_RES
+        Logical,                           Intent(In)  :: STORE
+        ! Real(8),                           intent(in)  :: gVar 
+
+    
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+            !  LOCAL VARIABLES
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+        ! FEM variables and their derivatives
+        Real(8)                              :: R, dRdx1, dRdx2 
+        Real(8)                              :: Z, dZdx1, dZdx2     
+        ! Basis Functions and their derivatives
+        Real(8), Dimension(:,:), Allocatable ::  bfn 
+        Real(8), Dimension(:,:), Allocatable :: dbfndx1
+        Real(8), Dimension(:,:), Allocatable :: dbfndx2 
+        ! Jacobian of Transformation and the reverse derivatives
+        Real(8)                              :: JacT
+        Real(8)                              :: dx1dR
+        Real(8)                              :: dx2dR
+        Real(8)                              :: dx1dZ
+        Real(8)                              :: dx2dZ
+        ! Normal Vector Components
+        Real(8)                              :: nr 
+        Real(8)                              :: nz 
+        Real(8)                              :: dS
+
+        Integer, Dimension(NBF_2d)           :: NM 
+        Real(8), Dimension(NEQ_f)            :: TERM_RES
+        ! Basis Function 
+        Real(8)                              :: BIFN, DBIR, DBIZ
+        Integer :: KK, II, JJ, LL, IW, I
+        Integer :: IROW, JCOL
+
+        !*********************************************************************
+        ! calculate the basis functions at the face of the triangle
+        !*********************************************************************
+        NM = NM_MESH(NELEM,:)
+        call getBasisFunctionsAtFace(ned, bfn, dbfndx1, dbfndx2)
+
+        !*********************************************************************
+        !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
+        !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
+        !*********************************************************************
+        TEMP_RES = 0.D0
+
+        !*********************************************************************
+        !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
+        !*********************************************************************
+        LOOP_GAUSS: DO KK = 1, NGAUSS_1d
+
+            !*********************************************************************
+            ! Calculate the variation of the the FEM variables
+            ! in the parent element
+            !*********************************************************************
+
+            R = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
+            Z = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
+            do ii = 1, nbf_2d
+                R     =  R    + TEMP_TL(ii, getVariableId("R")) *  bfn   (ii,kk)
+                dRdx1 = dRdx1 + TEMP_TL(ii, getVariableId("R")) * dbfndx1(ii,kk)
+                dRdx2 = dRdx2 + TEMP_TL(ii, getVariableId("R")) * dbfndx2(ii,kk)
+
+                Z     =  Z    + TEMP_TL(ii, getVariableId("Z")) *  bfn   (ii,kk)
+                dZdx1 = dZdx1 + TEMP_TL(ii, getVariableId("Z")) * dbfndx1(ii,kk)
+                dZdx2 = dZdx2 + TEMP_TL(ii, getVariableId("Z")) * dbfndx2(ii,kk)    
+            end do
+
+            !*********************************************************************
+            ! Calculate the Jacobian of Transformation
+            !*********************************************************************
+            JacT   = dRdx2 * dZdx1 - dRdx1 * dZdx2
+            dx1dZ  =   dRdx2/JacT
+            dx1dR  = - dZdx2/JacT
+            dx2dZ  = - dRdx1/JacT
+            dx2dR  =   dZdx1/JacT
+
+            !*********************************************************************
+            ! Calculate the normal vectors with respect to the face of the 
+            ! triangle
+            !*********************************************************************
+
+            call getNormalVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
+                                         ned, nr, nz, dS, normalize = .true.)
+            
+
+
+            ! if (kk==1 .and. store == .true.) then
+            !     print*, 'Bubble pressure=', gvar; pause
+            !     endif
+            !---------------------------------------------------------------------
+            !    ITERATE OVER WEIGHTING FUNCTIONS
+            !---------------------------------------------------------------------
+            loop_residuals_f:DO IW = 1, NBF_2d
+        
+                    BIFN =  bfn   (iw,kk)
+                    DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
+                    DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
+        
+                    ! -n * T = + P_bubble n + 1/Bo * (I-nn)\nabla \cdot \phi
+        
+                    TERM_RES     = 0.D0
+                    ! random fixx value of 1.1
+                    TERM_RES(getVariableId("C"))  = 5.d0*BIFN
+                    ! TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
+                    ! TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
+        
+                    !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
+                TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK) * dS
+                              
+            end do loop_residuals_f
+        end do LOOP_GAUSS
+      
+
+        !---------------------------------------------------------------------
+        !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
+        !---------------------------------------------------------------------
+        if ( STORE ) then 
+            NM = NM_f(NELEM,1:NBF_2d)
+            call MATRIX_STORAGE_RESIDUAL ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
+        end if               
+
+    end Subroutine fixConcentrationFlux
 
 ! ********************************************************************
 
