@@ -19,4 +19,5 @@ rm -f  ./BubbleVariables/Bubble2/*
 rm -f  *_genmod.f90
 rm -rf  .UnBounded.unv/
 rm -rf  .time_*.unv/
+rm -rf fort.*
 # ctags -R .

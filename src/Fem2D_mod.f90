@@ -78,7 +78,7 @@ MODULE PHYSICAL_MODULE
 
     Real(8), parameter       :: velocity_char       =  0.01d0  ! m/s
   
-    Real(8), parameter       :: viscosity = 0.01d0
+    Real(8), parameter       :: viscosity = 1.0d0
 
 
     !_______________________________________________________________________________

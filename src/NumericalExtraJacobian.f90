@@ -18,8 +18,8 @@ Module NumericalBoundaryJacobian
 
   Subroutine NumericalJacobian_Simple(Equation, NELEM, NED, TEMP_TL, TEMP_RES )
       !********************************************************************
-      ! NumJac : Computes the contributions of the Equation in the Jacobian
-      !          matrix.
+      ! Computes the interfacial contributions of the Equation in the
+      ! Jacobian matrix.
       !********************************************************************
       Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
       Use ENUMERATION_MODULE,   Only: NM_f
@@ -356,9 +356,9 @@ Module NumericalBoundaryJacobian
   end subroutine CalculateExtraJacobianContributionsOf_2_global
 
 
-  Subroutine NumJac( NELEM, NED, TEMP_TL, TEMP_RES, Equation )
+  Subroutine NumJacBulk( Equation, NELEM, TEMP_TL, TEMP_RES )
       !********************************************************************
-      ! NumJac : Computes the contributions of the Equation in the Jacobian
+      ! NumJacBulk : Computes the contributions of the Equation in the Jacobian
       !          matrix.
       !********************************************************************
       Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
@@ -369,17 +369,18 @@ Module NumericalBoundaryJacobian
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       !  ARGUMENTS
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-      Integer,                               Intent(In)          :: NELEM, NED
+      Integer,                               Intent(In)          :: NELEM
       Real(8), Dimension(NBF_2d,NEQ_f),      Intent(InOut)       :: TEMP_TL
       Real(8), Dimension(NBF_2d,NEQ_f),      Intent(In)          :: TEMP_RES
+
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       ! Interface Equation 
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
       Interface 
-        Subroutine Equation ( nelem, ned, temp_tl, temp_res, store )
+        Subroutine Equation ( nelem, temp_tl, temp_res, store )
           Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
-          Integer,                           Intent(In)           :: NELEM, NED
+          Integer,                           Intent(In)           :: NELEM
           Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: TEMP_TL
           Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: TEMP_RES
           LOGICAL,                           Intent(In)           :: STORE
@@ -415,7 +416,7 @@ Module NumericalBoundaryJacobian
           TEMP_TL(JW,JEQ) = TEMP_TL(JW,JEQ) + EPS_JAC
                
           !      RECOMPUTE RESIDUAL WITH A CHANGE IN VARIABLE
-          CALL EQUATION( NELEM, NED, TEMP_TL, dTEMP_RES, .FALSE. )
+          CALL EQUATION( NELEM, TEMP_TL, dTEMP_RES, .FALSE. )
                
           !      RETURN THE ORIGINAL VALUE TO THE UNKNOWN    
           TEMP_TL(JW,JEQ) = TEMP_TL(JW,JEQ) - EPS_JAC
@@ -434,7 +435,7 @@ Module NumericalBoundaryJacobian
       CALL MATRIX_STORAGE_JACOBIAN&
           (TEMP_JAC, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
                 CSC, NBF_2d*NBF_2d, A_f, NZ_f)
-  End Subroutine NumJac
+  End Subroutine NumJacBulk
 
 
   Subroutine updateJacobianExtraColumn(id, element, Contributions) 

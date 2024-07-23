@@ -138,7 +138,8 @@ module former_external_subroutines
             !$OMP& DEFAULT (SHARED)&
             !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
-                CALL FLOW_EQUATIONS(IEL, FLAG_NR)
+                CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
+                ! CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
             !$OMP END PARALLEL DO
 
@@ -432,6 +433,49 @@ module former_external_subroutines
     !-----------------------------------------------------------------------
 
 
+    SUBROUTINE CONCENTRATION_EQUATION(IEL, FLAG_NR)
+     
+       Use PHYSICAL_MODULE
+       Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
+       Use ENUMERATION_MODULE,          Only: NM_MESH
+       Use BOUNDARY_ENUMERATION_MODULE, Only: NBE
+       Use GLOBAL_ARRAYS_MODULE,        Only: TL
+       Use MESH_MODULE,                 Only: Xm, Ym, EPS_MESH
+       Use Boundary_Equations 
+       Use BulkEquations 
+       Use NumericalBoundaryJacobian
+       Implicit None
+       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+       !  ARGUMENTS
+       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+       Integer          :: IEL, ICH
+       Character(len=3) :: FLAG_NR
+       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+       !  LOCAL VARIABLES
+       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+       Integer :: INOD, II, IBND, NOD
+       Logical :: FLAG
+       Real(8) :: SGN, XX, YY
+       Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_TL
+       Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_RES
+       Integer                          :: face
+
+
+       ! COPY SOLUTION TO A LOCAL ARRAY
+       TEMP_TL = 0.D0
+       DO INOD = 1, NBF_2d
+         II = NM_MESH(IEL,INOD)
+         TEMP_TL(INOD,:) = TL(II,:)
+       ENDDO
+
+
+       CALL DOMI_RESIDUAL_f( IEL, TEMP_TL, TEMP_RES, .TRUE. )
+           
+       ! IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
+       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_f  ,IEL, TEMP_TL, TEMP_RES)
+     
+       
+    END SUBROUTINE CONCENTRATION_EQUATION
 
 
     !-----------------------------------------------------------------------
@@ -605,66 +649,7 @@ module former_external_subroutines
     !                   SUBROUTINE BASIS_2d
     !----------------------------------------------------------------------
           
-    SUBROUTINE BASIS_2d&
-        ( IG, X_loc, Y_loc, BFN_2d, DFDC_2d, DFDE_2d, XX, DXDC, DXDE, YY, DYDC,&
-        DYDE, CJAC, AJAC, DFDX, DFDY, NGAUSS )
 
-        USE ELEMENTS_MODULE, only: NBF_2d
-
-        IMPLICIT NONE
-        ! ARGUMENTS
-        INTEGER, INTENT(IN)                            :: IG, NGAUSS
-        REAL(8), INTENT(IN), DIMENSION(NBF_2d)         :: X_loc, Y_loc
-        REAL(8), INTENT(IN), DIMENSION(NBF_2d, NGAUSS) :: BFN_2d, DFDC_2d, DFDE_2d
-
-        REAL(8), INTENT(INOUT) :: XX, DXDC, DXDE
-        REAL(8), INTENT(INOUT) :: YY, DYDC, DYDE
-        REAL(8), INTENT(INOUT) :: CJAC, AJAC
-
-        REAL(8), INTENT(INOUT), DIMENSION(NBF_2d) :: DFDX, DFDY
-
-        ! LOCAL VARIABLES
-        INTEGER :: I
-        REAL(8) :: X,  Y
-        REAL(8) :: Cx, Cy
-        REAL(8) :: Ex, Ey
-
-
-        ! CALCULATE PARTIAL DERIVATIVES OF TRANSFORMATION
-        ! AT A POINT C,E IN NELEM
-
-        XX = 0.D0 ; DXDC = 0.D0 ; DXDE = 0.D0
-
-        DO I = 1, NBF_2d
-            X    = X_loc(I)
-            XX   = XX   +  BFN_2d(I,IG)*X
-            DXDC = DXDC + DFDC_2d(I,IG)*X
-            DXDE = DXDE + DFDE_2d(I,IG)*X
-        ENDDO
-
-
-        YY = 0.D0 ; DYDC = 0.D0 ; DYDE = 0.D0
-
-        DO I = 1, NBF_2d
-            Y    = Y_loc(I)
-            YY   = YY   +  BFN_2d(I,IG)*Y
-            DYDC = DYDC + DFDC_2d(I,IG)*Y
-            DYDE = DYDE + DFDE_2d(I,IG)*Y
-        ENDDO
-
-
-        ! CALCULATE JACOBIAN OF THE TRANSFORMATION
-        CJAC = DXDC*DYDE-DXDE*DYDC
-        AJAC = DABS(CJAC)
-
-        ! CALCULATE DERIVATIVES OF BASIS FUNCTIONS WRT X,Y COORDINATES
-        DO I = 1, NBF_2d
-            DFDX(I) = (DFDC_2d(I,IG)*DYDE-DFDE_2d(I,IG)*DYDC)/CJAC
-            DFDY(I) = (DFDE_2d(I,IG)*DXDC-DFDC_2d(I,IG)*DXDE)/CJAC
-        ENDDO
-
-
-    END SUBROUTINE BASIS_2d
 
 
      

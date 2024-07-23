@@ -159,6 +159,7 @@ PROGRAM FEM2D
       
       call fdate(dateNtime)
       print*, dateNtime
+      pause
 
     ENDDO LOOP_TIME_INTEGRATION
     
