@@ -333,7 +333,7 @@ Module Boundary_Equations
 
     End Subroutine Kinematic
 
-    Subroutine fixConcentrationFlux( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
+    Subroutine fixConcentrationFlux( NELEM, NED, TEMP_TL, TEMP_RES, STORE, value )
         Use VariableMapping
         Use PHYSICAL_MODULE
         Use CONTINUATION_MODULE,     Only: INCREMENT
@@ -343,6 +343,7 @@ Module Boundary_Equations
                                             getNormalVectorAtFace
         Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
         Use FLOW_ARRAYS_MODULE,      Only: B_f
+        use MESH_MODULE,            only: Xm, Ym
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         !  ARGUMENTS
@@ -351,6 +352,7 @@ Module Boundary_Equations
         Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)  :: TEMP_TL
         Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out) :: TEMP_RES
         Logical,                           Intent(In)  :: STORE
+        Real(8),                           Intent(In)  :: value
         ! Real(8),                           intent(in)  :: gVar 
 
     
@@ -407,13 +409,14 @@ Module Boundary_Equations
             R = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
             Z = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
             do ii = 1, nbf_2d
-                R     =  R    + TEMP_TL(ii, getVariableId("R")) *  bfn   (ii,kk)
-                dRdx1 = dRdx1 + TEMP_TL(ii, getVariableId("R")) * dbfndx1(ii,kk)
-                dRdx2 = dRdx2 + TEMP_TL(ii, getVariableId("R")) * dbfndx2(ii,kk)
+                Z     =  Z    + Xm( NM(ii) ) *  bfn   (ii,kk)
+                dZdx1 = dZdx1 + Xm( NM(ii) ) * dbfndx1(ii,kk)
+                dZdx2 = dZdx2 + Xm( NM(ii) ) * dbfndx2(ii,kk)    
+                
+                R     =  R    + Ym( NM(ii) ) *  bfn   (ii,kk)
+                dRdx1 = dRdx1 + Ym( NM(ii) ) * dbfndx1(ii,kk)
+                dRdx2 = dRdx2 + Ym( NM(ii) ) * dbfndx2(ii,kk)
 
-                Z     =  Z    + TEMP_TL(ii, getVariableId("Z")) *  bfn   (ii,kk)
-                dZdx1 = dZdx1 + TEMP_TL(ii, getVariableId("Z")) * dbfndx1(ii,kk)
-                dZdx2 = dZdx2 + TEMP_TL(ii, getVariableId("Z")) * dbfndx2(ii,kk)    
             end do
 
             !*********************************************************************
@@ -450,8 +453,7 @@ Module Boundary_Equations
                     ! -n * T = + P_bubble n + 1/Bo * (I-nn)\nabla \cdot \phi
         
                     TERM_RES     = 0.D0
-                    ! random fixx value of 1.1
-                    TERM_RES(getVariableId("C"))  = 5.d0*BIFN
+                    TERM_RES(getVariableId("C"))  = value*BIFN
                     ! TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
                     ! TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
         

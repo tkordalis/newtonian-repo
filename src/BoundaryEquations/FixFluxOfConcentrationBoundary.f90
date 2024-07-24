@@ -1,4 +1,4 @@
-Module FixConcentrationValueBoundary
+Module FixFluxOfConcentrationBoundary
     Use Boundary_Equations
     Use NumericalBoundaryJacobian
     Use ExtraEquations
@@ -9,27 +9,28 @@ Module FixConcentrationValueBoundary
     
     private 
 
-    public :: FixConcentrationValue, NewFixConcentrationValue
+    public :: FixFluxConcentrationValue, NewFixFluxConcentrationValue
 
-    Type FixConcentrationValue
+    Type FixFluxConcentrationValue
         ! Wall Properties
         
         Integer                            :: nelem 
         Integer, Dimension(:), Allocatable :: elements 
         Integer, Dimension(:), Allocatable :: faces
         Integer, Dimension(:), Allocatable :: nodes
-        Real(8)                            :: maximumRcoord
+        Real(8)                            :: fluxValueAtTheBoundary
         contains 
+            procedure :: setFluxValueAtTheBoundary
             procedure :: applyBoundaryConditions
             final     :: deconstructor
-    End Type FixConcentrationValue    
+    End Type FixFluxConcentrationValue    
 
 
     contains
 
-    Function NewFixConcentrationValue( elements, faces) Result(This)
+    Function NewFixFluxConcentrationValue( elements, faces) Result(This)
         Implicit None 
-        Type(FixConcentrationValue)                      :: This 
+        Type(FixFluxConcentrationValue)                      :: This 
         Integer, Dimension(:), Allocatable :: elements 
         Integer, Dimension(:), Allocatable :: faces 
 
@@ -45,23 +46,29 @@ Module FixConcentrationValueBoundary
 
         call getBoundaryNodesOfWholeBoundary( This%nelem, This%elements, This%faces, This%nodes ) 
 
-        this%maximumRcoord = maxval(Ym(this%nodes))
-
-        ! Rtank = this%maximumRcoord
-
-    End Function NewFixConcentrationValue
+    End Function NewFixFluxConcentrationValue
 
 
+    subroutine setFluxValueAtTheBoundary(this, value)
+        implicit none
+        Class(FixFluxConcentrationValue)  , Intent(InOut)         :: This 
+        Real(8),                        Intent(In)         :: value
 
-    Subroutine applyBoundaryConditions(This, value, FlagNr)
+
+        this%fluxValueAtTheBoundary = value
+    end subroutine setFluxValueAtTheBoundary
+
+
+
+
+    Subroutine applyBoundaryConditions(This, FlagNr)
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
 
         Implicit None 
-        Class(FixConcentrationValue)  , Intent(In)         :: This 
-        Real(8),          Intent(In)         :: value
+        Class(FixFluxConcentrationValue)  , Intent(In)         :: This 
         Character(len=3), Intent(In)         :: FlagNr
 
         Real(8), Dimension(:,:), Allocatable :: TL_
@@ -78,9 +85,9 @@ Module FixConcentrationValueBoundary
             face    =This%faces   (iel) 
 
             call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
-            call fixConcentrationFlux       (element, face, TL_, RES_1, .true.)
+            call fixConcentrationFlux       (element, face, TL_, RES_1, .true., this%fluxValueAtTheBoundary )
             if (FlagNR == "NRP") Then
-                call CalculateJacobianContributionsOf(fixConcentrationFlux      ,element, face, TL_, RES_1)
+                call CalculateJacobianContributionsOf(fixConcentrationFlux      ,element, face, TL_, RES_1, this%fluxValueAtTheBoundary )
             end if
         end do 
 
@@ -93,11 +100,11 @@ Module FixConcentrationValueBoundary
 
     Subroutine deconstructor(This) 
         Implicit None
-        Type(FixConcentrationValue) :: This
+        Type(FixFluxConcentrationValue) :: This
 
         If (Allocated(This%elements) ) Deallocate( This%elements)
         If (Allocated(This%faces)    ) Deallocate( This%faces   )
 
     End Subroutine deconstructor
 
-End Module FixConcentrationValueBoundary
+End Module FixFluxOfConcentrationBoundary

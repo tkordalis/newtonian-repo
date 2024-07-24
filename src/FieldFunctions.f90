@@ -276,4 +276,56 @@ contains
         enddo
     end function fromSgetStresses
 
+    function C10_C01_transientDiffusion_analytical(Xnode) Result(output)
+        Use VariableMapping, only: getVariableId
+        use TIME_INTEGRATION, only: time
+        use PHYSICAL_MODULE, only: pi
+        ! Use PHYSICAL_MODULE, only: WiN 
+        Implicit None
+        Real(8), Dimension(:), Intent(In) :: Xnode
+        Real(8), Dimension(:), Allocatable:: output
+        Integer                             :: nodtol_
+
+
+        Integer                             :: j, n
+        real(8)                             :: sum_terms
+
+        nodtol_ = size(Xnode,1)
+        Allocate( output (nodtol_) )
+
+       
+
+        do j = 1, nodtol_
+
+            sum_terms = 0.d0
+
+            sum_terms = sum ( [ ( sin(real(n)*pi*Xnode(j))/(real(n)*pi) * exp(-(real(n)*pi)**2*time), n=1,10 ) ] )
+
+            output(j) = 1.d0 - Xnode(j) - 2.d0*sum_terms
+
+            ! sum_terms = sum ( [ ( cos(real(n)*pi*Xnode(j))/((real(n)*pi)**2) * exp(-(real(n)*pi)**2*time), n=1,10 ) ] )
+
+            ! output(j) = time + 0.5d0*Xnode(j)**2 - Xnode(j) + 0.33333333d0 - 2.d0*sum_terms
+
+
+
+            ! SM(1,1) = Solution_(j, getVariableId("Srr"))
+            ! SM(1,2) = Solution_(j, getVariableId("Srz"))
+            ! SM(2,1) = Solution_(j, getVariableId("Srz"))
+            ! SM(2,2) = Solution_(j, getVariableId("Szz"))
+            ! SM(3,3) = Solution_(j, getVariableId("Stt"))
+
+
+            ! CM = matmul(SM,SM)
+
+            ! Stress_Tensor = (CM - unity_tensor)/WiN
+
+            ! output(j,1)  =  Stress_Tensor(1,1)
+            ! output(j,2)  =  Stress_Tensor(1,2)
+            ! output(j,3)  =  Stress_Tensor(2,2)
+            ! output(j,4)  =  Stress_Tensor(3,3)
+            
+        enddo
+    end function C10_C01_transientDiffusion_analytical
+
 End Module FieldFunctions

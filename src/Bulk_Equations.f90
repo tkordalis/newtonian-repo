@@ -17,9 +17,9 @@ Module BulkEquations
 
 
   !---------------------------------------------------------------------
-  !                  SUBROUTINE   DOMI_RESIDUAL_f
+  !                  SUBROUTINE   DOMI_RESIDUAL_fluid
   !---------------------------------------------------------------------
-Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
+Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    use check_for_floating_point_exceptions
    Use VariableMapping
    Use basis_calculations
@@ -101,8 +101,8 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
      TLo_loc(II,:) = TLo(JJ,:)
      TLb_loc(II,:) = TLb(JJ,:)
    ENDDO
-  
-   Gravity_Term = 0.d0
+
+    Gravity_Term = 0.d0
    Gravity_Term = Gravity_Term*ratio_of_pressures
 
     !---------------------------------------------------------------------   
@@ -131,6 +131,7 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
         ! Uelem = Uelem + SQRT( ( Uz_nodes_elem(II) )**2 &
         !                         + ( Ur_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
    enddo
+   
 
    
     !---------------------------------------------------------------------
@@ -312,93 +313,187 @@ Subroutine DOMI_RESIDUAL_f( NELEM, TEMP_TL, TEMP_RES, STORE )
     ENDIF
 
 
-END SUBROUTINE DOMI_RESIDUAL_f
+END SUBROUTINE DOMI_RESIDUAL_fluid
 
-!---------------------------------------------------------------------
-!                  SUBROUTINE   DOMI_JACOBIAN_f
-!---------------------------------------------------------------------
 
- Subroutine DOMI_JACOBIAN_f( NELEM, TEMP_TL, TEMP_RES )
-   Use PHYSICAL_MODULE 
-   Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
-   Use ENUMERATION_MODULE,   Only: NM_f
-   Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f
+
+Subroutine DOMI_RESIDUAL_chemSpecies( NELEM, TEMP_TL, TEMP_RES, STORE )
+   use check_for_floating_point_exceptions
+   Use VariableMapping
+   Use basis_calculations
+   Use SR_REPRESENTATION
+   Use CONTINUATION_MODULE,     Only: INCREMENT
+   Use PHYSICAL_MODULE
+   Use ELEMENTS_MODULE,         Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+   Use GAUSS_MODULE,            Only: WO_2d, NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+   Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
+   Use GLOBAL_ARRAYS_MODULE,    Only: TLo, TLb
+   Use FLOW_ARRAYS_MODULE,      Only: B_f
+   Use MESH_MODULE,             Only: Xm, Ym
+   Use TIME_INTEGRATION,        Only: Dt, TIME, DTo, dtb
    Implicit None
-   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
    !  ARGUMENTS
-   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-   Integer,                          Intent(In)    :: NELEM
-   Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_TL
-   Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_RES
-   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-   !  LOCAL VARIABLES
-   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-   Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-   Integer                                         :: IROW, JCOL, ICOL, IAD, L
-   Real(8)                                         :: F_DX, eps
-   Integer, Dimension(NBF_2d)                      :: NM
-   Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
+   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+   Integer,                           Intent(In)  :: NELEM
+   Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)  :: TEMP_TL
+   Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out) :: TEMP_RES
+   Logical,                           Intent(In)  :: STORE
+   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+   !  LOCAL VARIABLES  
+   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+   Integer  :: KK, II, JJ, IW
 
-   Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: JAC_
-   Real(8), Dimension(NBF_2d,NEQ_f)                :: dRES_
-   Real(8), Dimension(NBF_2d,NEQ_f)                ::  RES_
-   Real(8), Dimension(NBF_2d,NEQ_f)                ::  DER_
-   Real(8), Dimension(NBF_2d,NEQ_f)                ::  TL_
+   Real(8)  :: C, Vr ,Vz
 
-   Real(8)                                         :: tmp 
-   Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP
+   Real(8)  :: JacT
+   Real(8)  :: dCdR , dCdZ, dCdt
+   Real(8)  :: dCdRo , dCdZo
 
-   !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
-   !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
-   JAC_  = 0.D0
-   dRES_ = 0.D0
-
-   RES_     = TEMP_RES 
-   TL_      = TEMP_TL
+   Real(8)  :: Co
+   Real(8)  :: DCDM
    
-   !******************************************************************** 
-   !  Elemental Jacobian
-   ! ** Iterate over the Nodes of the Element
-   !    (the jacobian has contibutions from inside the element only)
-   ! ** Iterate over the Unknowns
-   ! ** Perturb the Unknown
-   ! ** Compute the Perturbed Residuals
-   ! ** Update the Value to the preexisted state.
-   ! ** Compute the Jacobian Contributions with finite differences
-   !******************************************************************** 
+   Real(8)  :: BIFN, DBIR, DBIZ, SBFN
+   Real(8)  :: E_TR, Helem, Uelem, Ha, Rmom, Zmom, Hugn, tlsme, tlsic, tlsce, taudc
+   
 
-   do jw = 1, nbf_2d
-     do jeq = 1, neq_f
-        
-       eps               = Perturb( temp_tl(jw,jeq) )
-       tl_(jw,jeq)       = tl_ (jw,jeq) + eps
-        
-       call domi_residual_f( nelem, tl_, dres_, .false. )
-        
-       tl_(jw,jeq)       = tl_(jw,jeq) - eps
-       der_              = (dres_ - res_ ) /eps
-       jac_ (:,jw,jeq,:) = der_
-        
-     end do
-   end do
+   Real(8), Dimension(NBF_2d)           :: Ksi_loc, Eta_loc, dBFNdZ, dBFNdR
+   
+   Integer, Dimension(NBF_2d)           :: NM 
+
+   
+   Real(8), Dimension(NEQ_f)            :: TERM_RES
+   Real(8), Dimension(NBF_2d)           :: BFN, DFDX, DFDY
+   Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc
+  
+   Real(8)                              :: X, dXdC, dXdE, Y, dYdC, dYdE, CJAC, AJAC
 
 
-   !  STORE THE ELEMENT INTEGRATION MATRIX IN THE GLOBAL MATRIX A
-   NM  = NM_f (NELEM,1:NBF_2d       )
-   CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
+    !---------------------------------------------------------------------
+    !  COPY X VECTOR TO LOCAL VECTOR
+    !---------------------------------------------------------------------
+   DO II = 1, NBF_2d
+     JJ = NM_MESH(NELEM,II)
+     
+     ! Coordinates of the nodes at the computational domain 
+     Ksi_loc(II) = Xm(JJ) 
+     Eta_loc(II) = Ym(JJ)
 
-   CALL MATRIX_STORAGE_JACOBIAN&
-   (JAC_, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
-    CSC, NBF_2d*NBF_2d, A_f, NZ_f)
+     TLo_loc(II,:) = TLo(JJ,:)
+     TLb_loc(II,:) = TLb(JJ,:)
+   ENDDO
+  
+   
+    !---------------------------------------------------------------------
+    !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
+    !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
+    !---------------------------------------------------------------------
+   TEMP_RES = 0.D0
 
-   !****************************************************************
-   !****************************************************************
+
+    !---------------------------------------------------------------------
+    !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
+    !---------------------------------------------------------------------
+   LOOP_GAUSS: DO KK = 1, NGAUSS_2d
+
+     BFN = BFN_2d(:,KK)
+
+     ! calculate the derivatives of basis functions with respect to physical coordinates at current timestep
+     call basis_spatial_derivatives( KK, Ksi_loc(:) , Eta_loc(:) , dBFNdZ , dBFNdR , JacT  )
+
+    
+     ! give TEMP_TL to the subroutine and take back the variable calculated at the current gauss point
+     ! along with the derivatives of the variable with respect to the physical coordinates i.e. dVrdr
+     ! call basis_interpolation_chainrule( Z_nodes_elem(:), KK, Ksi_loc(:), Eta_loc(:),  Z, dZdKsi, dZdEta )
+
+     ! call basis_interpolation_chainrule( R_nodes_elem(:), KK, Ksi_loc(:), Eta_loc(:),  R, dRdKsi, dRdEta )
+
+     
+     call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("C")) , KK, Ksi_loc(:), Eta_loc(:),  C , dCdZ , dCdR  )
+
+   
+
+     
+
+     ! ************************************************************************
+     ! Local variables and its ferivatives calculated at the previous timestep
+     ! ************************************************************************
+     call basis_interpolation_chainrule( TLo_loc(:,getVariableId("C")) , KK, Ksi_loc(:), Eta_loc(:),  Co , dCdZo , dCdRo  )
+
+             
+     dCdt = ( C - Co ) / dt
+    !---------------------------------------------------------------------     
+    !    DEFINE MATERIAL DERIVATIVES FOR MOMENTUM
+    !---------------------------------------------------------------------
+     ! dCdM  = dCdt  + Vr * dCdR   + Vz * dCdZ
+     dCdM  = dCdt
+     
+     ! dUrdM  = ReN*dUrdM
 
 
- End Subroutine DOMI_JACOBIAN_f
+    !---------------------------------------------------------------------
+    !    ITERATE OVER WEIGHTING FUNCTIONS
+    !---------------------------------------------------------------------
+    LOOP_RESIDUALS_f:DO IW = 1, NBF_2d
+    
+        BIFN = BFN   (IW)  ;  DBIZ = dBFNdZ(IW)  ;  DBIR = dBFNdR(IW)
+           
+   
+        TERM_RES                        = 0.d0
+        TERM_RES(getVariableId("C" ))  = dCdM*BIFN  +  dCdZ*DBIZ  +  dCdR*DBIR 
+    
+     
+    
+        ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
+        TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_2d(KK) * JacT
+    ENDDO LOOP_RESIDUALS_f
+         
+      
+
+
+    call check_fp_exceptions(dBFNdZ, "dBFNdZ")
+    call check_fp_exceptions(dBFNdR, "dBFNdR")
+    call check_fp_exceptions(JacT, "JacT")
+    ! call check_fp_exceptions(Z, "Z")
+    ! call check_fp_exceptions(dZdKsi, "dZdKsi")
+    ! call check_fp_exceptions(dZdEta, "dZdEta")
+    ! call check_fp_exceptions(R, "R")
+    ! call check_fp_exceptions(dRdKsi, "dRdKsi")
+    ! call check_fp_exceptions(dRdEta, "dRdEta")
+    call check_fp_exceptions(C, "C")
+    call check_fp_exceptions(dCdZ, "dCdZ")
+    call check_fp_exceptions(dCdR, "dCdR")
+    call check_fp_exceptions(Co, "Co")
+    call check_fp_exceptions(dCdZo, "dCdZo")
+    call check_fp_exceptions(dCdRo, "dCdRo")
+    call check_fp_exceptions(dCdt, "dCdt")
+    call check_fp_exceptions(dCdM, "dCdM")
+    call check_fp_exceptions(TEMP_RES, "TEMP_RES")
+    
 
 
 
+    ENDDO LOOP_GAUSS
+       
+    
+    !---------------------------------------------------------------------
+    !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
+    !---------------------------------------------------------------------
+    IF ( STORE ) THEN
+       
+        NM = NM_f(NELEM,1:NBF_2d)
+         
+        CALL MATRIX_STORAGE_RESIDUAL&
+        ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
+         
+    ENDIF
+
+
+END SUBROUTINE DOMI_RESIDUAL_chemSpecies
+
+!------------------------------------------------
+!                  extra jacobian
+!------------------------------------------------
 
 
 

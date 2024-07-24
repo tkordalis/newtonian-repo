@@ -34,11 +34,11 @@ Module VariableMapping
         Integer                      :: Vid 
 
         Select Case(Var)
-        Case('Vr' ) ; Vid = 1
-        Case('Vz' ) ; Vid = 2
-        Case('P'  ) ; Vid = 3
-        Case('Z'  ) ; Vid = 4
-        Case('R'  ) ; Vid = 5
+        Case('C' ) ; Vid = 1
+        ! Case('Vz' ) ; Vid = 2
+        ! Case('P'  ) ; Vid = 3
+        ! Case('Z'  ) ; Vid = 4
+        ! Case('R'  ) ; Vid = 5
         
         Case Default; Vid = -1
         End Select 
@@ -51,11 +51,11 @@ Module VariableMapping
 
 
         Select Case(vid)
-        Case(1)      ; Var = 'Vr' 
-        Case(2)      ; Var = 'Vz' 
-        Case(3)      ; Var = 'P'  
-        Case(4)      ; Var = 'Z'  
-        Case(5)      ; Var = 'R'  
+        Case(1)      ; Var = 'C' 
+        ! Case(2)      ; Var = 'Vz' 
+        ! Case(3)      ; Var = 'P'  
+        ! Case(4)      ; Var = 'Z'  
+        ! Case(5)      ; Var = 'R'  
         
         Case Default ; Var = ''
         End Select 
@@ -71,8 +71,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: g_grav    =  9.81d0           ! m/s2:  gravitational acceleration
     
 
-    Real(8), parameter       :: rho       = 1000.d0                          ! kg/m3: density of water
-    Real(8), parameter       :: length_char   =  1.d0
+    Real(8), parameter       :: rho       = 1000.d0           ! kg/m3: density of water
+    Real(8), parameter       :: length_char   =  1.d0         ! m
     
 
 
@@ -82,11 +82,15 @@ MODULE PHYSICAL_MODULE
 
 
     !_______________________________________________________________________________
+
+    Real(8), parameter       :: diffusivity = 1.0d-6  ! m2/s
+    !_______________________________________________________________________________
   
 
     Real(8), parameter       :: surface_tension = 0.073d0
     
-    Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
+    ! Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
+    Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
 
     !_______________________________________________________________________________
 
@@ -207,7 +211,7 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.05d0
+      Dt_constant = 0.01d0
   end subroutine set_DT
   
 
@@ -238,7 +242,7 @@ Module ELEMENTS_MODULE
  Integer, Parameter:: NED_2d = 3             ! NUMBER OF EDGES PER 2d ELEMENT
     
  !   NUMBER OF EQUATIONS
- Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
+ Integer, Parameter:: NEQ_f = 1             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
  Integer, Parameter:: NEX_f = 0 
 
  !   NUMBER OF ELEMENTS
@@ -1343,14 +1347,17 @@ MODULE BOUNDARY_ENUMERATION_MODULE
 
 
 
-    call commitBoundary(unvfile, 'FixWall'        , 1, bnd1_elements, bnd1_faces)
-    call commitBoundary(unvfile, 'MovingWall'     , 2, bnd2_elements, bnd2_faces)
+    call commitBoundary(unvfile, 'BottomWall'        , 1, bnd1_elements, bnd1_faces)
+    call commitBoundary(unvfile, 'TopWall'     , 2, bnd2_elements, bnd2_faces)
+    call commitBoundary(unvfile, 'LeftWall'     , 3, bnd3_elements, bnd3_faces)
+    call commitBoundary(unvfile, 'RightWall'     , 4, bnd4_elements, bnd4_faces)
     
 
-     !call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)
-     !call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)
-     !call WriteBoundaryNodesAt(103, bnd3_elements, bnd3_faces)
-     !call WriteBoundaryNodesAt(104, bnd4_elements, bnd4_faces)
+     ! call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)
+     ! call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)
+     ! call WriteBoundaryNodesAt(103, bnd3_elements, bnd3_faces)
+     ! call WriteBoundaryNodesAt(104, bnd4_elements, bnd4_faces)
+     
   End Subroutine DEFINE_BOUNDARY_NUMBERING
 
 

@@ -18,8 +18,9 @@ Module FixConcentrationValueBoundary
         Integer, Dimension(:), Allocatable :: elements 
         Integer, Dimension(:), Allocatable :: faces
         Integer, Dimension(:), Allocatable :: nodes
-        Real(8)                            :: maximumRcoord
+        Real(8)                            :: valueAtTheBoundary
         contains 
+            procedure :: setValueAtTheBoundary
             procedure :: applyBoundaryConditions
             final     :: deconstructor
     End Type FixConcentrationValue    
@@ -45,15 +46,20 @@ Module FixConcentrationValueBoundary
 
         call getBoundaryNodesOfWholeBoundary( This%nelem, This%elements, This%faces, This%nodes )
 
-        this%maximumRcoord = maxval(Ym(this%nodes))
-
-        ! Rtank = this%maximumRcoord
-
     End Function NewFixConcentrationValue
 
+    subroutine setValueAtTheBoundary(this, value)
+        implicit none
+        Class(FixConcentrationValue)  , Intent(InOut)         :: This 
+        Real(8),                        Intent(In)         :: value
 
 
-    Subroutine applyBoundaryConditions(This, value, FlagNr)
+        this%valueAtTheBoundary = value
+    end subroutine setValueAtTheBoundary
+
+
+
+    Subroutine applyBoundaryConditions(This, FlagNr)
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
@@ -61,7 +67,7 @@ Module FixConcentrationValueBoundary
 
         Implicit None 
         Class(FixConcentrationValue)  , Intent(In)         :: This 
-        Real(8),          Intent(In)         :: value
+
         Character(len=3), Intent(In)         :: FlagNr
 
         Real(8), Dimension(:,:), Allocatable :: TL_
@@ -75,8 +81,7 @@ Module FixConcentrationValueBoundary
     
         do inode = 1, size(this%nodes)
             node = this%nodes(inode)
-            call ApplyDirichletAtNode_(node, "C", value, FlagNr )
-            
+            call ApplyDirichletAtNode_(node, "C", this%valueAtTheBoundary, FlagNr )
         end do 
 
     End Subroutine applyBoundaryConditions

@@ -191,12 +191,14 @@ Module IO_module
         
                 call tecfile%setTitle   (title)
                 call tecfile%setZonename(toStr(time))
-                call tecfile%addVariable("Z"      , length_char*Solution(:, getVariableId("Z"  )))
-                call tecfile%addVariable("R"      , length_char*Solution(:, getVariableId("R"  )))
-                call tecfile%addVariable("Vr"     , velocity_char*Solution(:, getVariableId("Vr" )))
-                call tecfile%addVariable("Vz"     , velocity_char*Solution(:, getVariableId("Vz" )))
-                call tecfile%addVariable("P"      , (Pchar)*Solution(:, getVariableId("P"  )))
-                call tecfile%addVariable("Pdiarho"      , (Pchar/rho)*Solution(:, getVariableId("P"  )))
+                call tecfile%addVariable("X"      , Xm(:))
+                call tecfile%addVariable("Y"      , Ym(:))
+                call tecfile%addVariable("C"      , Solution(:, getVariableId("C"  )))
+                call tecfile%addVariable("Canal"      , C10_C01_transientDiffusion_analytical(Xm(:)) )
+                ! call tecfile%addVariable("Vr"     , velocity_char*Solution(:, getVariableId("Vr" )))
+                ! call tecfile%addVariable("Vz"     , velocity_char*Solution(:, getVariableId("Vz" )))
+                ! call tecfile%addVariable("P"      , (Pchar)*Solution(:, getVariableId("P"  )))
+                ! call tecfile%addVariable("Pdiarho"      , (Pchar/rho)*Solution(:, getVariableId("P"  )))
 
                 call tecfile%addElements( elements )
         
@@ -213,8 +215,8 @@ Module IO_module
                 call tecfile%setTitle   (title)
                 call tecfile%setZonename(toStr(time))
 
-                call tecfile%addVariable("Z"      , Solution(:, getVariableId("Z"                ))                       )
-                call tecfile%addVariable("R"      , Solution(:, getVariableId("R"                ))                       )
+                ! call tecfile%addVariable("Z"      , Solution(:, getVariableId("Z"                ))                       )
+                ! call tecfile%addVariable("R"      , Solution(:, getVariableId("R"                ))                       )
                 ! call tecfile%addVariable("Stretch", (180d0/3.141599265d0)*minimumAngleOfTriangle(Solution, elements), cellcentered = .True.)
 
                 call tecfile%addElements( elements )

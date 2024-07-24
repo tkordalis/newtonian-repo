@@ -54,12 +54,12 @@ Wall_union = geompy.UnionIDs( TopWall, idTopWall )
 
 idBottomWall = []
 BottomWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idBottomWall.append( returnIDofShape( [             cavity_edge,     h_s, 0] , "EDGE" ) )
+idBottomWall.append( returnIDofShape( [           h_s    ,     0, 0] , "EDGE" ) )
 BottomWall_union = geompy.UnionIDs( BottomWall, idBottomWall )
 
 idRightWall = []
 RightWall = geompy.CreateGroup(Domain_translated, geompy.ShapeType["EDGE"])
-idRightWall.append( returnIDofShape( [             h_s,     0, 0] , "EDGE" ) )
+idRightWall.append( returnIDofShape( [             cavity_edge,     h_s, 0] , "EDGE" ) )
 RightWall_union = geompy.UnionIDs( RightWall, idRightWall )
 
 idLeftWall = []

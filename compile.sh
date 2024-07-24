@@ -40,8 +40,8 @@ rm -f nohup.out
 							  ./src/extraequations.f90       \
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations.f90     	 \
-								./src/BoundaryEquations/FixWallBoundary.f90 \
-								./src/BoundaryEquations/MovingWallBoundary.f90 \
+								./src/BoundaryEquations/FixConcentrationValueBoundary.f90 \
+								./src/BoundaryEquations/FixFluxOfConcentrationBoundary.f90 \
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
 							./src/InitializeTypes.f90\

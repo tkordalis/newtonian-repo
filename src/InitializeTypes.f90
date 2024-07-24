@@ -1,22 +1,46 @@
 Module BoundaryConditions
   Use BOUNDARY_ENUMERATION_MODULE
-  Use FixWallBoundary
-  Use MovingWallBoundary
+  Use FixConcentrationValueBoundary
+  Use FixFluxOfConcentrationBoundary
 
-  Type(FixWall)                 :: Wall
-  Type(MovingWall)              :: TopWall
-  ! Type(Symmetry)                :: SymmetryAxis
-  ! Type(InflatedBubble)          :: Bubble1
-  ! Type(Ambient)                 :: topSurface
-  ! Type(IntEquidistribution)     :: InternalEquidistributionZ
-  ! Type(IntEquidistribution)     :: InternalEquidistributionR
-
+  Type(FixConcentrationValue)        :: Left
+  Type(FixConcentrationValue)        :: Right
+  ! Type(FixConcentrationValue)        :: Up
+  ! Type(FixConcentrationValue)        :: Down
+  ! Type(FixFluxConcentrationValue)    :: Left
+  ! Type(FixFluxConcentrationValue)    :: Right
+  Type(FixFluxConcentrationValue)    :: Up
+  Type(FixFluxConcentrationValue)    :: Down
+  
   contains
     Subroutine DefineTheBoundaries()
       Implicit None
 
-        Wall           = NewFixWall    ( bnd1_elements, bnd1_faces )
-        TopWall        = NewMovingWall ( bnd2_elements, bnd2_faces )
+        Down      = NewFixFluxConcentrationValue  (bnd1_elements, bnd1_faces)
+        call Down%setFluxValueAtTheBoundary(0.d0)
+
+        ! Down    = NewFixConcentrationValue  (bnd1_elements, bnd1_faces)
+        ! call Down%setValueAtTheBoundary(1.d0)
+
+        Up    =  NewFixFluxConcentrationValue (bnd2_elements, bnd2_faces)
+        call Up%setFluxValueAtTheBoundary(0.d0)
+
+
+        ! Up   = NewFixConcentrationValue  (bnd2_elements, bnd2_faces)
+        ! call Up%setValueAtTheBoundary(1.d0)
+
+        Left    = NewFixConcentrationValue  (bnd3_elements, bnd3_faces)
+        call Left%setValueAtTheBoundary(1.d0)
+
+        ! Left    = NewFixFluxConcentrationValue  (bnd3_elements, bnd3_faces)
+        ! call Left%setFluxValueAtTheBoundary(-1.d0)
+
+        Right   = NewFixConcentrationValue  (bnd4_elements, bnd4_faces)
+        call Right%setValueAtTheBoundary(0.d0)
+
+        ! Right   = NewFixFluxConcentrationValue  (bnd4_elements, bnd4_faces)
+        ! call Right%setFluxValueAtTheBoundary(0.d0)
+
     
     End Subroutine DefineTheBoundaries
 End Module BoundaryConditions
@@ -36,8 +60,8 @@ Module InitialConditions
     ! I should print in the title of the .plts the Remesh_counter to read and define the boundaries correctly regardless
     Remesh_counter = 0
     TLo(:,:) = 0.D0
-    TLo(:,getVariableId("Z"))   = Xm
-    TLo(:,getVariableId("R"))   = Ym
+    ! TLo(:,getVariableId("Z"))   = Xm
+    ! TLo(:,getVariableId("R"))   = Ym
     TLb = TLo
     ! ----------------------------------------------------------------------
     ! ASSIGN NR INITIAL GUESS
@@ -65,8 +89,10 @@ module solveAllExtraConstraints
         Real(8), dimension(NEX_f,NEX_f), intent(out), optional :: JacGlobalEq_GlobUnkn
         Real(8), dimension(NEX_f),       intent(out), optional :: ExtraRes
 
-        call Wall%applyBoundaryConditions(FlagNR)
-        call TopWall%applyBoundaryConditions(FlagNR, time)
+        call Up%applyBoundaryConditions(FlagNR)
+        call Down%applyBoundaryConditions(FlagNR)
+        call Left%applyBoundaryConditions(FlagNR)
+        call Right%applyBoundaryConditions(FlagNR)
             
         
     End Subroutine applyBCs_and_solveExtraConstraints
