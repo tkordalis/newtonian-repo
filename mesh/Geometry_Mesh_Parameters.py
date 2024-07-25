@@ -33,5 +33,5 @@ cavity_edge = 1
 
 h_s = 5e-05
 
-NumSegmentsOnCavityEdge = 120
+NumSegmentsOnCavityEdge = 50
 

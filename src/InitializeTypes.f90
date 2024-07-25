@@ -30,13 +30,13 @@ Module BoundaryConditions
         ! call Up%setValueAtTheBoundary(1.d0)
 
         Left    = NewFixConcentrationValue  (bnd3_elements, bnd3_faces)
-        call Left%setValueAtTheBoundary(1.d0)
+        call Left%setValueAtTheBoundary(2.0d0)
 
         ! Left    = NewFixFluxConcentrationValue  (bnd3_elements, bnd3_faces)
         ! call Left%setFluxValueAtTheBoundary(-1.d0)
 
         Right   = NewFixConcentrationValue  (bnd4_elements, bnd4_faces)
-        call Right%setValueAtTheBoundary(0.d0)
+        call Right%setValueAtTheBoundary(1.d0)
 
         ! Right   = NewFixFluxConcentrationValue  (bnd4_elements, bnd4_faces)
         ! call Right%setFluxValueAtTheBoundary(0.d0)
@@ -59,7 +59,7 @@ Module InitialConditions
     Implicit None
     ! I should print in the title of the .plts the Remesh_counter to read and define the boundaries correctly regardless
     Remesh_counter = 0
-    TLo(:,:) = 0.D0
+    TLo(:,:) = 1.D0
     ! TLo(:,getVariableId("Z"))   = Xm
     ! TLo(:,getVariableId("R"))   = Ym
     TLb = TLo

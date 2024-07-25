@@ -211,7 +211,7 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.01d0
+      Dt_constant = 0.05d0
   end subroutine set_DT
   
 

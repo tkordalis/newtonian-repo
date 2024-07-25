@@ -353,7 +353,7 @@ Subroutine DOMI_RESIDUAL_chemSpecies( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8)  :: Co
    Real(8)  :: DCDM
    
-   Real(8)  :: BIFN, DBIR, DBIZ, SBFN
+   Real(8)  :: BIFN, DBIR, DBIZ
    Real(8)  :: E_TR, Helem, Uelem, Ha, Rmom, Zmom, Hugn, tlsme, tlsic, tlsce, taudc
    
 
@@ -426,6 +426,7 @@ Subroutine DOMI_RESIDUAL_chemSpecies( NELEM, TEMP_TL, TEMP_RES, STORE )
     !    DEFINE MATERIAL DERIVATIVES FOR MOMENTUM
     !---------------------------------------------------------------------
      ! dCdM  = dCdt  + Vr * dCdR   + Vz * dCdZ
+     ! dCdM  = dCdt  + 100.5d0* dCdZ
      dCdM  = dCdt
      
      ! dUrdM  = ReN*dUrdM
@@ -437,10 +438,12 @@ Subroutine DOMI_RESIDUAL_chemSpecies( NELEM, TEMP_TL, TEMP_RES, STORE )
     LOOP_RESIDUALS_f:DO IW = 1, NBF_2d
     
         BIFN = BFN   (IW)  ;  DBIZ = dBFNdZ(IW)  ;  DBIR = dBFNdR(IW)
+        
            
-   
         TERM_RES                        = 0.d0
-        TERM_RES(getVariableId("C" ))  = dCdM*BIFN  +  dCdZ*DBIZ  +  dCdR*DBIR 
+        TERM_RES(getVariableId("C" ))  = dCdM*BIFN  +  dCdZ*DBIZ  +  dCdR*DBIR
+
+        ! TERM_RES(getVariableId("C" ))  = TERM_RES(getVariableId("C" )) - 10.d0*C*BIFN
     
      
     
