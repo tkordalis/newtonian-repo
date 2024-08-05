@@ -34,11 +34,11 @@ Module VariableMapping
         Integer                      :: Vid 
 
         Select Case(Var)
-        Case('C' ) ; Vid = 1
-        ! Case('Vz' ) ; Vid = 2
-        ! Case('P'  ) ; Vid = 3
-        ! Case('Z'  ) ; Vid = 4
-        ! Case('R'  ) ; Vid = 5
+        Case('Vr' ) ; Vid = 1
+        Case('Vz' ) ; Vid = 2
+        Case('P'  ) ; Vid = 3
+        Case('Z'  ) ; Vid = 4
+        Case('R'  ) ; Vid = 5
         
         Case Default; Vid = -1
         End Select 
@@ -51,11 +51,11 @@ Module VariableMapping
 
 
         Select Case(vid)
-        Case(1)      ; Var = 'C' 
-        ! Case(2)      ; Var = 'Vz' 
-        ! Case(3)      ; Var = 'P'  
-        ! Case(4)      ; Var = 'Z'  
-        ! Case(5)      ; Var = 'R'  
+        Case(1)      ; Var = 'Vr' 
+        Case(2)      ; Var = 'Vz' 
+        Case(3)      ; Var = 'P'  
+        Case(4)      ; Var = 'Z'  
+        Case(5)      ; Var = 'R'  
         
         Case Default ; Var = ''
         End Select 
@@ -67,18 +67,19 @@ End Module VariableMapping
 
 MODULE PHYSICAL_MODULE
   
-    Real(8), PARAMETER       :: pi        = 3.141592653589793D0
-    Real(8), parameter       :: g_grav    =  9.81d0           ! m/s2:  gravitational acceleration
+    Real(8)                  :: Rtank
+    Real(8), PARAMETER       :: pi            = 3.141592653589793D0
+    Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
 
-    Real(8), parameter       :: rho       = 1000.d0           ! kg/m3: density of water
-    Real(8), parameter       :: length_char   =  1.d0         ! m
+    Real(8), parameter       :: rho           = 1000.d0           ! kg/m3: density of water
+    Real(8), parameter       :: length_char   =  0.001d0         ! m
     
 
 
-    Real(8), parameter       :: velocity_char       =  0.01d0  ! m/s
   
-    Real(8), parameter       :: viscosity = 1.0d0
+    Real(8), parameter       :: viscosity = 0.014d0
+    Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
 
 
     !_______________________________________________________________________________
@@ -87,10 +88,10 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
   
 
-    Real(8), parameter       :: surface_tension = 0.073d0
+    Real(8), parameter       :: surface_tension = 0.00997d-1
     
-    ! Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
-    Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
+    Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
+    ! Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
 
     !_______________________________________________________________________________
 
@@ -104,17 +105,21 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
 
 
-    Real(8), parameter       :: Pchar             = viscous_stress
+    Real(8), parameter       :: Pchar               = gravity_stress
+    Real(8), parameter       :: Pambient_o_Pchar    = 101325.d0/Pchar
     
     
-    Real(8), parameter       :: ratio_of_pressures = gravity_stress/Pchar
+    Real(8), parameter       :: ratio_of_pressures  = gravity_stress/Pchar
 
-    Real(8)                  :: ReN  !  REYNOLDS NUMBER
+    Real(8)                  :: ReN, ArN, BoN  !  REYNOLDS NUMBER
     
 
     Real(8)                  :: eo1, eo2
     Real(8)                  :: es1, es2
     Real(8)                  :: e_bnd
+    
+    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble
+    Real(8)                  :: ambient_position_o, ambient_position, vm_ambient, dVtankdt
   
     Contains
 
@@ -130,12 +135,14 @@ MODULE PHYSICAL_MODULE
         ! initial_position =  ho/length_char
         ! ambient_position =  ho/length_char
 
-        ReN   =  inertial_stress/Pchar
+        ReN   =  inertial_stress/inertial_stress
+        ArN   =  inertial_stress/Pchar
+        BoN   =  gravity_stress/capillary_stress
         ! print*, "pi  =", pi
         ! print*, " "
         ! print*, "rho  =", rho
         ! print*, " "
-        ! print*, "length_char  =", length_char
+        ! print*, "Ro  =", length_char
         ! print*, " "
         ! print*, "g_grav  =", g_grav
         ! print*, " "
@@ -162,8 +169,10 @@ MODULE PHYSICAL_MODULE
         ! print*, "ReN  =", ReN
         ! print*, " "
         ! pause
-        write(*,"(A6,2X,F16.8)") "Reff ="    , length_char
-        write(*,"(A6,2X,F16.8)") "ReN  ="    , ReN
+        write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
+        write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
+        write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
+        write(*,"(10X,A6,2X,F16.8)") "BoN  ="    , BoN
         
         eo1   = 0.0D0
         eo2   = 0.1D0
@@ -172,16 +181,7 @@ MODULE PHYSICAL_MODULE
 
     END SUBROUTINE DIMENSIONLESS_NUMBERS
 
-    function calculateFlowrate(time)  result(output)
-      real(8), intent(in) :: time
-      real(8)             :: output
-
-      ! output = 1.d0 - exp(-1.d0*time)
-      output = 1.d0
-
-    end function calculateFlowrate
-
-
+    
   END MODULE PHYSICAL_MODULE
   
 ! ----------------------------------------------------------------------
@@ -211,7 +211,10 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.05d0
+      Dt_constant = 0.1d0
+
+      Dt_max = 25.d0*Dt_constant
+
   end subroutine set_DT
   
 
@@ -242,8 +245,8 @@ Module ELEMENTS_MODULE
  Integer, Parameter:: NED_2d = 3             ! NUMBER OF EDGES PER 2d ELEMENT
     
  !   NUMBER OF EQUATIONS
- Integer, Parameter:: NEQ_f = 1             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
- Integer, Parameter:: NEX_f = 0 
+ Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
+ Integer, Parameter:: NEX_f = 1 
 
  !   NUMBER OF ELEMENTS
  Integer :: NEL_1d                 ! TOTAL NUMBER OF 1D ELEMENTS
@@ -318,18 +321,18 @@ End Module Elements_Module
     
     INTEGER            :: INCREMENT
       
-    REAL(8)            :: ArN
-    REAL(8)            :: ArNo, ArNb, ArNp
+    REAL(8)            :: ArL
+    REAL(8)            :: ArLo, ArLb, ArLp
 
-    REAL(8)            :: dArN = - 0.01D0
+    REAL(8)            :: dArL = - 0.01D0
     
-    REAL(8), PARAMETER :: INITIAL_ArN = 1.0D0
-    REAL(8), PARAMETER :: FINAL_ArN   = 1.D+5
+    REAL(8), PARAMETER :: INITIAL_ArL = 1.0D0
+    REAL(8), PARAMETER :: FINAL_ArL   = 1.D+5
     
     REAL(8)            :: dS, S0SM1, SNRM
 
     REAL(8)            :: dDpL, dDpLo, dDpLodS
-    REAL(8)            ::       dArNo, dArNodS
+    REAL(8)            ::       dArLo, dArLodS
     
     REAL(8), ALLOCATABLE, DIMENSION(:) :: dTL, dTLo, dTLodS
     
@@ -458,7 +461,7 @@ End Module Elements_Module
   MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 5.d-9
+    REAL(8), PARAMETER :: ERROR_NR  = 1.d-9
     
     
     INTEGER            :: ITER_f
@@ -1302,18 +1305,23 @@ MODULE BOUNDARY_ENUMERATION_MODULE
     Integer, Intent(In)                :: unit 
     Integer, Dimension(:), Allocatable :: elements 
     Integer, Dimension(:), Allocatable :: faces 
+    Integer, Dimension(:), Allocatable :: all_nodes 
 
-    Integer                            :: iel 
+    Integer                            :: iel, inod
     Integer                            :: nodes(2)
 
+    call getBoundaryNodesOfWholeBoundary( size(elements), elements, faces, all_nodes )
 
-    do iel = 1, size(elements)
-      nodes = getBoundaryNodesOfTheElement(elements(iel), faces(iel))
+    do inod = 1, size(all_nodes)
+        Write(unit,*) Xm(all_nodes(inod)), Ym(all_nodes(inod))
+    enddo
+    ! do iel = 1, size(elements)
+    !   nodes = getBoundaryNodesOfTheElement(elements(iel), faces(iel))
       
-      Write(unit,*) Xm(nodes(1)), Ym(nodes(1))
-      Write(unit,*) Xm(nodes(2)), Ym(nodes(2))
-      Write(unit,*) ''
-    end do 
+    !   Write(unit,*) Xm(nodes(1)), Ym(nodes(1))
+    !   Write(unit,*) Xm(nodes(2)), Ym(nodes(2))
+    !   Write(unit,*) ''
+    ! end do 
   End Subroutine WriteBoundaryNodesAt
 
   Subroutine commitBoundary(unvfile, name, ibnd, elements, faces)
@@ -1347,16 +1355,17 @@ MODULE BOUNDARY_ENUMERATION_MODULE
 
 
 
-    call commitBoundary(unvfile, 'BottomWall'        , 1, bnd1_elements, bnd1_faces)
-    call commitBoundary(unvfile, 'TopWall'     , 2, bnd2_elements, bnd2_faces)
-    call commitBoundary(unvfile, 'LeftWall'     , 3, bnd3_elements, bnd3_faces)
-    call commitBoundary(unvfile, 'RightWall'     , 4, bnd4_elements, bnd4_faces)
+    call commitBoundary(unvfile, 'tankWall'        , 1, bnd1_elements, bnd1_faces)
+    call commitBoundary(unvfile, 'Symmetry'     , 2, bnd2_elements, bnd2_faces)
+    call commitBoundary(unvfile, 'Bubble1'     , 3, bnd3_elements, bnd3_faces)
+    call commitBoundary(unvfile, 'Ambient'     , 4, bnd4_elements, bnd4_faces)
     
 
      ! call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)
      ! call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)
      ! call WriteBoundaryNodesAt(103, bnd3_elements, bnd3_faces)
      ! call WriteBoundaryNodesAt(104, bnd4_elements, bnd4_faces)
+     ! pause
      
   End Subroutine DEFINE_BOUNDARY_NUMBERING
 

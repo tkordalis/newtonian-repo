@@ -29,7 +29,7 @@ PROGRAM FEM2D
    Use InitialConditions
    USE OMP_PARALLEL
    Use RemeshVariables
-   use former_external_subroutines
+   use newton_bulk_call
    Implicit None
    character(25)                        :: dateNtime
    
@@ -47,8 +47,8 @@ PROGRAM FEM2D
    call openBubbleFiles()
       
    ! Read Solution
-   unvf  = unvFileReader("UnBounded.unv")
-
+   ! unvf  = unvFileReader("UnBounded.unv")
+   unvf  = unvFileReader("Bounded.unv")
 
    if (ReadSolutionFromFile) Then
       sol_b = ReadSolution("./sol/time_3.2000.plt")
@@ -64,10 +64,7 @@ PROGRAM FEM2D
    call ALLOCATE_MESH_ARRAYS(.TRUE.,NODTOL)
    call MESH ( unvf )
 
-
-   CALL DIMENSIONLESS_NUMBERS
    CALL GAUSS_EVALUATION
-
 
    call ALLOCATE_ENUMERATION_INDICES(.TRUE.,NEL_2d,NBF_1d,NBF_2d,NED_2d)
    call NNUM_ELEMENT( unvf )
@@ -91,13 +88,17 @@ PROGRAM FEM2D
    call ALLOCATE_GLOBAL_ARRAYS      ( .TRUE., NODTOL, NEL_2d, NEQ_f )
 
 
+
+   Call DefineTheBoundaries()
+
+   CALL DIMENSIONLESS_NUMBERS
+
    call set_num_threads
    call set_DT
 
   !  ! ----------------------------------------------------------------------
   !  ! ASSIGN INITIAL CONDITIONS
   !  ! ----------------------------------------------------------------------
-   Call DefineTheBoundaries()
    call setInitalConditions()
 
    INCREMENT      = 0
@@ -113,10 +114,11 @@ PROGRAM FEM2D
       ! call sol  %getSolutionVars(time , TL , increment, Remesh_counter, pressure_bubble  )
    endif
    
-
+   call WriteBubbleFiles(TIME)
 
    if (.not. ReadSolutionFromFile) call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
 
+   vm_ambient = 0.d0
 
    LOOP_TIME_INTEGRATION: DO
       
@@ -139,7 +141,6 @@ PROGRAM FEM2D
     ! SOLVE THE NONLINEAR PDE SYSTEM
       Call NEWTON_RAPSHON_f(ReallocateForRemesh)
 
-      call calculateVariables(DT)
       
       call WriteBubbleFiles(TIME)
       

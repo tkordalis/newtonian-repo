@@ -65,29 +65,23 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8)  :: Gdot_rr , Gdot_rz , Gdot_zz , Gdot_tt
    Real(8)  :: Prr, Prz, Pzz, Ptt
    Real(8)  :: BIFN, DBIR, DBIZ, SBFN
-   Real(8)  :: E_TR, Helem, Helem2, Uelem, Ha, Rmom, Zmom, Hugn, tlsme, tlsic, tlsce, taudc
-   Real(8)  :: U1, U2, U3
+   Real(8)  :: Helem, Uelem, Ha, Rmom, Zmom, tlsme
 
-   Real(8), Dimension(NBF_2d)           :: Ksi_loc, Eta_loc, dBFNdZ, dBFNdR
+   Real(8), Dimension(NBF_2d)           :: Ksi_loc, Eta_loc
+   Real(8), Dimension(NBF_2d)           :: BFN, dBFNdZ, dBFNdR
    
    Integer, Dimension(NBF_2d)           :: NM 
    Real(8), Dimension(NBF_2d)           :: Zo_nodes_elem, Ro_nodes_elem, Z_nodes_elem, R_nodes_elem
    Real(8), Dimension(NBF_2d)           :: Uz_nodes_elem, Ur_nodes_elem, dZdt_nodes_elem, dRdt_nodes_elem
    
    Real(8), Dimension(NEQ_f)            :: TERM_RES
-   Real(8), Dimension(NBF_2d)           :: BFN, DFDX, DFDY
    Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc
-   Real(8), Dimension(2,2)              :: S, GU, GUT, ST, SI
-   Real(8), Dimension(3,3)              :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
   
-   Real(8)                              :: X, dXdC, dXdE, Y, dYdC, dYdE, CJAC, AJAC
-    !  VARIABLES for the EVP HB MODEL
-   Real(8)                              :: Trace_Stress_Tensor
-   Real(8)                              :: TraceStress, S_ddot_S
-   Real(8)                              :: T_t
-   Real(8)                              :: Max_Term
-   Real(8)                              :: Gravity_Term
-   Real(8)                              :: ZZcon, RZcon, RRcon, TTcon, mag_ce
+   
+   Real(8), Dimension(3,3)              :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
+   
+   
+   Real(8)                              :: Gravity_Term, e_tr
     !---------------------------------------------------------------------
     !  COPY X VECTOR TO LOCAL VECTOR
     !---------------------------------------------------------------------
@@ -102,8 +96,8 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      TLb_loc(II,:) = TLb(JJ,:)
    ENDDO
 
-    Gravity_Term = 0.d0
-   Gravity_Term = Gravity_Term*ratio_of_pressures
+    Gravity_Term = -1.d0
+   ! Gravity_Term = Gravity_Term*ratio_of_pressures
 
     !---------------------------------------------------------------------   
     !  DEFINE CHARACTERISTIC VELOCITY
@@ -127,7 +121,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Uelem = 0.d0
    do II=1, NBF_2d
         Uelem = Uelem + SQRT( ( Uz_nodes_elem(II)-dZdt_nodes_elem(II) )**2 &
-                                + ( Ur_nodes_elem(II)-dRdt_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
+                            + ( Ur_nodes_elem(II)-dRdt_nodes_elem(II) )**2   ) / DBLE(NBF_2d)
         ! Uelem = Uelem + SQRT( ( Uz_nodes_elem(II) )**2 &
         !                         + ( Ur_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
    enddo
@@ -140,7 +134,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
     !---------------------------------------------------------------------
    TEMP_RES = 0.D0
 
-
+   
     !---------------------------------------------------------------------
     !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
     !---------------------------------------------------------------------
@@ -149,7 +143,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      BFN = BFN_2d(:,KK)
 
      ! calculate the derivatives of basis functions with respect to physical coordinates at current timestep
-     call basis_spatial_derivatives( KK, Ksi_loc(:) , Eta_loc(:) , dBFNdZ , dBFNdR , JacT  )
+     call basis_spatial_derivatives( KK,  Z_nodes_elem(:) ,  R_nodes_elem(:) , dBFNdZ , dBFNdR , JacT  )
 
     
      ! give TEMP_TL to the subroutine and take back the variable calculated at the current gauss point
@@ -197,12 +191,14 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      Drz = dVzdR
      Dzr = dVrdZ
      Dzz = dVzdZ
+     Dtt = Vr/R
 
-     Continuity_Equ = dVrdR + dVzdZ
+     Continuity_Equ = dVrdR + Vr/R + dVzdZ
 
      Gdot_rr = 2.d0 * ( Drr       )
      Gdot_rz =        ( Drz + Dzr )
      Gdot_zz = 2.d0 * ( Dzz       )
+     Gdot_tt = 2.d0 * ( Dtt       )
 
         
     !---------------------------------------------------------------------     
@@ -224,8 +220,8 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      ! dUrdM  = dVrdt  + Vr * dVrdR   + Vz * dVrdZ
      ! dUzdM  = dVzdt  + Vr * dVzdR   + Vz * dVzdZ 
      
-     dUrdM  = ReN*dUrdM
-     dUzdM  = ReN*dUzdM
+     dUrdM  = ArN*dUrdM
+     dUzdM  = ArN*dUzdM
 
 
     !-----------------------------------------------------------------------
@@ -240,39 +236,35 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      Trr = Gdot_rr
      Trz = Gdot_rz
      Tzz = Gdot_zz
+     Ttt = Gdot_tt
 
      Prr =Trr  
      Prz =Trz  
      Pzz =Tzz  
+     Ptt =Ttt  
 
 
 
      Rmom = dUrdM + dPdR !- (dTrrdr + Trr/R - Ttt/R + dTrzdZ)               
-     Zmom = dUzdM + dPdZ !- (dTrzdr + Trz/R         + dTzzdZ) - Gravity_Term
+     Zmom = dUzdM + dPdZ - Gravity_Term!- (dTrzdr + Trz/R         + dTzzdZ) 
 
 
      helem = sum([ (sqrt( dBFNdZ(ii)**2 + dBFNdR(ii)**2 ),ii=1,NBF_2d) ])
      helem = 1.d0/helem
-
      
     ! **************************************************************************************************
-    Ha = DSQRT( 1.d0 + 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 ) ) / &
-        DSQRT(  1.D0    + 0.5D0*( Gdot_rr**2 + 2.D0*Gdot_rz**2 + Gdot_zz**2) )
+    Ha = DSQRT( 1.d0 + 0.5D0*( Trr    **2 + 2.D0*Trz    **2 + Tzz    **2 + Ttt**2 ) ) / &
+        DSQRT(  1.D0    + 0.5D0*( Gdot_rr**2 + 2.D0*Gdot_rz**2 + Gdot_zz**2 + Gdot_tt**2) )
     
     ! **************************************************************************************************
     tlsme = 1.D0/DSQRT( (ReN/Dt)**2 + (ReN*Uelem/Helem)**2 + (Ha/Helem**2)**2 )
     ! if ( store) write(404,'(I5,2X,F12.8, 2X,F12.8, 2X,F12.8, 2X,F12.8, 2X,F12.8, 2X)') nelem, Uelem, Helem, Ha, DSQRT( (ReN/Dt)**2 + (ReN*Uelem/Helem)**2 + (Ha/Helem**2)**2 ), tlsme
     
     ! **************************************************************************************************
-    tlsic = (Helem**2)/tlsme
     
-    ! **************************************************************************************************
-    tlsce = tlsic
-    ! **************************************************************************************************
-    
-
-    ! **************************************************************************************************
-    
+    ! if (kk==1 .and. store) then
+    !   write(404,'(7(f16.8))'),  dUzdM, Pzz,P,Prz
+    ! endif
 
     !---------------------------------------------------------------------
     !    ITERATE OVER WEIGHTING FUNCTIONS
@@ -283,11 +275,12 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
            
    
         TERM_RES                        = 0.d0
-        TERM_RES(getVariableId("Vz" ))  = dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR !  - Gravity_Term*BIFN 
+
+        TERM_RES(getVariableId("Vr" ))  = (dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ +  (Ptt-P)*BIFN/R )*R
     
-        TERM_RES(getVariableId("Vr" ))  = dUrdM*BIFN  +  (Prr -P)*DBIR  +  (Prz)*DBIZ 
+        TERM_RES(getVariableId("Vz" ))  = (dUzdM*BIFN  +  (Pzz-P)*DBIZ  +  (Prz)*DBIR  - Gravity_Term*BIFN )*R
     
-        TERM_RES(getVariableId("P"  ))  = Continuity_Equ*BIFN + tlsme*(Rmom*DBIR+Zmom*DBIZ) 
+        TERM_RES(getVariableId("P"  ))  = (Continuity_Equ*BIFN + tlsme*(Rmom*DBIR+Zmom*DBIZ) )*R
        
         TERM_RES(getVariableId("Z"  ))  = ( eo1*SKsi + (1.d0 -eo1))*( dKsidR * DBIR + dKsidZ * DBIZ )
         TERM_RES(getVariableId("R"  ))  = ( eo2*SEta + (1.d0 -eo2))*( dEtadR * DBIR + dEtadZ * DBIZ )
@@ -295,11 +288,13 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
         ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
         TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_2d(KK) * JacT
     ENDDO LOOP_RESIDUALS_f
-         
+    
+    
         
     ENDDO LOOP_GAUSS
        
     
+
     !---------------------------------------------------------------------
     !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
     !---------------------------------------------------------------------

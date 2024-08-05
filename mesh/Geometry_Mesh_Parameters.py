@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 ###
 ### This file is generated automatically by SALOME v9.5.0 with dump python functionality
@@ -22,16 +22,77 @@ from math  import *
 from numpy import *
 import SALOMEDS
 
-# from the photos shown in Fig. 4 they mention that the inner diameter is 0.58 mm
-# and from the scale bar we can deduce that the outer diameter is 0.8 mm
-# which means the wall thickness is 2 x 0.11 mm -> the ratio is 0.11/0.8 = 0.1375 constant throughout the simulations
 
 
+blockage_ratio = 0.01
 
 # Domain Construction
-cavity_edge = 1
 
-h_s = 5e-05
+RSphere1 		= 1.0
+RSphere2 		= 1.0
 
-NumSegmentsOnCavityEdge = 50
+Radius_tank  	= RSphere1/blockage_ratio
+Height_tank 	= 200
+
+Sphere_position = 0.
+
+
+# NumSegmentsOnSphere = 200
+NumSegmentsOnSphere = 40
+
+Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
+
+
+
+dR_ref1 = 3*Element_size_on_Sphere
+dR_ref2 = 2*dR_ref1
+R_refinement1_Sphere1 = RSphere1 + dR_ref1
+R_refinement1_Sphere2 = RSphere2 + dR_ref1
+R_refinement2_Sphere1 = RSphere1 + dR_ref2
+R_refinement2_Sphere2 = RSphere2 + dR_ref2
+
+
+Sphere_position + RSphere2 + dR_ref2 
+
+# if (2*Sphere_position) <= R_refinement2_Sphere1 + R_refinement2_Sphere2:
+# 	print("Sphere REFINEMENT ZONES are Touching")
+
+
+
+ellipse_Minor_Radius = dR_ref2 + 1
+ellipse_Major_Radius = dR_ref2 + 1
+
+ellipse_position 	 = 0.
+
+
+
+outer_ellipse_Major_Radius = ellipse_Major_Radius + 1.0
+outer_ellipse_Minor_Radius = ellipse_Minor_Radius + 1.0
+
+
+h_s = 0.0001
+
+
+Main_maxSize_element = 4
+Main_minSize_element = 0.1
+
+Netgen_Params = []
+
+check_drRef1_compatibility = int(dR_ref1/Element_size_on_Sphere)
+
+if check_drRef1_compatibility<3:
+	print('Segment length from sphere does not fit the symmetry egde')
+	print(check_drRef1_compatibility)
+	sys.exit()
+
+# Fine Mesh parameters
+Netgen_Params.append([ 2.*Element_size_on_Sphere,  2.*Element_size_on_Sphere, 0.5])
+
+Netgen_Params.append([ 3*Element_size_on_Sphere,  3*Element_size_on_Sphere, 0.1])
+
+Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 6*Element_size_on_Sphere,  6*Element_size_on_Sphere, 0.1])
+
+
+# # --------------------------- End of Geometry --------------------------- #
 

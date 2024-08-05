@@ -74,26 +74,26 @@ Module SymmetryBoundary
         Integer                              :: element 
         Integer                              :: face
 
-        ! do iel = 1, this%nelem
-        !     element =This%elements(iel)
-        !     face    =This%faces   (iel)
-        !     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+        do iel = 1, this%nelem
+            element =This%elements(iel)
+            face    =This%faces   (iel)
+            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-        !     select case(this%position)
-        !     case('X')
-        !         call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
-        !         if (FlagNR == "NRP") Then
-        !             call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
-        !         end if
+            select case(this%position)
+            case('X')
+                call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
+                if (FlagNR == "NRP") Then
+                    call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
+                end if
         !     case('Y')
         !         call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
         !         if (FlagNR == "NRP") Then
         !             call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
         !         end if
-        !     case default
-        !             Print*, "[Error] : Equid. in symmetry type wrong value of position."
-        !     End Select
-        ! end do
+            case default
+                    Print*, "[Error] : Equid. in symmetry type wrong value of position."
+            End Select
+        end do
         
 
         do inode = 1, size(this%nodes)

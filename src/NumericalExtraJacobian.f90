@@ -17,6 +17,88 @@ Module NumericalBoundaryJacobian
 
     Contains
 
+    Subroutine DOMI_JACOBIAN_f( NELEM, TEMP_TL, TEMP_RES )
+        Use BulkEquations, only: DOMI_RESIDUAL_fluid
+
+        Use PHYSICAL_MODULE 
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+        Use ENUMERATION_MODULE,   Only: NM_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f
+        Implicit None
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  ARGUMENTS
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer,                          Intent(In)    :: NELEM
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_TL
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_RES
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  LOCAL VARIABLES
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
+        Integer                                         :: IROW, JCOL, ICOL, IAD, L
+        Real(8)                                         :: eps
+        Integer, Dimension(NBF_2d)                      :: NM
+        Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
+
+        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: JAC_
+        Real(8), Dimension(NBF_2d,NEQ_f)                :: dRES_
+        Real(8), Dimension(NBF_2d,NEQ_f)                ::  RES_
+        Real(8), Dimension(NBF_2d,NEQ_f)                ::  DER_
+        Real(8), Dimension(NBF_2d,NEQ_f)                ::  TL_
+
+        Real(8)                                         :: tmp 
+        Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP
+
+        !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
+        !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
+        JAC_  = 0.D0
+        dRES_ = 0.D0
+
+        RES_     = TEMP_RES 
+        TL_      = TEMP_TL
+
+        !******************************************************************** 
+        !  Elemental Jacobian
+        ! ** Iterate over the Nodes of the Element
+        !    (the jacobian has contibutions from inside the element only)
+        ! ** Iterate over the Unknowns
+        ! ** Perturb the Unknown
+        ! ** Compute the Perturbed Residuals
+        ! ** Update the Value to the preexisted state.
+        ! ** Compute the Jacobian Contributions with finite differences
+        !******************************************************************** 
+
+        do jw = 1, nbf_2d
+         do jeq = 1, neq_f
+            
+           eps               = f_dx( temp_tl(jw,jeq) )
+           tl_(jw,jeq)       = tl_ (jw,jeq) + eps
+            
+           call DOMI_RESIDUAL_fluid( nelem, tl_, dres_, .false. )
+            
+           tl_(jw,jeq)       = tl_(jw,jeq) - eps
+           der_              = (dres_ - res_ ) /eps
+           jac_ (:,jw,jeq,:) = der_
+            
+         end do
+        end do
+
+
+        !  STORE THE ELEMENT INTEGRATION MATRIX IN THE GLOBAL MATRIX A
+        NM  = NM_f (NELEM,1:NBF_2d       )
+        CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
+
+        CALL MATRIX_STORAGE_JACOBIAN&
+        (JAC_, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
+        CSC, NBF_2d*NBF_2d, A_f, NZ_f)
+
+        !****************************************************************
+        !****************************************************************
+
+
+    End Subroutine DOMI_JACOBIAN_f
+
+
     Subroutine NumericalJacobian_Simple(Equation, NELEM, NED, TEMP_TL, TEMP_RES )
         !********************************************************************
         ! Computes the interfacial contributions of the Equation in the
@@ -649,6 +731,48 @@ module constrainJacobians
     End Subroutine jacobianOfConstrain
 
 
+    Subroutine loopOverElements(nelements, elements, faces, gid, procedure_, globUnknown)
+        Use CSR_STORAGE,               Only: Ar_f, Ah_f
+
+        Implicit None
+        Integer,                       Intent(In) :: nelements
+        Integer, Dimension(nelements), Intent(In) :: elements
+        Integer, Dimension(nelements), Intent(In) :: faces
+        Real(8),             intent(in), optional :: globUnknown
+        Integer                                   :: gid
+      !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+      !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Interface
+        Function procedure_ (nelem, ned) Result(out)
+          Implicit None 
+          Integer, Intent(In) :: nelem
+          Integer, Intent(In) :: ned
+          Real(8)             :: out
+        End Function procedure_
+        End Interface 
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer                                   :: iel
+        Integer                                   :: element
+        Integer                                   :: face
+
+         
+        do iel = 1, nelements
+            element = elements(iel)
+            face    = faces   (iel)
+
+            call jacobianOfConstrain(gid, element, face, procedure_)
+        end do
+
+        ! multiply by pressure outside loop to create the jacobian derivative
+        ! This is for PV equation
+        ! if (present(globUnknown)) then 
+        !   Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
+        ! endif
+      
+    End Subroutine loopOverElements
+
+
     ! Subroutine jacobianOfConstrainCentroid( gid )
     !   ! constrain is the integral Z dV of the interface
     !   Use DirichletBoundaries,         Only: integrateOverAllElementsOfTheBoundary
@@ -757,6 +881,7 @@ module constrainJacobians
 
 
     ! END SUBROUTINE jacobianOfConstrainCentroid
+
 
 
 end module constrainJacobians

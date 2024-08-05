@@ -6,9 +6,9 @@ echo $NEXE
 #----------------------------------------------------------------------------
 
 
-# OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
+OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
 
-OPT="-O3 -cpp -traceback -standard-realloc-lhs"
+#OPT="-O3 -cpp -traceback -standard-realloc-lhs"
 echo $OPT
 
 #----------------------------------------------------------------------------
@@ -40,14 +40,18 @@ rm -f nohup.out
 							  ./src/extraequations.f90       \
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations.f90     	 \
-								./src/BoundaryEquations/FixConcentrationValueBoundary.f90 \
-								./src/BoundaryEquations/FixFluxOfConcentrationBoundary.f90 \
+								./src/BoundaryEquations/FixWallBoundary.f90 \
+								./src/BoundaryEquations/SymmetryBoundary.f90 \
+								./src/BoundaryEquations/StaticCSBubbleBoundaryNewtonian.f90 \
+								./src/BoundaryEquations/AmbientBoundary.f90 \
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
 							./src/InitializeTypes.f90\
-							./src/former_external_subroutines.f90\
+							./src/solution_check_update.f90\
+							./src/newton_bulk_call.f90\
                      Fem2D_prg.f90            \
 	             $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++
+							# ./src/former_external_subroutines.f90\
  
 #----------------------------------------------------------------------------
 ctags -R .

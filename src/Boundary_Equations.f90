@@ -9,9 +9,8 @@ Module Boundary_Equations
     Subroutine Stresses( NELEM, NED, TEMP_TL, TEMP_RES, STORE, gVar )
         Use VariableMapping
         Use PHYSICAL_MODULE
-        Use CONTINUATION_MODULE,     Only: INCREMENT
-        Use ELEMENTS_MODULE,         Only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
-        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, BFN_E, &
+        Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
+        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, &
                                             getBasisFunctionsAtFace, &
                                             getNormalVectorAtFace
         Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
@@ -52,7 +51,7 @@ Module Boundary_Equations
         Real(8), Dimension(NEQ_f)            :: TERM_RES
         ! Basis Function 
         Real(8)                              :: BIFN, DBIR, DBIZ
-        Integer :: KK, II, JJ, LL, IW, I
+        Integer :: KK, II, IW 
         Integer :: IROW, JCOL
 
         !*********************************************************************
@@ -114,17 +113,18 @@ Module Boundary_Equations
             !---------------------------------------------------------------------
             !    ITERATE OVER WEIGHTING FUNCTIONS
             !---------------------------------------------------------------------
+
             loop_residuals_f:DO IW = 1, NBF_2d
         
                     BIFN =  bfn   (iw,kk)
                     DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                     DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
         
-                    ! -n * T = + P_bubble n + 1/Bo * (I-nn)\nabla \cdot \phi
+                    ! -n * T = + P_bubble n + 1/Bo * (-nn)\nabla \cdot \phi
         
                     TERM_RES     = 0.D0
-                    ! TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
-                    ! TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
+                    TERM_RES(getVariableId("Vr"))  = nr*gVar*BIFN*R + (1.d0/BoN)*((1.D0-nr*nr)*DBIR + BIFN/R + (    -nr*nz)*DBIZ)*R
+                    TERM_RES(getVariableId("Vz"))  = nz*gVar*BIFN*R + (1.d0/BoN)*((    -nr*nz)*DBIR          + (1.D0-nz*nz)*DBIZ)*R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK) * dS
@@ -132,6 +132,8 @@ Module Boundary_Equations
             end do loop_residuals_f
         end do LOOP_GAUSS
       
+                ! print*, 'temp_res=', temp_res
+                ! pause
 
         !---------------------------------------------------------------------
         !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
@@ -147,10 +149,9 @@ Module Boundary_Equations
 
     Subroutine Kinematic( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
-        Use CONTINUATION_MODULE,     Only: INCREMENT
         Use PHYSICAL_MODULE
-        Use ELEMENTS_MODULE,         Only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
-        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, BFN_E, DFDC_E,&
+        Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
+        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, DFDC_E,&
                                        DFDE_E, &
                                                                          getBasisFunctionsAtFace, &
                                                                          getNormalVectorAtFace
@@ -271,8 +272,9 @@ Module Boundary_Equations
 
             call getNormalVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
                                          ned, nr, nz, dS, normalize = .true.)
-            ! if (KK .eq. 1) then
-            ! print*, nr, nz
+            ! if ((KK .eq. 1) .and. (store)) then
+            ! print*, Z, R
+            ! print*, nz, nr 
             ! pause
             ! endif
             !*********************************************************************
@@ -305,6 +307,9 @@ Module Boundary_Equations
             !*********************************************************************
             !    ITERATE OVER WEIGHTING FUNCTIONS
             !*********************************************************************
+
+            
+
             loop_residuals_f:do iw = 1, nbf_2d
 
                 BIFN =  bfn   (iw,kk)
@@ -315,7 +320,6 @@ Module Boundary_Equations
                 TERM_RES     = 0.D0
             
                 TERM_RES(getVariableId("Z")) = SBFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * R * dS
-                ! TERM_RES(getVariableId("R")) = SBFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * R * dS
 
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)
@@ -336,9 +340,8 @@ Module Boundary_Equations
     Subroutine fixConcentrationFlux( NELEM, NED, TEMP_TL, TEMP_RES, STORE, value )
         Use VariableMapping
         Use PHYSICAL_MODULE
-        Use CONTINUATION_MODULE,     Only: INCREMENT
-        Use ELEMENTS_MODULE,         Only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
-        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, BFN_E, &
+        Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
+        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, &
                                             getBasisFunctionsAtFace, &
                                             getNormalVectorAtFace
         Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
@@ -381,7 +384,7 @@ Module Boundary_Equations
         Real(8), Dimension(NEQ_f)            :: TERM_RES
         ! Basis Function 
         Real(8)                              :: BIFN, DBIR, DBIZ
-        Integer :: KK, II, JJ, LL, IW, I
+        Integer :: KK, II, IW
         Integer :: IROW, JCOL
 
         !*********************************************************************
@@ -450,7 +453,7 @@ Module Boundary_Equations
                     DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                     DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
         
-                    ! -n * T = + P_bubble n + 1/Bo * (I-nn)\nabla \cdot \phi
+                    ! -n * T = + P_bubble n + 1/Bo * (-nn)\nabla \cdot \phi
         
                     TERM_RES     = 0.D0
                     TERM_RES(getVariableId("C"))  = value*BIFN
@@ -479,7 +482,7 @@ Module Boundary_Equations
     Subroutine X_EQUIDISTRIBUTION_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
         USE PHYSICAL_MODULE
-        USE ELEMENTS_MODULE,     only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
+        USE ELEMENTS_MODULE,     only: NBF_2d,  NEQ_f, NUNKNOWNS_f
         USE GAUSS_MODULE,        only: WO_1d, NGAUSS_1d, &
                                          getBasisFunctionsAtFace
         USE ENUMERATION_MODULE,  only: NM_MESH, NM_f
@@ -655,7 +658,7 @@ Module Boundary_Equations
     Subroutine Y_EQUIDISTRIBUTION_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
         USE PHYSICAL_MODULE
-        USE ELEMENTS_MODULE,     only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
+        USE ELEMENTS_MODULE,     only: NBF_2d,  NEQ_f, NUNKNOWNS_f
         USE GAUSS_MODULE,        only: WO_1d, NGAUSS_1d, &
                                          getBasisFunctionsAtFace
         USE ENUMERATION_MODULE,  only: NM_MESH, NM_f
@@ -830,11 +833,10 @@ Module Boundary_Equations
 
     SUBROUTINE Theta_EQUIDISTRIBUTION_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
-        USE CONTINUATION_MODULE, only: INCREMENT
         USE PHYSICAL_MODULE
-        USE ELEMENTS_MODULE,         only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
+        USE ELEMENTS_MODULE,         only: NBF_2d,  NEQ_f, NUNKNOWNS_f
         USE ENUMERATION_MODULE,      only: NM_MESH, NM_f, NME_MESH 
-        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, BFN_E, DFDC_E,&
+        Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, DFDC_E,&
                                         DFDE_E, &
                                                                             getBasisFunctionsAtFace, &
                                                                             getNormalVectorAtFace
@@ -880,7 +882,7 @@ Module Boundary_Equations
         Real(8) :: dS
         
 
-        INTEGER :: KK, II, JJ, LL, IW, JW, I, J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
+        INTEGER :: KK, II, JJ, IW, JW, J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
         INTEGER :: IROW, JCOL, N1, N2
 
         REAL(8)  :: WET
@@ -974,6 +976,12 @@ Module Boundary_Equations
             !    CALCULATE DERIVATIVES OF BASIS FUNCTIONS AND TRANSFORMATION
             !    JACOBIAN AT THE GAUSS POINTS IN X,Y COORDINATES
             !---------------------------------------------------------------------
+
+            ! if (kk==1 .and. store) then 
+            ! print*, 'theta_equid'
+            ! print*, TEMP_TL(:,getVariableId("Z")) , TEMP_TL(:,getVariableId("R"))
+            ! pause
+            ! endif
                 CALL BASIS_2d&
                 ( KK, TEMP_TL(:,getVariableId("Z")) , TEMP_TL(:,getVariableId("R")) , BFN, DFDC, DFDE, X, dXdC, dXdE, Y, dYdC, dYdE,&
                 CJAC, AJAC, DFDX, DFDY, NGAUSS_1d )
@@ -981,7 +989,9 @@ Module Boundary_Equations
                 CALL BASIS_2d&
                 ( KK, X_loc, Y_loc, BFN, DFDC, DFDE, X0, dX0dC, dX0dE, Y0, dY0dC, dY0dE,&
                 CJAC0, AJAC0, DFDX0, DFDY0, NGAUSS_1d )
-
+            
+                           
+            
                 !*********************************************************************
                 ! Calculate the normal and tangent vectors of the parent element
                 !*********************************************************************
@@ -1073,6 +1083,7 @@ Module Boundary_Equations
             !---------------------------------------------------------------------
             !    ITERATE OVER WEIGHTING FUNCTIONS
             !---------------------------------------------------------------------
+                       
             LOOP_RESIDUALS_f:DO IW = 1, NBF_2d
     
                 BIFN  = BFN(IW,KK)
@@ -1082,7 +1093,6 @@ Module Boundary_Equations
                 TERM_RES = 0.D0
     
                 TERM_RES(getVariableId("R")) = e_bnd*dQdtheta*DFDL0(IW,KK)
-                ! TERM_RES(getVariableId("Z")) = e_bnd*dQdtheta*DFDL0(IW,KK)
     
                 ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)*WET 
@@ -1111,10 +1121,9 @@ Module Boundary_Equations
 
 ! SUBROUTINE OUTFLOW_RESIDUAL_f( NELEM, NED, TEMP_TL, TEMP_RES, STORE )
 !       Use VariableMapping
-!       USE CONTINUATION_MODULE,     only: INCREMENT
 !       USE PHYSICAL_MODULE
-!       USE ELEMENTS_MODULE,         only: NBF_2d, NEL_2d, NEQ_f, NUNKNOWNS_f
-!       USE GAUSS_MODULE,            only: WO_1d, NGAUSS_1d, BFN_E, DFDC_E,&
+!       USE ELEMENTS_MODULE,         only: NBF_2d,  NEQ_f, NUNKNOWNS_f
+!       USE GAUSS_MODULE,            only: WO_1d, NGAUSS_1d, DFDC_E,&
 !                                          DFDE_E, &
 !                                                  getBasisFunctionsAtFace
 !       USE ENUMERATION_MODULE,      only: NM_MESH, NM_f
@@ -1132,7 +1141,7 @@ Module Boundary_Equations
 !       LOGICAL,                           INTENT(IN)  :: STORE
                   
 !     !  LOCAL VARIABLES
-!       INTEGER :: KK, II, JJ, LL, IW, JW, I, J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
+!       INTEGER :: KK, II, JJ, IW, JW, , J, INOD, IEQ, JNOD, JEQ, ISTEP, IMOD
 !       INTEGER :: IROW, JCOL
 
 !       REAL(8)  :: WET
@@ -1205,8 +1214,8 @@ Module Boundary_Equations
               
 !                       CASE(3)
                       
-!                       ! I mutually changed case 2 and case 3 and it worked
-!                       ! in the future i need to call subroutines to do the procedure automatically
+!                       !  mutually changed case 2 and case 3 and it worked
+!                       ! in the future  need to call subroutines to do the procedure automatically
                               
 !                               dL = DSQRT(DRDE**2+DZDE**2)
 !                               nr = + DZDE/dL

@@ -5,7 +5,7 @@ Module AmbientBoundary
     Use DirichletBoundaries,         only: ApplyDirichletAtNode_
     use boundary_enumeration_module, only: getBoundaryNodesOfWholeBoundary
     use MESH_MODULE, only: Xm, Ym
-    use physical_module, only: initial_position, ambient_position
+    use physical_module, only: initial_position, position_o, position, ambient_position_o, ambient_position
 
 
     private 
@@ -38,8 +38,6 @@ Module AmbientBoundary
         Type(Ambient)                      :: This 
         Integer, Dimension(:), Allocatable :: elements 
         Integer, Dimension(:), Allocatable :: faces 
-        real(8)                            :: a1 
-
 
         
         This%nelem = size(elements)
@@ -58,27 +56,27 @@ Module AmbientBoundary
 
         this%minimumZcoord = minval(  Xm( this%nodes )  )
 
-        ambient_position = this%minimumZcoord 
-        initial_position = this%minimumZcoord 
+        initial_position   = this%minimumZcoord  ;  position_o = initial_position 
+        position           = position_o          ;  ambient_position_o = position 
+        ambient_position   = ambient_position_o
 
     End Function NewAmbient
 
-
-
-
-    Subroutine applyBoundaryConditions(This, FlagNr)
-        Use physical_module,             only: ambient_position, vm_ambient
+    Subroutine applyBoundaryConditions(This, FlagNr, dVtankdt, Pressure_bc)
+        Use physical_module,             only: ambient_position_o, vm_ambient, Rtank, pi
         Use TIME_INTEGRATION,            only: time, dt
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
-        ! Use DirichletBoundaries, only : updateAllNodesOfTheBoundary, &
-        !                             ClearRowsOfResidual, ClearRowsOfJacobian
+        Use DirichletBoundaries, only : updateAllNodesOfTheBoundary, &
+                                    ClearRowsOfResidual, ClearRowsOfJacobian
 
         Implicit None 
-        Class(Ambient)  , Intent(In)         :: This 
+        Class(Ambient)  , Intent(In)         :: This
         Character(len=3), Intent(In)         :: FlagNr
+        Real(8),          Intent(In)         :: dVtankdt
+        Real(8),          Intent(In)         :: Pressure_bc
 
         Real(8), Dimension(:,:), Allocatable :: TL_
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2, RES_3
@@ -87,23 +85,64 @@ Module AmbientBoundary
         Integer                              :: face
         Integer                              :: i
         Integer                              :: ii
-        Integer                              :: datumPressure_boundary_node
-       
 
-        
+        vm_ambient = dVtankdt / (pi*Rtank**2)
+       
         do node_counter = 1, size(this%nodes)
             node = this%nodes(node_counter)
-
-            call ApplyDirichletAtNode_(node, "Z", ambient_position, FlagNr )
+            call ApplyDirichletAtNode_(node, "Z", ambient_position_o + dt*vm_ambient, FlagNr )
             call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
-            call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
+            call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
+            
+            call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
         enddo
-
-        node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
-        call ApplyDirichletAtNode_(node, "P", This%datumPressure, FlagNr )
 
         If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
+
+
+    ! Subroutine applyBoundaryConditions(This, FlagNr)
+    !     ! Use physical_module,             only: ambient_position, vm_ambient
+    !     Use TIME_INTEGRATION,            only: time, dt
+    !     Use GLOBAL_ARRAYS_MODULE,        Only: TL
+    !     Use ENUMERATION_MODULE,          Only: NM_MESH
+    !     Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
+    !     Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
+    !     ! Use DirichletBoundaries, only : updateAllNodesOfTheBoundary, &
+    !     !                             ClearRowsOfResidual, ClearRowsOfJacobian
+
+    !     Implicit None 
+    !     Class(Ambient)  , Intent(In)         :: This 
+    !     Character(len=3), Intent(In)         :: FlagNr
+
+    !     Real(8), Dimension(:,:), Allocatable :: TL_
+    !     Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2, RES_3
+    !     Integer                              :: iel, node_counter, node
+    !     Integer                              :: element 
+    !     Integer                              :: face
+    !     Integer                              :: i
+    !     Integer                              :: ii
+    !     Integer                              :: datumPressure_boundary_node
+       
+
+        
+    !     do node_counter = 1, size(this%nodes)
+    !         node = this%nodes(node_counter)
+
+    !         ! call ApplyDirichletAtNode_(node, "Z", ambient_position, FlagNr )
+    !         call ApplyDirichletAtNode_(node, "Z", Ksi(node), FlagNr )
+    !         call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
+    !         call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
+    !         ! call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
+    !         call ApplyDirichletAtNode_(node, "P", This%datumPressure, FlagNr )
+    !     enddo
+
+    !     ! node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
+    !     ! node = this%nodes(  minloc( Ym(this%nodes), dim=1 )  )
+    !     ! call ApplyDirichletAtNode_(node, "P", This%datumPressure, FlagNr )
+
+    !     If ( Allocated(TL_) ) Deallocate(TL_)
+    ! End Subroutine  applyBoundaryConditions
 
 
 
