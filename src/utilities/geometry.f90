@@ -68,11 +68,12 @@ module geometry
 
 
 
-        Subroutine distance_array(point1, point2, dist) 
+        function distance_array(point1, point2) result(output)
             Implicit None 
             Real(8), Dimension(:), Intent(In) :: point1 
             Real(8), Dimension(:), Intent(In) :: point2
             Real(8)                           :: dist
+            Real(8)                           :: output
 
             Integer                           :: i
             Integer                           :: n
@@ -83,8 +84,8 @@ module geometry
                 dist = dist + (point1(i) - point2(i))**2
             end do
 
-            dist = dsqrt(dist)
-        End Subroutine distance_array
+            output = dsqrt(dist)
+        End function distance_array
 
 
         Function area_array(x,y) Result(A)
@@ -101,9 +102,9 @@ module geometry
 
             If ( size(x) /= 3) Stop "[Error] area_array: the input is not triangle vertices."
 
-            call distance( [x(1), y(1)], [x(2), y(2)], AB)
-            call distance( [x(2), y(2)], [x(3), y(3)], BC)
-            call distance( [x(3), y(3)], [x(1), y(1)], CA)
+            AB = distance( [x(1), y(1)], [x(2), y(2)])
+            BC = distance( [x(2), y(2)], [x(3), y(3)])
+            CA = distance( [x(3), y(3)], [x(1), y(1)])
 
             ! Herons Formula
             s  = (AB + BC + CA)/2.d0
@@ -124,9 +125,9 @@ module geometry
             Real(8)                           :: s
 
 
-            call distance( [x(1), y(1)], [x(2), y(2)], AB)
-            call distance( [x(2), y(2)], [x(3), y(3)], BC)
-            call distance( [x(3), y(3)], [x(1), y(1)], CA)
+            AB = distance( [x(1), y(1)], [x(2), y(2)])
+            BC = distance( [x(2), y(2)], [x(3), y(3)])
+            CA = distance( [x(3), y(3)], [x(1), y(1)])
 
             ! Herons Formula
             s  = (AB + BC + CA)/2.d0

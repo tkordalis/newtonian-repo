@@ -1465,7 +1465,7 @@ MODULE BOUNDARY_ENUMERATION_MODULE
             point_next = [ Solution( nodesOnBoundary_temp(counter_j), getVariableId("Z") ), &
                            Solution( nodesOnBoundary_temp(counter_j), getVariableId("R") ) ]
 
-            call distance(point_ref, point_next, Dist(counter_j))
+            Dist(counter_j) = distance(point_ref, point_next)
           enddo inner_loop
 
           NodeMinDist = minloc(Dist, dim=1)
@@ -2123,9 +2123,9 @@ module basis_calculations
   
     Jac = dA(1,1) * dA(2,2) - dA(2,1) * dA(1,2)
     dA_inverse(1,1)  =   dA(2,2)/Jac
-    dA_inverse(1,2)  = - dA(2,1)/Jac
-    dA_inverse(2,1)  = - dA(1,2)/Jac
-    dA_inverse(2,2)  =   dA(2,2)/Jac
+    dA_inverse(1,2)  = - dA(1,2)/Jac
+    dA_inverse(2,1)  = - dA(2,1)/Jac
+    dA_inverse(2,2)  =   dA(1,1)/Jac
   end subroutine inv_deriv
 
     subroutine basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
@@ -2154,6 +2154,7 @@ module basis_calculations
         dXc_gpdK  = 0.d0
 
         do ii=1, NBF_2d
+            a = 0.d0  ;  b = 0.d0
             a = reshape(Xc(:,ii), [NCD,1])
             b = reshape(dBFNdK(:,ii), [1,NCD] )
 
@@ -2165,10 +2166,81 @@ module basis_calculations
         call inv_deriv( dXc_gpdK, dKdX_gp, Jac )
 
         do ii=1, NBF_2d
-            dBFNdX(:,ii) = matmul( dKdX_gp, dBFNdK(:,ii) )
+            dBFNdX(:,ii) = matmul( transpose(dKdX_gp), dBFNdK(:,ii) )
         enddo
     end subroutine basis_spatial_derivs
 
+    subroutine basis_interp_scalar( Pvalue_nod, gauss_point, Xc, Pgp, dPgpdX)
+        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f, NCD
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        implicit none
+        real(8), dimension(:), intent(in)  :: Pvalue_nod
+        integer,               intent(in)  :: gauss_point
+        real(8), dimension(:,:), intent(in)  :: Xc
+
+        real(8),               intent(out) :: Pgp
+        real(8), dimension(:), intent(out) :: dPgpdX
+
+        ! local variables
+        Real(8), Dimension(NBF_2d)           :: BFN
+        Real(8), Dimension(NCD, NBF_2d)      :: dBFNdX
+        Real(8)                              :: Jac
+        ! Real(8), Dimension(NCD,1)       :: a
+        ! Real(8), Dimension(1,NCD)       :: b
+
+        integer                              :: II
+
+        BFN     = BFN_2d (:, gauss_point)
+
+        call basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
+
+        Pgp     = 0.d0
+        dPgpdX  = 0.d0
+        do ii=1, NBF_2d
+            Pgp     = Pgp    + Pvalue_nod(ii)*BFN(ii)
+
+            dPgpdX  = dPgpdX + Pvalue_nod(ii)*dBFNdX(:,ii)
+        enddo
+
+    end subroutine basis_interp_scalar
+
+
+    subroutine basis_interp_vector(Uvalue_nod, gauss_point, Xc, Ugp, gradUgp)
+        ! this works only for 2 dimensions currently
+        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f, NCD
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        implicit none
+        real(8), dimension(:,:), intent(in)  :: Uvalue_nod
+        integer,                 intent(in)  :: gauss_point
+        real(8), dimension(:,:), intent(in)  :: Xc
+        real(8), dimension(:),   intent(inout)  :: Ugp
+        real(8), dimension(:,:), intent(inout)  :: gradUgp
+
+        Real(8), Dimension(NBF_2d)           :: BFN
+        Real(8), Dimension(NCD, NBF_2d)      :: dBFNdX
+        Real(8)                              :: Jac
+        Real(8), Dimension(NCD,1)       :: a
+        Real(8), Dimension(1,NCD)       :: b
+
+
+        integer                              :: II
+
+        BFN     = BFN_2d (:, gauss_point)
+
+        call basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
+
+        Ugp      = 0.d0
+        gradUgp  = 0.d0
+
+        do ii=1, NBF_2d
+            a = reshape(Uvalue_nod(:,ii), [NCD,1])
+            b = reshape(dBFNdX(:,ii), [1,NCD] )
+
+            Ugp     = Ugp     + Uvalue_nod(:,ii)*BFN(ii)
+
+            gradUgp  = gradUgp  + matmul(a, b)
+        enddo
+    end subroutine basis_interp_vector
 
     subroutine basis_spatial_derivatives( gauss_point, Z_nodes, R_nodes, dBFNdZ, dBFNdR, Jac )
         Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f
@@ -2222,43 +2294,8 @@ module basis_calculations
         enddo 
     end subroutine basis_spatial_derivatives
 
+    
 
-    subroutine basis_interp_chain_U(Uvalue_nod, gauss_point, Xc, Ugp, gradUgp)
-        ! this works only for 2 dimensions currently
-        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f, NCD
-        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
-        implicit none
-        real(8), dimension(:,:), intent(in)  :: Uvalue_nod
-        integer,                 intent(in)  :: gauss_point
-        real(8), dimension(:,:), intent(in)  :: Xc
-        real(8), dimension(:),   intent(inout)  :: Ugp
-        real(8), dimension(:,:), intent(inout)  :: gradUgp
-
-        Real(8), Dimension(NBF_2d)           :: BFN
-        Real(8), Dimension(NCD, NBF_2d)      :: dBFNdX
-        Real(8)                              :: Jac
-        Real(8), Dimension(NCD,1)       :: a
-        Real(8), Dimension(1,NCD)       :: b
-
-
-        integer                              :: II
-
-        BFN     = BFN_2d (:, gauss_point)
-
-        call basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
-
-        Ugp      = 0.d0
-        gradUgp  = 0.d0
-
-        do ii=1, NBF_2d
-            a = reshape(Uvalue_nod(:,ii), [NCD,1])
-            b = reshape(dBFNdX(:,ii), [1,NCD] )
-
-            Ugp     = Ugp     + Uvalue_nod(:,ii)*BFN(ii)
-
-            gradUgp  = gradUgp  + matmul(a, b)
-        enddo
-    end subroutine basis_interp_chain_U
 
   
     subroutine basis_interpolation_chainrule( value_at_nodes_of_element, gauss_point, Z_nodes, R_nodes, VAR, dVARdZ, dVARdR)

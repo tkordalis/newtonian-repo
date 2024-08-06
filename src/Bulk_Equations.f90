@@ -33,6 +33,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Use FLOW_ARRAYS_MODULE,      Only: B_f
    Use MESH_MODULE,             Only: Xm, Ym
    Use TIME_INTEGRATION,        Only: Dt, TIME, DTo, dtb
+   use geometry, only: distance
    Implicit None
    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
    !  ARGUMENTS
@@ -75,17 +76,18 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Real(8), Dimension(NBF_2d)           :: Uz_nodes_elem, Ur_nodes_elem, dZdt_nodes_elem, dRdt_nodes_elem
 
    ! if the code is 3d this needs to be dim(3,NBF)
-   Real(8), Dimension(NCD,NBF_2d)         :: X_, dXdt_, X0_, U_, dPdX_
+   Real(8), Dimension(NBF_2d)             :: P_
+   Real(8), Dimension(NCD,NBF_2d)         :: X_, Xo_, dXdt_, X0_, U_, dPdX_, dbfndx_
    
    Real(8), Dimension(NEQ_f)            :: TERM_RES
    Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc  
    
    Real(8), Dimension(3,3)              :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
-   Real(8), Dimension(NCD)              :: Ugp
+   Real(8), Dimension(NCD)              :: Ugp, dPgpdX
    Real(8), Dimension(NCD,NCD)          :: gradUgp
    
    
-   Real(8)                              :: Gravity_Term, e_tr
+   Real(8)                              :: Gravity_Term, e_tr, jac2, Pgp, Uelem2
     !---------------------------------------------------------------------
     !  COPY X VECTOR TO LOCAL VECTOR
     !---------------------------------------------------------------------
@@ -100,8 +102,12 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      TLb_loc(II,:) = TLb(JJ,:)
    ENDDO
 
-   X_(1,:) = TEMP_TL(:,getVariableId("Z")) 
-   X_(2,:) = TEMP_TL(:,getVariableId("R")) 
+   P_ = TEMP_TL(:,getVariableId("P"))
+
+   X_(1,:) = TEMP_TL(:,getVariableId("Z"))  ;  Xo_(1,:) = TLo_loc(:,getVariableId("Z")) 
+   X_(2,:) = TEMP_TL(:,getVariableId("R"))  ;  Xo_(2,:) = TLo_loc(:,getVariableId("R")) 
+
+   dXdt_ = (X_ - Xo_)/dt
 
    U_(1,:) = TEMP_TL(:,getVariableId("Vz"))
    U_(2,:) = TEMP_TL(:,getVariableId("Vr"))
@@ -125,7 +131,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    
    dZdt_nodes_elem = ( Z_nodes_elem - Zo_nodes_elem ) / DT
 
-   dRdt_nodes_elem = ( R_nodes_elem - Ro_nodes_elem ) / DT
+   dRdt_nodes_elem = ( R_nodes_elem - Ro_nodes_elem ) / DT 
 
 
    Uelem = 0.d0
@@ -135,9 +141,10 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
         ! Uelem = Uelem + SQRT( ( Uz_nodes_elem(II) )**2 &
         !                         + ( Ur_nodes_elem(II) )**2 ) / DBLE(NBF_2d)
    enddo
-   
 
-   
+   Uelem2 = sum( [ (distance( U_(:,ii), dXdt_(:,ii) )/dble(NBF_2d) , ii=1, NBF_2d) ] )
+  print*, Uelem, Uelem2, Uelem- Uelem2
+  pause
     !---------------------------------------------------------------------
     !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
     !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
@@ -172,15 +179,21 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
 
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Vz")) , KK, Z_nodes_elem(:), R_nodes_elem(:),  Vz , dVzdZ , dVzdR  )
 
-     call basis_interp_chain_U( U_ , kk , X_ , Ugp , gradUgp )
+     ! call basis_interp_vector( U_ , kk , X_ , Ugp , gradUgp )
+     call basis_interp_scalar( P_ , kk , X_ , Pgp , dPgpdX )
+     
 
-     if ( (abs(Vz- Ugp(1)) .gt. 1.d-10 ).or. ((abs(Vr- Ugp(2)) .gt. 1.d-10)) ) then
-       print*, Vz- Ugp(1), Vr- Ugp(2)
-       pause
-     endif
 
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("P"))  , KK, Z_nodes_elem(:), R_nodes_elem(:),  P  , dPdZ  , dPdR   )
 
+       ! print*, P, Pgp, P- Pgp
+       ! print*," " 
+       ! print*, dPdZ, dPgpdX(1), dPdZ - dPgpdX(1)
+       ! print*," " 
+       ! print*, dPdr, dPgpdX(2), dPdr - dPgpdX(2)
+       ! print*," " 
+
+       ! pause
      
 
      ! ************************************************************************
