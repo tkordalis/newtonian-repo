@@ -243,6 +243,7 @@ Module ELEMENTS_MODULE
  Integer, Parameter:: NBF_1d = 2             ! NUMBER OF BASIS FUNCTIONS PER 1d ELEMENT
  Integer, Parameter:: NBF_2d = 3             ! NUMBER OF BASIS FUNCTIONS PER 2d ELEMENT
  Integer, Parameter:: NED_2d = 3             ! NUMBER OF EDGES PER 2d ELEMENT
+ Integer, Parameter:: NCD    = 2             ! number of coordinate dimensions: 2 for 2D and 2D axis, 3 for 3D
     
  !   NUMBER OF EQUATIONS
  Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
@@ -2114,93 +2115,185 @@ module basis_calculations
   end subroutine inverse_derivatives
 
 
-  subroutine basis_spatial_derivatives( gauss_point, Z_nodes, R_nodes, dBFNdZ, dBFNdR, Jac )
-    Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f
-    use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+  subroutine inv_deriv(dA, dA_inverse, Jac)
     implicit none
-    integer,               intent(in)  :: gauss_point
-    real(8), dimension(:), intent(in)  :: Z_nodes, R_nodes
-    real(8), dimension(:), intent(out) :: dBFNdZ, dBFNdR
-    Real(8)              , intent(out) :: Jac
-    ! local variables
-    integer                              :: II
-    Real(8), Dimension(NBF_2d,NGAUSS_2d) :: BFN, dBFNdx1, dBFNdx2
-    Real(8)                              :: R, dRdx1, dRdx2, dx1dR, dx2dR
-    Real(8)                              :: Z, dZdx1, dZdx2, dx1dZ, dx2dZ
-    Real(8), dimension(4)                :: outpt
+    real(8), dimension(:,:), intent(in)  :: dA
+    real(8), dimension(:,:), intent(out) :: dA_inverse
+    real(8),               intent(out) :: Jac
+  
+    Jac = dA(1,1) * dA(2,2) - dA(2,1) * dA(1,2)
+    dA_inverse(1,1)  =   dA(2,2)/Jac
+    dA_inverse(1,2)  = - dA(2,1)/Jac
+    dA_inverse(2,1)  = - dA(1,2)/Jac
+    dA_inverse(2,2)  =   dA(2,2)/Jac
+  end subroutine inv_deriv
+
+    subroutine basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
+        Use ELEMENTS_MODULE,  only: NBF_2d, NCD
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        Implicit none
+        integer,                 intent(in)  :: gauss_point
+        real(8), dimension(:,:), intent(in)  :: Xc
+        real(8), dimension(:,:), intent(out) :: dBFNdX
+        Real(8)                , intent(out) :: Jac
+
+        Real(8), Dimension(NBF_2d)      :: BFN
+        Real(8), Dimension(NCD, NBF_2d) :: dBFNdK
+        Real(8), Dimension(NCD)         :: Xc_gp
+        Real(8), Dimension(NCD,NCD)     :: dXc_gpdK, dKdX_gp
+        Real(8), Dimension(NCD,1)       :: a
+        Real(8), Dimension(1,NCD)       :: b
+
+        integer                         :: II
+
+        BFN = BFN_2d(:,gauss_point)
+        dBFNdK(1,:) = DFDC_2d(:,gauss_point)
+        dBFNdK(2,:) = DFDE_2d(:,gauss_point)
+
+        Xc_gp     = 0.d0
+        dXc_gpdK  = 0.d0
+
+        do ii=1, NBF_2d
+            a = reshape(Xc(:,ii), [NCD,1])
+            b = reshape(dBFNdK(:,ii), [1,NCD] )
+
+            Xc_gp     = Xc_gp     + Xc(:,ii)*BFN(ii)
+
+            dXc_gpdK  = dXc_gpdK  + matmul(a, b)
+        enddo
+
+        call inv_deriv( dXc_gpdK, dKdX_gp, Jac )
+
+        do ii=1, NBF_2d
+            dBFNdX(:,ii) = matmul( dKdX_gp, dBFNdK(:,ii) )
+        enddo
+    end subroutine basis_spatial_derivs
 
 
-    BFN     = BFN_2d
-    dBFNdx1 = DFDC_2d
-    dBFNdx2 = DFDE_2d
-
-    Z     = 0.d0 ; dZdx1 = 0.d0 ; dZdx2 = 0.d0
-    do II = 1, NBF_2d
-      Z     = Z     + Z_nodes(II)*BFN    (II, gauss_point)
-      dZdx1 = dZdx1 + Z_nodes(II)*dBFNdx1(II, gauss_point)
-      dZdx2 = dZdx2 + Z_nodes(II)*dBFNdx2(II, gauss_point)
-    enddo 
-
-    R     = 0.d0 ; dRdx1 = 0.d0 ; dRdx2 = 0.d0
-    do II = 1, NBF_2d
-      R     = R     + R_nodes(II)*BFN    (II, gauss_point)
-      dRdx1 = dRdx1 + R_nodes(II)*dBFNdx1(II, gauss_point)
-      dRdx2 = dRdx2 + R_nodes(II)*dBFNdx2(II, gauss_point)
-    enddo 
+    subroutine basis_spatial_derivatives( gauss_point, Z_nodes, R_nodes, dBFNdZ, dBFNdR, Jac )
+        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        implicit none
+        integer,               intent(in)  :: gauss_point
+        real(8), dimension(:), intent(in)  :: Z_nodes, R_nodes
+        real(8), dimension(:), intent(out) :: dBFNdZ, dBFNdR
+        Real(8)              , intent(out) :: Jac
+        ! local variables
+        integer                              :: II
+        Real(8), Dimension(NBF_2d,NGAUSS_2d) :: BFN, dBFNdx1, dBFNdx2
+        Real(8)                              :: R, dRdx1, dRdx2, dx1dR, dx2dR
+        Real(8)                              :: Z, dZdx1, dZdx2, dx1dZ, dx2dZ
+        Real(8), dimension(4)                :: outpt
 
 
-    call inverse_derivatives( [dZdx1, dZdx2, dRdx1, dRdx2], outpt, Jac )
+        BFN     = BFN_2d
+        dBFNdx1 = DFDC_2d
+        dBFNdx2 = DFDE_2d
 
-    dx1dZ = outpt(1)
-    dx2dZ = outpt(2)
-    dx1dR = outpt(3)
-    dx2dR = outpt(4)
-    
+        Z     = 0.d0 ; dZdx1 = 0.d0 ; dZdx2 = 0.d0
+        do II = 1, NBF_2d
+            Z     = Z     + Z_nodes(II)*BFN    (II, gauss_point)
+            dZdx1 = dZdx1 + Z_nodes(II)*dBFNdx1(II, gauss_point)
+            dZdx2 = dZdx2 + Z_nodes(II)*dBFNdx2(II, gauss_point)
+        enddo 
 
-    dBFNdZ  = 0.d0 ; dBFNdR  = 0.d0
-    do II = 1, NBF_2d
+        R     = 0.d0 ; dRdx1 = 0.d0 ; dRdx2 = 0.d0
+        do II = 1, NBF_2d
+            R     = R     + R_nodes(II)*BFN    (II, gauss_point)
+            dRdx1 = dRdx1 + R_nodes(II)*dBFNdx1(II, gauss_point)
+            dRdx2 = dRdx2 + R_nodes(II)*dBFNdx2(II, gauss_point)
+        enddo 
 
-      dBFNdZ(II) = dx1dZ * dBFNdx1(II, gauss_point)  +  dx2dZ * dBFNdx2(II, gauss_point)
-      dBFNdR(II) = dx1dR * dBFNdx1(II, gauss_point)  +  dx2dR * dBFNdx2(II, gauss_point)
 
-    enddo 
-  end subroutine basis_spatial_derivatives
+        call inverse_derivatives( [dZdx1, dZdx2, dRdx1, dRdx2], outpt, Jac )
 
+        dx1dZ = outpt(1)
+        dx2dZ = outpt(2)
+        dx1dR = outpt(3)
+        dx2dR = outpt(4)
+
+
+        dBFNdZ  = 0.d0 ; dBFNdR  = 0.d0
+        do II = 1, NBF_2d
+
+            dBFNdZ(II) = dx1dZ * dBFNdx1(II, gauss_point)  +  dx2dZ * dBFNdx2(II, gauss_point)
+            dBFNdR(II) = dx1dR * dBFNdx1(II, gauss_point)  +  dx2dR * dBFNdx2(II, gauss_point)
+
+        enddo 
+    end subroutine basis_spatial_derivatives
+
+
+    subroutine basis_interp_chain_U(Uvalue_nod, gauss_point, Xc, Ugp, gradUgp)
+        ! this works only for 2 dimensions currently
+        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f, NCD
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        implicit none
+        real(8), dimension(:,:), intent(in)  :: Uvalue_nod
+        integer,                 intent(in)  :: gauss_point
+        real(8), dimension(:,:), intent(in)  :: Xc
+        real(8), dimension(:),   intent(inout)  :: Ugp
+        real(8), dimension(:,:), intent(inout)  :: gradUgp
+
+        Real(8), Dimension(NBF_2d)           :: BFN
+        Real(8), Dimension(NCD, NBF_2d)      :: dBFNdX
+        Real(8)                              :: Jac
+        Real(8), Dimension(NCD,1)       :: a
+        Real(8), Dimension(1,NCD)       :: b
+
+
+        integer                              :: II
+
+        BFN     = BFN_2d (:, gauss_point)
+
+        call basis_spatial_derivs( gauss_point, Xc, dBFNdX, Jac)
+
+        Ugp      = 0.d0
+        gradUgp  = 0.d0
+
+        do ii=1, NBF_2d
+            a = reshape(Uvalue_nod(:,ii), [NCD,1])
+            b = reshape(dBFNdX(:,ii), [1,NCD] )
+
+            Ugp     = Ugp     + Uvalue_nod(:,ii)*BFN(ii)
+
+            gradUgp  = gradUgp  + matmul(a, b)
+        enddo
+    end subroutine basis_interp_chain_U
 
   
-  subroutine basis_interpolation_chainrule( value_at_nodes_of_element, gauss_point, Z_nodes, R_nodes, VAR, dVARdZ, dVARdR)
-    Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f
-    use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
-    implicit none
-    real(8), dimension(:), intent(in)  :: value_at_nodes_of_element, Z_nodes, R_nodes
-    integer,               intent(in)  :: gauss_point
-    real(8),               intent(out) :: VAR, dVARdZ, dVARdR !values of the variable on the gauss point
+    subroutine basis_interpolation_chainrule( value_at_nodes_of_element, gauss_point, Z_nodes, R_nodes, VAR, dVARdZ, dVARdR)
+        Use ELEMENTS_MODULE,  only: NBF_2d, NEQ_f
+        use GAUSS_MODULE,     only: NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
+        implicit none
+        real(8), dimension(:), intent(in)  :: value_at_nodes_of_element, Z_nodes, R_nodes
+        integer,               intent(in)  :: gauss_point
+        real(8),               intent(out) :: VAR, dVARdZ, dVARdR !values of the variable on the gauss point
 
-    ! local variables
-    Real(8), Dimension(NBF_2d)           :: BFN, dBFNdZ, dBFNdR
-    integer                              :: II
-    Real(8)                              :: dVARdZ_dummy, dVARdR_dummy, Jac
-
-
-    BFN     = BFN_2d (:, gauss_point)
-
-    call basis_spatial_derivatives( gauss_point, Z_nodes, R_nodes, dBFNdZ, dBFNdR, Jac )
+        ! local variables
+        Real(8), Dimension(NBF_2d)           :: BFN, dBFNdZ, dBFNdR
+        integer                              :: II
+        Real(8)                              :: dVARdZ_dummy, dVARdR_dummy, Jac
 
 
-    VAR     = 0.d0 
-    dVARdZ_dummy  = 0.d0 ; dVARdR_dummy  = 0.d0
-    do II = 1, NBF_2d
+        BFN     = BFN_2d (:, gauss_point)
 
-      VAR          = VAR          + value_at_nodes_of_element(II)*BFN   (II)
-      dVARdZ_dummy = dVARdZ_dummy + value_at_nodes_of_element(II)*dBFNdZ(II)
-      dVARdR_dummy = dVARdR_dummy + value_at_nodes_of_element(II)*dBFNdR(II)
+        call basis_spatial_derivatives( gauss_point, Z_nodes, R_nodes, dBFNdZ, dBFNdR, Jac )
 
-    enddo 
 
-    dVARdZ  = dVARdZ_dummy
-    dVARdR  = dVARdR_dummy
+        VAR     = 0.d0 
+        dVARdZ_dummy  = 0.d0 ; dVARdR_dummy  = 0.d0
+        do II = 1, NBF_2d
 
-  end subroutine basis_interpolation_chainrule
+            VAR          = VAR          + value_at_nodes_of_element(II)*BFN   (II)
+            dVARdZ_dummy = dVARdZ_dummy + value_at_nodes_of_element(II)*dBFNdZ(II)
+            dVARdR_dummy = dVARdR_dummy + value_at_nodes_of_element(II)*dBFNdR(II)
+
+        enddo 
+
+        dVARdZ  = dVARdZ_dummy
+        dVARdR  = dVARdR_dummy
+
+    end subroutine basis_interpolation_chainrule
 
 
   subroutine Hugn_calculation(velocity_z, velocity_r, gauss_point, Z_nodes, R_nodes, Hugn)

@@ -26,7 +26,7 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Use SR_REPRESENTATION
    Use CONTINUATION_MODULE,     Only: INCREMENT
    Use PHYSICAL_MODULE
-   Use ELEMENTS_MODULE,         Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+   Use ELEMENTS_MODULE,         Only: NBF_2d, NEQ_f, NUNKNOWNS_f, NCD
    Use GAUSS_MODULE,            Only: WO_2d, NGAUSS_2d, BFN_2d, DFDC_2d, DFDE_2d
    Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
    Use GLOBAL_ARRAYS_MODULE,    Only: TLo, TLb
@@ -73,12 +73,16 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
    Integer, Dimension(NBF_2d)           :: NM 
    Real(8), Dimension(NBF_2d)           :: Zo_nodes_elem, Ro_nodes_elem, Z_nodes_elem, R_nodes_elem
    Real(8), Dimension(NBF_2d)           :: Uz_nodes_elem, Ur_nodes_elem, dZdt_nodes_elem, dRdt_nodes_elem
+
+   ! if the code is 3d this needs to be dim(3,NBF)
+   Real(8), Dimension(NCD,NBF_2d)         :: X_, dXdt_, X0_, U_, dPdX_
    
    Real(8), Dimension(NEQ_f)            :: TERM_RES
-   Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc
-  
+   Real(8), Dimension(NBF_2d, NEQ_f)    :: TLo_loc, TLb_loc  
    
    Real(8), Dimension(3,3)              :: S_tensor_o, S_tensor, Stress_tensor_o, Stress_tensor
+   Real(8), Dimension(NCD)              :: Ugp
+   Real(8), Dimension(NCD,NCD)          :: gradUgp
    
    
    Real(8)                              :: Gravity_Term, e_tr
@@ -95,6 +99,12 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
      TLo_loc(II,:) = TLo(JJ,:)
      TLb_loc(II,:) = TLb(JJ,:)
    ENDDO
+
+   X_(1,:) = TEMP_TL(:,getVariableId("Z")) 
+   X_(2,:) = TEMP_TL(:,getVariableId("R")) 
+
+   U_(1,:) = TEMP_TL(:,getVariableId("Vz"))
+   U_(2,:) = TEMP_TL(:,getVariableId("Vr"))
 
     Gravity_Term = -1.d0
    ! Gravity_Term = Gravity_Term*ratio_of_pressures
@@ -156,9 +166,18 @@ Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
 
      call basis_interpolation_chainrule( Eta_loc(:), KK, Z_nodes_elem(:), R_nodes_elem(:),  Eta, dEtadZ, dEtadR )
 
+
+
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Vr")) , KK, Z_nodes_elem(:), R_nodes_elem(:),  Vr , dVrdZ , dVrdR  )
 
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("Vz")) , KK, Z_nodes_elem(:), R_nodes_elem(:),  Vz , dVzdZ , dVzdR  )
+
+     call basis_interp_chain_U( U_ , kk , X_ , Ugp , gradUgp )
+
+     if ( (abs(Vz- Ugp(1)) .gt. 1.d-10 ).or. ((abs(Vr- Ugp(2)) .gt. 1.d-10)) ) then
+       print*, Vz- Ugp(1), Vr- Ugp(2)
+       pause
+     endif
 
      call basis_interpolation_chainrule( TEMP_TL(:,getVariableId("P"))  , KK, Z_nodes_elem(:), R_nodes_elem(:),  P  , dPdZ  , dPdR   )
 
