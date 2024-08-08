@@ -92,7 +92,6 @@ Module MovingWallBoundary
 
         output = ( 1.d0 - (2.d0*Xnode-1.d0)**14.d0 )
         ! print*, time, Xnode, output
-        ! pause
     end function getLidVelocity
 
 

@@ -99,9 +99,6 @@ module newton_bulk_call
         n_timer   = 0
         ITER_f = 0
 
-        call bubble%setCentroid_o()
-        call bubble%setVolume_o()
-
         ! ----------------------------------------------------------------------
         !  NEWTON ITERATION LOOP
         !  UPDATE THE SOLUTION VECTOR TL AND CHECK CONVERGENCE
@@ -137,18 +134,14 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
 
-            ! print*, bubble1%pressure
-            ! pause
-        !   !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-        !   !$OMP& DEFAULT (SHARED)&
-        !   !$OMP& PRIVATE (IEL)
+          !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+          !$OMP& DEFAULT (SHARED)&
+          !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 ! CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-        !      !$OMP END PARALLEL DO
-                pause
-
+             !$OMP END PARALLEL DO
               ! jj=1
               ! kk=0
               ! do ii = 1, size(B_f)
@@ -209,8 +202,6 @@ module newton_bulk_call
 
             ENDIF
 
-            ! Ac_f = 0.d0
-            ! Ar_f = 0.d0
             !--------------------------------------------------------------
             !    CALCULATE Sa_f = A_f(-1).Ac_f
             !--------------------------------------------------------------
@@ -362,13 +353,9 @@ module newton_bulk_call
 
         call bubble%setPressure(Pressure_bubble)
 
-        ! call Bubble1%setMaxRcoordinateOfInterfaceAndLogicalOperator(StructMeshOnlyInTheFront, TL)
-
 
         ! If convergence is achieved, remove iteration_*.plt
         call execute_command_line("rm -f Iteration_*.plt")
-
-           
 
     END SUBROUTINE NEWTON_RAPSHON_f
 

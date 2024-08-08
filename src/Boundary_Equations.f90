@@ -108,7 +108,7 @@ Module Boundary_Equations
 
 
             ! if (kk==1 .and. store == .true.) then
-            !     print*, 'Bubble pressure=', gvar; pause
+            !     print*, 'Bubble pressure=', gvar
             !     endif
             !---------------------------------------------------------------------
             !    ITERATE OVER WEIGHTING FUNCTIONS
@@ -133,7 +133,6 @@ Module Boundary_Equations
         end do LOOP_GAUSS
       
                 ! print*, 'temp_res=', temp_res
-                ! pause
 
         !---------------------------------------------------------------------
         !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
@@ -275,7 +274,6 @@ Module Boundary_Equations
             ! if ((KK .eq. 1) .and. (store)) then
             ! print*, Z, R
             ! print*, nz, nr 
-            ! pause
             ! endif
             !*********************************************************************
             ! Calculate the Solution of the previous time steps
@@ -980,7 +978,6 @@ Module Boundary_Equations
             ! if (kk==1 .and. store) then 
             ! print*, 'theta_equid'
             ! print*, TEMP_TL(:,getVariableId("Z")) , TEMP_TL(:,getVariableId("R"))
-            ! pause
             ! endif
                 CALL BASIS_2d&
                 ( KK, TEMP_TL(:,getVariableId("Z")) , TEMP_TL(:,getVariableId("R")) , BFN, DFDC, DFDE, X, dXdC, dXdE, Y, dYdC, dYdE,&
@@ -1227,7 +1224,6 @@ Module Boundary_Equations
 !                ! if (kk .eq. 1) then
 !                ! print*, ned
 !                ! print*, nr, nz
-!                ! pause
 !                ! endif
                 
               

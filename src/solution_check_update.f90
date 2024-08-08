@@ -125,7 +125,7 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        FLAG_NR = 'NRP'
+        ! FLAG_NR = 'NRP'
 
 
         IF( RSUM_NEW .GT. 5.0D+9 )THEN
@@ -163,41 +163,34 @@ module solution_check_update
     !--------------------------------------------------------------------------
 
     SUBROUTINE UPDATE_SOLUTION( INCREMENT )
+        use BoundaryConditions
+        USE GLOBAL_ARRAYS_MODULE
+        USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb
+        IMPLICIT NONE
+        ! ARGUMENTS
+        INTEGER, INTENT(IN)        :: INCREMENT
+
+        ! LOCAL VARIABLES
+        REAL(8) :: Lb, Lo, L
 
 
+        call bubble%setCentroid_o()
+        call bubble%setVolume_o()
 
+        if (INCREMENT.GT.2) then 
+            CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)
 
-       USE GLOBAL_ARRAYS_MODULE
-       USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb
-       IMPLICIT NONE
-
-       ! ARGUMENTS
-       INTEGER, INTENT(IN)        :: INCREMENT
-
-       ! LOCAL VARIABLES
-       REAL(8) :: Lb, Lo, L
-
-      if (INCREMENT.GT.2) then 
-       CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)
-
-       TLp = Lb*TLb + Lo*TLo + L*TL
-       TLb = TLo
-       TLo = TL
-       TL  = TLp
-
-      
-      else 
-       ! UPDATE VECTORS
-       TLp = TL  + Dt*(TL-TLo)
-       TLb = TLo
-       TLo = TL
-       TL  = TLp
-
-     
-      endif 
-
-
-
+            TLp = Lb*TLb + Lo*TLo + L*TL
+            TLb = TLo
+            TLo = TL
+            TL  = TLp
+        else 
+            ! UPDATE VECTORS
+            TLp = TL  + Dt*(TL-TLo)
+            TLb = TLo
+            TLo = TL
+            TL  = TLp
+        endif 
     END SUBROUTINE UPDATE_SOLUTION
 
 

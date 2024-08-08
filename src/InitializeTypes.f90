@@ -55,7 +55,6 @@ Module InitialConditions
     Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
     Pressure_Bubble  = Pressure_Bubbleo
     ! print*, Pambient_o_Pchar , ratio_of_pressures, ( initial_position ) , 2.d0/BoN
-    ! pause
     
     call bubble%setInitialPressure(Pressure_Bubble)
     call bubble%setInitialvolume()
@@ -63,7 +62,6 @@ Module InitialConditions
     ! do i=1, size(tlo,1)
     !     write(404,'(f16.8,3x)') (tlo(i,j),j=1,size(tlo,2))
     ! enddo
-    ! pause
    
     ! call check_fp_exceptions()
     

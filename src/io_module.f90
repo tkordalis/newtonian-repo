@@ -83,7 +83,6 @@ Module IO_module
         ! print*, strGlobal(3)
         ! print*, toDouble( remove( strGlobal(3), ["Bubble_Pressure_1 ", "="]) )
 
-        ! pause
         this%increment         = toInt   ( remove( strGlobal(1), ["Increment        ", "="]) )
         
 

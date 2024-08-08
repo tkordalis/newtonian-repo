@@ -203,6 +203,11 @@ Module BulkEquations
 
                 elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
 
+                ! print*, 'e=',eo(1), eo(2)
+                ! print*, 's=',S(1), S(2)
+                ! print*, 'sum=',( eo*S + (1.d0-eo) )
+                ! pause
+
                 ! =====================================================================================
                 TERM_RES                        = 0.d0
                 TERM_RES(getVariableId("Vz" ))  = momentum_equation(1)

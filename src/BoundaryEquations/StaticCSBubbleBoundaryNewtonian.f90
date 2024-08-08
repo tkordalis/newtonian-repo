@@ -1,14 +1,4 @@
-!<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><2
-! Module BubbleBoundary 
-! Author : Dionisis Pettas
-! Date   : 16.10.2020
-! 
-! Boundary Conditions Clustering for Bubble Definition with Cylindical 
-! coordinates
-!
-! Future Idea Create an Abstract Class to inherit boundary conditions
-! in the subclasses
-!<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
 Module StaticCSBubbleBoundaryNewtonian
     Use Boundary_Equations
     Use NumericalBoundaryJacobian
@@ -104,14 +94,10 @@ Module StaticCSBubbleBoundaryNewtonian
 
         Real(8)       :: Volume
         
-
         Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-        ! print '(A11, 2x, f6.4)', "initial_V =" , this%InitialVolume
-        ! print '(A11, 2x, f6.4)', "current_V = ", Volume
+        
         output = Volume - this%InitialVolume
-        ! print*, "equation = ", output
-
-
+        
         call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration   ) ! first  constrain
     end Function volumeConservation
 
@@ -129,16 +115,16 @@ Module StaticCSBubbleBoundaryNewtonian
 
         Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
 
-        print '(A11, 2x, f11.4)', "initialPV =" , this%InitialPressure * this%InitialVolume
-        print '(A11, 2x, f11.4)', "currentPV = ", this%pressure * Volume 
-        print '(A11, 2x, f11.4)', "initial_P =" , this%InitialPressure
-        print '(A11, 2x, f11.4)', "current_P = ", this%pressure
-        print '(A11, 2x, f6.4)', "initial_V =" , this%InitialVolume
-        print '(A11, 2x, f6.4)', "current_V = ", Volume
+        ! print '(A11, 2x, f11.4)', "initialPV =" , this%InitialPressure * this%InitialVolume
+        ! print '(A11, 2x, f11.4)', "currentPV = ", this%pressure * Volume 
+        ! print '(A11, 2x, f11.4)', "initial_P =" , this%InitialPressure
+        ! print '(A11, 2x, f11.4)', "current_P = ", this%pressure
+        ! print '(A11, 2x, f6.4)', "initial_V =" , this%InitialVolume
+        ! print '(A11, 2x, f6.4)', "current_V = ", Volume
         
         output = this%pressure * Volume - this%InitialPressure * this%InitialVolume
-        print*, "equation = ", output
-        pause
+        ! print*, "equation = ", output
+        ! pause
 
         call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration, this%pressure ) ! first  constrain
     end Function PressureVolumeConservation
@@ -313,13 +299,14 @@ Module StaticCSBubbleBoundaryNewtonian
     end Function getCentroid
 
     Function getVelocity(this) Result(output)
-        use TIME_INTEGRATION, only:dt
+        use TIME_INTEGRATION, only:dt, time
         Implicit None 
         Class(StaticCSBubbleNewtonian)              :: this
+        Real(8)                                     :: zcenter
         Real(8)                                     :: output
-
-        output = ( this%getCentroid() - this%Zcenter_o ) / dt
-
+        zcenter= this%getCentroid()
+        output = ( zcenter - this%Zcenter_o ) / dt
+        write(404,'(4(f16.8,2x))') time, zcenter, this%Zcenter_o, output
     end Function getVelocity
 
     Function getDragForce(this) Result(output)

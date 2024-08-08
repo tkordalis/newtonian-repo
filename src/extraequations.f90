@@ -521,7 +521,6 @@ Contains
             ! if (kk==1 ) then 
             ! print*, 'SurfaceIntegration'
             ! print*, Z_loc(1) , R_loc(1)
-            ! pause
             ! endif
             call BASIS_2d&
             ( KK , Z_loc, R_loc, &

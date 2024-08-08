@@ -168,7 +168,6 @@ MODULE PHYSICAL_MODULE
         ! print*, " "
         ! print*, "ReN  =", ReN
         ! print*, " "
-        ! pause
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
         write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
@@ -176,7 +175,7 @@ MODULE PHYSICAL_MODULE
         
         eo1   = 0.0D0
         eo2   = 0.1D0
-        eo = [0.d0, 1.d0]
+        eo = [0.5d0, 0.5d0]
         e_bnd = - 1.0D+4
         
 
@@ -319,48 +318,48 @@ End Module Elements_Module
 ! ----------------------------------------------------------------------
 
 
-  MODULE CONTINUATION_MODULE
-    
-    INTEGER            :: INCREMENT
-      
-    REAL(8)            :: ArL
-    REAL(8)            :: ArLo, ArLb, ArLp
+    MODULE CONTINUATION_MODULE
 
-    REAL(8)            :: dArL = - 0.01D0
-    
-    REAL(8), PARAMETER :: INITIAL_ArL = 1.0D0
-    REAL(8), PARAMETER :: FINAL_ArL   = 1.D+5
-    
-    REAL(8)            :: dS, S0SM1, SNRM
+        INTEGER            :: INCREMENT
 
-    REAL(8)            :: dDpL, dDpLo, dDpLodS
-    REAL(8)            ::       dArLo, dArLodS
-    
-    REAL(8), ALLOCATABLE, DIMENSION(:) :: dTL, dTLo, dTLodS
-    
-    
-    ! ----------------------------------------------------------------------
-    contains
-    ! ----------------------------------------------------------------------
+        REAL(8)            :: ArL
+        REAL(8)            :: ArLo, ArLb, ArLp
+
+        REAL(8)            :: dArL = - 0.01D0
+
+        REAL(8), PARAMETER :: INITIAL_ArL = 1.0D0
+        REAL(8), PARAMETER :: FINAL_ArL   = 1.D+5
+
+        REAL(8)            :: dS, S0SM1, SNRM
+
+        REAL(8)            :: dDpL, dDpLo, dDpLodS
+        REAL(8)            ::       dArLo, dArLodS
+
+        REAL(8), ALLOCATABLE, DIMENSION(:) :: dTL, dTLo, dTLodS
 
 
-    Subroutine Allocate_Continuation_Arrays(L, NUNKNOWNS_f_) 
-      Implicit None 
-      Logical, Intent(In)           :: L
-      Integer, Intent(In), Optional :: NUNKNOWNS_f_
- 
-      If (L) Then
-        allocate(    dTL(NUNKNOWNS_f_) )          ;  dTL    = 0.0D0
-        allocate(   dTLo(NUNKNOWNS_f_) )          ;  dTLo   = 0.0D0
-        allocate( dTLodS(NUNKNOWNS_f_) )          ;  dTLodS = 0.0D0
-      Else 
-        deallocate( dTL    )
-        deallocate( dTLo   )
-        deallocate( dTLodS )
-      End If 
-    End Subroutine Allocate_Continuation_Arrays
-        
-  END MODULE CONTINUATION_MODULE
+        ! ----------------------------------------------------------------------
+        contains
+        ! ----------------------------------------------------------------------
+
+
+        Subroutine Allocate_Continuation_Arrays(L, NUNKNOWNS_f_) 
+            Implicit None 
+            Logical, Intent(In)           :: L
+            Integer, Intent(In), Optional :: NUNKNOWNS_f_
+
+            If (L) Then
+                allocate(    dTL(NUNKNOWNS_f_) )          ;  dTL    = 0.0D0
+                allocate(   dTLo(NUNKNOWNS_f_) )          ;  dTLo   = 0.0D0
+                allocate( dTLodS(NUNKNOWNS_f_) )          ;  dTLodS = 0.0D0
+            Else 
+                deallocate( dTL    )
+                deallocate( dTLo   )
+                deallocate( dTLodS )
+            End If 
+        End Subroutine Allocate_Continuation_Arrays
+
+    END MODULE CONTINUATION_MODULE
   
 
 ! ----------------------------------------------------------------------
@@ -463,7 +462,7 @@ End Module Elements_Module
   MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 1.d-8
+    REAL(8), PARAMETER :: ERROR_NR  = 2.d-8
     
     
     INTEGER            :: ITER_f
@@ -1367,7 +1366,6 @@ MODULE BOUNDARY_ENUMERATION_MODULE
      ! call WriteBoundaryNodesAt(102, bnd2_elements, bnd2_faces)
      ! call WriteBoundaryNodesAt(103, bnd3_elements, bnd3_faces)
      ! call WriteBoundaryNodesAt(104, bnd4_elements, bnd4_faces)
-     ! pause
      
   End Subroutine DEFINE_BOUNDARY_NUMBERING
 
@@ -1514,7 +1512,6 @@ MODULE BOUNDARY_ENUMERATION_MODULE
           unsorted_list(counter:counter+1) = elementBoundaryNodes(:)
           counter = counter + 2
           ! Write(*,*) elementBoundaryNodes(1), elementBoundaryNodes(2)
-          ! pause
         enddo
 
         unsorted_list_zeroes = unsorted_list
