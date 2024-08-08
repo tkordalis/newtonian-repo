@@ -147,7 +147,7 @@ module newton_bulk_call
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
         !      !$OMP END PARALLEL DO
-                ! pause
+                pause
 
               ! jj=1
               ! kk=0
@@ -415,9 +415,9 @@ module newton_bulk_call
        ENDDO
 
        CALL DOMI_RESIDUAL_fluid( IEL, TEMP_TL, TEMP_RES, .TRUE. )
-       IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
+       ! IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
+       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_fluid  ,IEL, TEMP_TL, TEMP_RES)
         
-       ! IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_fluid  ,IEL, TEMP_TL, TEMP_RES)
        
     END SUBROUTINE FLOW_EQUATIONS
 
@@ -462,10 +462,10 @@ module newton_bulk_call
        ENDDO
 
 
-       CALL DOMI_RESIDUAL_chemSpecies( IEL, TEMP_TL, TEMP_RES, .TRUE. )
+       ! CALL DOMI_RESIDUAL_chemSpecies( IEL, TEMP_TL, TEMP_RES, .TRUE. )
            
        ! IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
-       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_chemSpecies  ,IEL, TEMP_TL, TEMP_RES)
+       ! IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_chemSpecies  ,IEL, TEMP_TL, TEMP_RES)
      
        
     END SUBROUTINE CONCENTRATION_EQUATION
