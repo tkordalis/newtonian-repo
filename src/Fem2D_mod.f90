@@ -117,7 +117,7 @@ MODULE PHYSICAL_MODULE
     Real(8)                  :: eo1, eo2
     Real(8)                  :: es1, es2
     Real(8)                  :: e_bnd
-    
+    Real(8), dimension(2)    :: eo
     Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble
     Real(8)                  :: ambient_position_o, ambient_position, vm_ambient, dVtankdt
   
@@ -176,6 +176,7 @@ MODULE PHYSICAL_MODULE
         
         eo1   = 0.0D0
         eo2   = 0.1D0
+        eo = [0.d0, 1.d0]
         e_bnd = - 1.0D+4
         
 
@@ -462,7 +463,7 @@ End Module Elements_Module
   MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 1.d-9
+    REAL(8), PARAMETER :: ERROR_NR  = 1.d-8
     
     
     INTEGER            :: ITER_f
@@ -1718,17 +1719,18 @@ Module DirichletBoundaries
       Integer                      :: v_id
       Integer                      :: irow 
 
-      Select Case(FemValueName)
-        Case('Vr' ) ; V_id = 1
-        Case('Vz' ) ; V_id = 2
-        Case('P'  ) ; V_id = 3
-        Case('Z'  ) ; V_id = 4
-        Case('R'  ) ; V_id = 5
-        Case('Srr') ; V_id = 6
-        Case('Srz') ; V_id = 7
-        Case('Szz') ; V_id = 8
-        Case('Stt') ; V_id = 9
-      End Select 
+      ! Select Case(FemValueName)
+      !   Case('Vr' ) ; V_id = 1
+      !   Case('Vz' ) ; V_id = 2
+      !   Case('P'  ) ; V_id = 3
+      !   Case('Z'  ) ; V_id = 4
+      !   Case('R'  ) ; V_id = 5
+      !   Case('Srr') ; V_id = 6
+      !   Case('Srz') ; V_id = 7
+      !   Case('Szz') ; V_id = 8
+      !   Case('Stt') ; V_id = 9
+      ! End Select 
+      v_id = getVariableId(FemValueName)
 
       irow               = gntr(node) - 1 + v_id
       
@@ -1746,17 +1748,19 @@ Module DirichletBoundaries
       Integer                      :: il  
       Integer                      :: iu
 
-      Select Case(FemValueName)
-        Case('Vr' ) ; V_id = 1
-        Case('Vz' ) ; V_id = 2
-        Case('P'  ) ; V_id = 3
-        Case('Z'  ) ; V_id = 4
-        Case('R'  ) ; V_id = 5
-        Case('Srr') ; V_id = 6
-        Case('Srz') ; V_id = 7
-        Case('Szz') ; V_id = 8
-        Case('Stt') ; V_id = 9
-      End Select 
+      ! Select Case(FemValueName)
+      !   Case('Vr' ) ; V_id = 1
+      !   Case('Vz' ) ; V_id = 2
+      !   Case('P'  ) ; V_id = 3
+      !   Case('Z'  ) ; V_id = 4
+      !   Case('R'  ) ; V_id = 5
+      !   Case('Srr') ; V_id = 6
+      !   Case('Srz') ; V_id = 7
+      !   Case('Szz') ; V_id = 8
+      !   Case('Stt') ; V_id = 9
+      ! End Select 
+
+      v_id = getVariableId(FemValueName)
 
       irow  = gntr(node) - 1 + v_id
 
@@ -2155,8 +2159,8 @@ module basis_calculations
 
         do ii=1, NBF_2d
             a = 0.d0  ;  b = 0.d0
-            a = reshape(Xc(:,ii), [NCD,1])
-            b = reshape(dBFNdK(:,ii), [1,NCD] )
+            a = reshape(dBFNdK(:,ii), [NCD,1])
+            b = reshape(Xc(:,ii), [1,NCD] )
 
             Xc_gp     = Xc_gp     + Xc(:,ii)*BFN(ii)
 
@@ -2166,7 +2170,7 @@ module basis_calculations
         call inv_deriv( dXc_gpdK, dKdX_gp, Jac )
 
         do ii=1, NBF_2d
-            dBFNdX(:,ii) = matmul( transpose(dKdX_gp), dBFNdK(:,ii) )
+            dBFNdX(:,ii) = matmul( dKdX_gp, dBFNdK(:,ii) )
         enddo
     end subroutine basis_spatial_derivs
 
@@ -2233,8 +2237,8 @@ module basis_calculations
         gradUgp  = 0.d0
 
         do ii=1, NBF_2d
-            a = reshape(Uvalue_nod(:,ii), [NCD,1])
-            b = reshape(dBFNdX(:,ii), [1,NCD] )
+            a = reshape(dBFNdX(:,ii), [NCD,1])
+            b = reshape(Uvalue_nod(:,ii), [1,NCD] )
 
             Ugp     = Ugp     + Uvalue_nod(:,ii)*BFN(ii)
 

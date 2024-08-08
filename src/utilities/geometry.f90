@@ -1,7 +1,8 @@
 
 module geometry
     private ::  RadiusEquilateral
-    public  :: area    , AreaEquilateral, distance, minimumAngle
+    public  :: area, AreaEquilateral, distance, minimumAngle, &
+                    trace, secondInvariant
 
     interface distance
         module procedure distance_array
@@ -22,6 +23,27 @@ module geometry
 
     contains
 
+        function trace(array) Result(output)
+            implicit none
+            real(8), dimension(:,:), intent(in) :: array
+            real(8)         :: output
+            integer         :: i
+
+            output = sum( [ (array(i,i),i=1,size(array,1)) ] )
+
+        end function trace
+
+        function secondInvariant(array) Result(output)
+            implicit none
+            real(8), dimension(:,:), intent(in) :: array
+            real(8)                 :: output
+            integer                 :: i
+            real(8), dimension(size(array,1),size(array,2))  :: array2
+
+            array2 = matmul(array,array) ! array**2
+
+            output = 0.5d0*( (trace(array))**2 + trace(array2) )
+        end function secondInvariant
 
         function minimumAngle(x_nodes, y_nodes) Result(output)
             implicit none

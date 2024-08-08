@@ -147,7 +147,7 @@ module newton_bulk_call
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
         !      !$OMP END PARALLEL DO
-                pause
+                ! pause
 
               ! jj=1
               ! kk=0
