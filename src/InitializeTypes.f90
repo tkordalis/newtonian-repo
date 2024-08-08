@@ -54,7 +54,6 @@ Module InitialConditions
 
     Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
     Pressure_Bubble  = Pressure_Bubbleo
-    ! print*, Pambient_o_Pchar , ratio_of_pressures, ( initial_position ) , 2.d0/BoN
     
     call bubble%setInitialPressure(Pressure_Bubble)
     call bubble%setInitialvolume()
@@ -90,10 +89,10 @@ module solveAllExtraConstraints
 
             Call bubble%setPressure( Bubble1Pressure )
             Call bubble%applyBoundaryConditions(FlagNR)
-            ! Be_f(1) = bubble%PressureVolumeConservation()
-            ! Ah_f(:,:) = bubble%getVolume()
-            Be_f(1) = bubble%volumeConservation()
-            Ah_f(:,:) = 0.d0
+            Be_f(1) = bubble%PressureVolumeConservation()
+            Ah_f(:,:) = bubble%getVolume()
+            ! Be_f(1) = bubble%volumeConservation()
+            ! Ah_f(:,:) = 0.d0
 
             dVtankdt = 0.d0 !bubble%getdVtankdt()
             ! call bubble%check_engine()
@@ -122,12 +121,12 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(4) :: title_results
+        character(18), dimension(5) :: title_results
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
-        title_results = [ 'time', 'displacement', 'velocity', 'pressure' ]
+        title_results = [ 'time', 'displacement', 'velocity', 'pressure', 'volume' ]
         do i=1,size(title_results)
             write(20,'(A16,3x)', advance='no') title_results(i)
         enddo
@@ -148,7 +147,7 @@ Module BubbleOutput
         Real(8)             :: flowrate           
        
 
-        write(20,'(4(f16.7,3x))') TIME, bubble%getCentroid(), bubble%getVelocity(), Pressure_Bubble
+        write(20,'(5(f16.7,3x))') TIME, bubble%getCentroid(), bubble%getVelocity(), Pressure_Bubble, bubble%getVolume()
         
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

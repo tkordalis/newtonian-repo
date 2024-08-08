@@ -766,9 +766,9 @@ module constrainJacobians
 
         ! multiply by pressure outside loop to create the jacobian derivative
         ! This is for PV equation
-        ! if (present(globUnknown)) then 
-        !   Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
-        ! endif
+        if (present(globUnknown)) then 
+          Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
+        endif
       
     End Subroutine loopOverElements
 
