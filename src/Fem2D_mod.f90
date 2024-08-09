@@ -68,7 +68,7 @@ End Module VariableMapping
 MODULE PHYSICAL_MODULE
   
     Real(8)                  :: Rtank
-    Real(8), PARAMETER       :: pi            = 3.141592653589793D0
+    Real(8), PARAMETER       :: pi            = 4.d0*atan(1)
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
 
@@ -83,8 +83,14 @@ MODULE PHYSICAL_MODULE
 
 
     !_______________________________________________________________________________
-
-    Real(8), parameter       :: diffusivity = 1.0d-6  ! m2/s
+    ! These numbers are for AIR in water
+    !-------------------------------------------------------------------------------
+    Real(8), parameter       :: Pambient    = 101325.d0       ! Pa
+    Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
+    Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    Real(8), parameter       :: Tgas        = 298d0           ! K
+    Real(8), parameter       :: Henry       = 1.3d-5          ! mol/m3/Pa
+    Real(8), parameter       :: Cchar       = Henry*Pambient  ! mol/m3
     !_______________________________________________________________________________
   
 
@@ -106,7 +112,7 @@ MODULE PHYSICAL_MODULE
 
 
     Real(8), parameter       :: Pchar               = gravity_stress
-    Real(8), parameter       :: Pambient_o_Pchar    = 101325.d0/Pchar
+    Real(8), parameter       :: Pambient_o_Pchar    = Pambient/Pchar
     
     
     Real(8), parameter       :: ratio_of_pressures  = gravity_stress/Pchar
