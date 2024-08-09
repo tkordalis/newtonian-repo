@@ -1,16 +1,16 @@
 
-Module StaticCSBubbleBoundaryNewtonian
-    Use Boundary_Equations
+Module BubbleDiffusionStaticCSBoundary
+    Use Boundary_EquationsDO
     Use NumericalBoundaryJacobian
     Use ExtraEquations
     Use constrainJacobians
     Use DirichletBoundaries
     Private 
 
-    Public :: StaticCSBubbleNewtonian, NewStaticCSBubbleNewtonian
+    Public :: BubbleDiffusionStaticCS, NewBubbleDiffusionStaticCS
 
-    Type StaticCSBubbleNewtonian 
-        ! StaticCSBubbleNewtonian Properties
+    Type BubbleDiffusionStaticCS 
+        ! BubbleDiffusionStaticCS Properties
         Real(8)                            :: Zcenter_o
 
         ! FEM : Prop
@@ -47,7 +47,7 @@ Module StaticCSBubbleBoundaryNewtonian
             procedure :: getdVtankdt
 
             final     :: deconstructor
-    End Type StaticCSBubbleNewtonian
+    End Type BubbleDiffusionStaticCS
 
 
 
@@ -55,16 +55,16 @@ Module StaticCSBubbleBoundaryNewtonian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     ! Constructor - Each time we remesh the object is deallocated and recreated
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-    Function NewStaticCSBubbleNewtonian( elements, faces) Result(This)
+    Function NewBubbleDiffusionStaticCS( elements, faces) Result(This)
         Implicit None 
         Integer, Dimension(:), Intent(In) :: elements
         Integer, Dimension(:), Intent(In) :: faces
 
-        Type(StaticCSBubbleNewtonian)                      :: This
+        Type(BubbleDiffusionStaticCS)                      :: This
 
         
         if ( size(elements) /= size(faces) ) Then
-            Print*, "[Error] NewStaticCSBubbleNewtonian."
+            Print*, "[Error] NewBubbleDiffusionStaticCS."
             Print*, "Incompartible size of elements and faces"
             Stop
         end if
@@ -78,7 +78,7 @@ Module StaticCSBubbleBoundaryNewtonian
         ! assign the elements
         This%elements = elements
         This%faces    = faces
-    End Function NewStaticCSBubbleNewtonian
+    End Function NewBubbleDiffusionStaticCS
 
     
     
@@ -89,7 +89,7 @@ Module StaticCSBubbleBoundaryNewtonian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     Function volumeConservation(this) Result(output)
         Implicit None
-        Class(StaticCSBubbleNewtonian) :: this
+        Class(BubbleDiffusionStaticCS) :: this
         Real(8)       :: output
 
         Real(8)       :: Volume
@@ -107,7 +107,7 @@ Module StaticCSBubbleBoundaryNewtonian
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     Function PressureVolumeConservation(this) Result(output)
         Implicit None
-        Class(StaticCSBubbleNewtonian) :: this
+        Class(BubbleDiffusionStaticCS) :: this
         Real(8)       :: output
 
         Real(8)       :: Volume
@@ -126,13 +126,13 @@ Module StaticCSBubbleBoundaryNewtonian
         ! print*, "equation = ", output
         ! pause
 
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration, this%pressure ) ! first  constrain
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration, this%pressure, .true. ) ! first  constrain
     end Function PressureVolumeConservation
 
     subroutine check_engine(this)
         use check_for_floating_point_exceptions
         implicit none
-        Class(StaticCSBubbleNewtonian) :: this
+        Class(BubbleDiffusionStaticCS) :: this
 
         call check_fp_exceptions(this%pressure, "pressure")
         call check_fp_exceptions(this%InitialPressure, "InitialPressure")
@@ -151,7 +151,7 @@ Module StaticCSBubbleBoundaryNewtonian
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Implicit None 
-        Class(StaticCSBubbleNewtonian)   , Intent(In)      :: This
+        Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
         Character(len=3), Intent(In)      :: FlagNR 
         logical, Intent(In), optional     :: kinematic_logical 
 
@@ -205,29 +205,31 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Subroutine setProperties(This, gid)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)           :: This 
+        Class(BubbleDiffusionStaticCS)           :: This 
         Integer, Intent(In)     :: gid
 
         this%gid        = gid
     End Subroutine setProperties
     Subroutine setInitialPressure(This, InitialPressure)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8), Intent(In) :: InitialPressure
 
         This%InitialPressure = InitialPressure
     End Subroutine setInitialPressure
     Subroutine setInitialVolume(This)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
 
         This%InitialVolume = this%getVolume()
+        This%volume_o = This%InitialVolume
+        pause
     End Subroutine setInitialVolume
 
 
     Subroutine setPressure(This, Pressure)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8), Intent(In) :: Pressure
 
         This%Pressure = Pressure
@@ -235,13 +237,13 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Subroutine setInitialmol_dim(This)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
 
         This%Initialmol_dim = (Pchar*this%InitialPressure) * (length_char**3*this%InitialVolume) / ( 8.314 * (273.d0 + 20.d0) )
     End Subroutine setInitialmol_dim
     Subroutine setInitialmol(This)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         ! dimensionless equation is P*V=n
 
         This%Initialmol = (this%InitialPressure) * (this%InitialVolume)
@@ -250,7 +252,7 @@ Module StaticCSBubbleBoundaryNewtonian
     Subroutine setmol(This, mol)
         use physical_module, only: Pchar, length_char
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8), Intent(In) :: mol
 
     End Subroutine setmol
@@ -258,7 +260,7 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Subroutine setCentroid_o(this)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)                               :: this
+        Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: Centroid, Volume
@@ -272,7 +274,7 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Subroutine setVolume_o(this)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)                               :: this
+        Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: Centroid, Volume
@@ -286,7 +288,7 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Function getCentroid(this) Result(output)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)                               :: this
+        Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: Centroid, Volume
@@ -301,17 +303,16 @@ Module StaticCSBubbleBoundaryNewtonian
     Function getVelocity(this) Result(output)
         use TIME_INTEGRATION, only:dt, time
         Implicit None 
-        Class(StaticCSBubbleNewtonian)              :: this
+        Class(BubbleDiffusionStaticCS)              :: this
         Real(8)                                     :: zcenter
         Real(8)                                     :: output
         zcenter= this%getCentroid()
         output = ( zcenter - this%Zcenter_o ) / dt
-        write(404,'(4(f16.8,2x))') time, zcenter, this%Zcenter_o, output
     end Function getVelocity
 
     Function getDragForce(this) Result(output)
         Implicit none
-        Class(StaticCSBubbleNewtonian)                               :: this
+        Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: DragForce
@@ -323,7 +324,7 @@ Module StaticCSBubbleBoundaryNewtonian
     Function getAspectRatio(this)    Result(AR)
         Use GLOBAL_ARRAYS_MODULE,      Only: TL
         Implicit none
-        Class(StaticCSBubbleNewtonian), Intent(In)            :: this
+        Class(BubbleDiffusionStaticCS), Intent(In)            :: this
         Real(8)                              :: output
 
         Real(8), Dimension(:)  , Allocatable :: Z_coord, R_coord
@@ -341,14 +342,14 @@ Module StaticCSBubbleBoundaryNewtonian
     End Function getAspectRatio
     Function getInitialVolume(This)  Result(output)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8)             :: output
 
         output = This%InitialVolume 
     End Function getInitialVolume
     Function getVolume(This)  Result(output)
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8)             :: output
 
         output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
@@ -357,7 +358,7 @@ Module StaticCSBubbleBoundaryNewtonian
     Function getdVtankdt(This)  Result(output)
         use time_integration, only: dt
         Implicit None 
-        Class(StaticCSBubbleNewtonian)       :: This
+        Class(BubbleDiffusionStaticCS)       :: This
         Real(8)             :: volume
         Real(8)             :: output
 
@@ -369,10 +370,10 @@ Module StaticCSBubbleBoundaryNewtonian
 
     Subroutine deconstructor(This) 
         Implicit None
-        Type(StaticCSBubbleNewtonian) :: This
+        Type(BubbleDiffusionStaticCS) :: This
 
         If (Allocated(This%elements) ) Deallocate( This%elements)
         If (Allocated(This%faces)    ) Deallocate( This%faces   )
     End Subroutine deconstructor
 
-End Module StaticCSBubbleBoundaryNewtonian
+End Module BubbleDiffusionStaticCSBoundary

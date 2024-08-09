@@ -3,7 +3,7 @@ module solution_check_update
     contains
 
     SUBROUTINE CHECK_CONVERGENCE&
-    (ITER, MITER, FLAG_NR, CCL, FoM, RSUM_NEW, RSUM_OLD, B, Be, IDIM_B, IDIM_Be,&
+        (ITER, MITER, FLAG_NR, CCL, FoM, RSUM_NEW, RSUM_OLD, B, Be, IDIM_B, IDIM_Be,&
            RES_NRM, LMSG, MNR_FAILED, Res_Norm_First_Iteration, time_in_seconds )
         
         use check_for_floating_point_exceptions
@@ -125,7 +125,7 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        ! FLAG_NR = 'NRP'
+        FLAG_NR = 'NRP'
 
 
         IF( RSUM_NEW .GT. 5.0D+9 )THEN

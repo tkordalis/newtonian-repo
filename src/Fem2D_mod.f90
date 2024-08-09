@@ -68,7 +68,7 @@ End Module VariableMapping
 MODULE PHYSICAL_MODULE
   
     Real(8)                  :: Rtank
-    Real(8), PARAMETER       :: pi            = 4.d0*atan(1)
+    Real(8), PARAMETER       :: pi            = 4.d0*atan(1.d0)
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
 
@@ -217,7 +217,7 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.1d0
+      Dt_constant = 0.05d0
 
       Dt_max = 25.d0*Dt_constant
 

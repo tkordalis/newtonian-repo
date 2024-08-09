@@ -134,14 +134,14 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
 
-          !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-          !$OMP& DEFAULT (SHARED)&
-          !$OMP& PRIVATE (IEL)
+!          !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+!          !$OMP& DEFAULT (SHARED)&
+!          !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 ! CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-             !$OMP END PARALLEL DO
+!             !$OMP END PARALLEL DO
               ! jj=1
               ! kk=0
               ! do ii = 1, size(B_f)
@@ -353,7 +353,6 @@ module newton_bulk_call
 
         call bubble%setPressure(Pressure_bubble)
 
-
         ! If convergence is achieved, remove iteration_*.plt
         call execute_command_line("rm -f Iteration_*.plt")
 
@@ -374,7 +373,7 @@ module newton_bulk_call
        Use BOUNDARY_ENUMERATION_MODULE, Only: NBE
        Use GLOBAL_ARRAYS_MODULE,        Only: TL
        Use MESH_MODULE,                 Only: Xm, Ym, EPS_MESH
-       Use Boundary_Equations 
+       Use Boundary_EquationsDO
        Use BulkEquations 
        Use NumericalBoundaryJacobian
        Implicit None
@@ -421,7 +420,7 @@ module newton_bulk_call
        Use BOUNDARY_ENUMERATION_MODULE, Only: NBE
        Use GLOBAL_ARRAYS_MODULE,        Only: TL
        Use MESH_MODULE,                 Only: Xm, Ym, EPS_MESH
-       Use Boundary_Equations 
+       Use Boundary_EquationsDO 
        Use BulkEquations 
        Use NumericalBoundaryJacobian
        Implicit None

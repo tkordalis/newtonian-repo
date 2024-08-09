@@ -1,29 +1,29 @@
 Module BoundaryConditions
   Use BOUNDARY_ENUMERATION_MODULE
-  Use StaticCSBubbleBoundaryNewtonian
-  Use FixWallBoundary
-  Use SymmetryBoundary
-  Use AmbientBoundary
+  Use BubbleDiffusionStaticCSBoundary
+  Use FixWallConcentrationBoundary
+  Use SymmetryDiffusionBoundary 
+  Use AmbientHenryBoundary
 
-  Type(FixWall)                      :: wall
-  Type(Symmetry)                     :: symmetryaxis
-  Type(Ambient)                      :: ambientinterf
-  Type(StaticCSBubbleNewtonian)      :: bubble
+  Type(FixWallConcentration)         :: wall
+  Type(SymmetryDiffusion)            :: symmetryaxis
+  Type(AmbientHenry)                 :: ambientinterf
+  Type(BubbleDiffusionStaticCS)      :: bubble
 
   
   contains
     Subroutine DefineTheBoundaries()
         Implicit None
 
-        wall            = NewFixWall                 (bnd1_elements, bnd1_faces)
+        wall            = NewFixWallConcentration    (bnd1_elements, bnd1_faces)
 
-        symmetryaxis    = NewSymmetry                (bnd2_elements, bnd2_faces)
+        symmetryaxis    = NewSymmetryDiffusion       (bnd2_elements, bnd2_faces)
         call symmetryaxis%setPosition('X')
 
-        bubble          = NewStaticCSBubbleNewtonian (bnd3_elements, bnd3_faces)
+        bubble          = NewBubbleDiffusionStaticCS (bnd3_elements, bnd3_faces)
         call bubble%setProperties(gid=1)
 
-        ambientinterf   = NewAmbient                 (bnd4_elements, bnd4_faces)
+        ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)
        
     End Subroutine DefineTheBoundaries
@@ -80,7 +80,8 @@ module solveAllExtraConstraints
     Subroutine applyBCs_solveExtraConstraints( FlagNR, Bubble1Pressure )
         use CSR_STORAGE, only: Ah_f
         use FLOW_ARRAYS_MODULE, only: Be_f
-        use Physical_module, only: Pambient_o_Pchar
+        use Physical_module, only: Pambient_o_Pchar, Rtank, pi
+        use TIME_INTEGRATION, only:time
         implicit none
         character(*),                    intent(in)  :: FlagNR
         Real(8),                         intent(in)  :: Bubble1Pressure
@@ -94,7 +95,8 @@ module solveAllExtraConstraints
             ! Be_f(1) = bubble%volumeConservation()
             ! Ah_f(:,:) = 0.d0
 
-            dVtankdt = 0.d0 !bubble%getdVtankdt()
+            dVtankdt = bubble%getdVtankdt()
+            write(404,'(4(f16.9,2x))') time, dVtankdt, Rtank, dVtankdt / (pi*Rtank**2)
             ! call bubble%check_engine()
 
 
@@ -128,7 +130,7 @@ Module BubbleOutput
         Open(20,File=fileplace//'results_dimensionless.dat')
         title_results = [ 'time', 'displacement', 'velocity', 'pressure', 'volume' ]
         do i=1,size(title_results)
-            write(20,'(A16,3x)', advance='no') title_results(i)
+            write(20,'(A17,3x)', advance='no') title_results(i)
         enddo
         write(20,*) " " 
     end Subroutine openBubbleFiles
