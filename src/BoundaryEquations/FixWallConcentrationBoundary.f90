@@ -79,7 +79,7 @@ Module FixWallConcentrationBoundary
             call ApplyDirichletAtNode_(node, "Z", Ksi(node), FlagNr )
             call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
 
-            
+            call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr )
         end do 
 
     End Subroutine applyBoundaryConditions

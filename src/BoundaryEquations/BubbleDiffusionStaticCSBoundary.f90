@@ -18,7 +18,7 @@ Module BubbleDiffusionStaticCSBoundary
         Integer, Dimension(:), Allocatable :: elements
         Integer, Dimension(:), Allocatable :: faces
         ! Global Contrain
-        Integer                            :: gid
+        Integer                            :: gidP, gidC
         Real(8)                            :: pressure, pressure_o, InitialPressure
         Real(8)                            ::           volume_o  , InitialVolume
         Real(8)                            :: mol  , Initialmol, Initialmol_dim
@@ -98,7 +98,7 @@ Module BubbleDiffusionStaticCSBoundary
         
         output = Volume - this%InitialVolume
         
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration   ) ! first  constrain
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidP, SurfaceIntegration   ) ! first  constrain
     end Function volumeConservation
 
 
@@ -114,19 +114,10 @@ Module BubbleDiffusionStaticCSBoundary
         
 
         Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-
-        ! print '(A11, 2x, f11.4)', "initialPV =" , this%InitialPressure * this%InitialVolume
-        ! print '(A11, 2x, f11.4)', "currentPV = ", this%pressure * Volume 
-        ! print '(A11, 2x, f11.4)', "initial_P =" , this%InitialPressure
-        ! print '(A11, 2x, f11.4)', "current_P = ", this%pressure
-        ! print '(A11, 2x, f6.4)', "initial_V =" , this%InitialVolume
-        ! print '(A11, 2x, f6.4)', "current_V = ", Volume
         
         output = this%pressure * Volume - this%InitialPressure * this%InitialVolume
-        ! print*, "equation = ", output
-        ! pause
-
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gid, SurfaceIntegration, this%pressure, .true. ) ! first  constrain
+     
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidP, SurfaceIntegration, this%pressure, .true. ) ! first  constrain
     end Function PressureVolumeConservation
 
     subroutine check_engine(this)
@@ -194,7 +185,7 @@ Module BubbleDiffusionStaticCSBoundary
                     call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
                     call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure, .true. )
                     !Extra Unknowns
-                    call CalculateExtraJacobianContributionsOf(Stresses, element, face, TL_, RES_3, 1, This%pressure,   this%gid)
+                    call CalculateExtraJacobianContributionsOf(Stresses, element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                 endif
           end if
         end do 
@@ -203,12 +194,13 @@ Module BubbleDiffusionStaticCSBoundary
     End Subroutine  applyBoundaryConditions
 
 
-    Subroutine setProperties(This, gid)
+    Subroutine setProperties(This, gidP, gidC)
         Implicit None 
         Class(BubbleDiffusionStaticCS)           :: This 
-        Integer, Intent(In)     :: gid
+        Integer, Intent(In)     :: gidP, gidC
 
-        this%gid        = gid
+        this%gidP        = gidP
+        this%gidC        = gidC
     End Subroutine setProperties
     Subroutine setInitialPressure(This, InitialPressure)
         Implicit None 
@@ -317,7 +309,7 @@ Module BubbleDiffusionStaticCSBoundary
 
         Real(8)                                     :: DragForce
 
-        DragForce = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, DragForceCalculationNewtonian)
+        DragForce = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, DragForceCalculation)
 
         output = DragForce
     end Function getDragForce

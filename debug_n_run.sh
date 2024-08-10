@@ -36,7 +36,8 @@ rm -f nohup.out
 								./src/export/tecplot.f90       \
 	              ./src/storage.f90            \
 	              ./src/Fem2D_mod.f90            \
-								./src/Bulk_Equations.f90       \
+	              ./src/pressure_variation.f90            \
+								./src/Bulk_Equations_DifffusionOriented.f90       \
 							  ./src/extraequations.f90       \
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations_DifffusionOriented.f90     	 \

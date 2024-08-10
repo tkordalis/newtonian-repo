@@ -39,6 +39,7 @@ Module VariableMapping
         Case('P'  ) ; Vid = 3
         Case('Z'  ) ; Vid = 4
         Case('R'  ) ; Vid = 5
+        Case('C'  ) ; Vid = 6
         
         Case Default; Vid = -1
         End Select 
@@ -56,6 +57,7 @@ Module VariableMapping
         Case(3)      ; Var = 'P'  
         Case(4)      ; Var = 'Z'  
         Case(5)      ; Var = 'R'  
+        Case(6)      ; Var = 'C'  
         
         Case Default ; Var = ''
         End Select 
@@ -78,7 +80,7 @@ MODULE PHYSICAL_MODULE
 
 
   
-    Real(8), parameter       :: viscosity = 0.014d0
+    Real(8), parameter       :: viscosity = 0.14d0
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
 
 
@@ -89,12 +91,12 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 298d0           ! K
-    Real(8), parameter       :: Henry       = 1.3d-5          ! mol/m3/Pa
-    Real(8), parameter       :: Cchar       = Henry*Pambient  ! mol/m3
+    Real(8), parameter       :: KHenry      = 1.3d-5          ! mol/m3/Pa
+    Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
     !_______________________________________________________________________________
   
 
-    Real(8), parameter       :: surface_tension = 0.00997d-1
+    Real(8), parameter       :: surface_tension = 0.00997d0
     
     Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
     ! Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
@@ -108,6 +110,10 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: gravity_stress      = rho*g_grav*length_char
 
     Real(8), parameter       :: capillary_stress    = surface_tension/length_char
+    
+    Real(8), parameter       :: IdG_pressure        = Cchar*Rgas*Tgas
+    
+    Real(8), parameter       :: Solubility_pressure = Cchar/KHenry
     !_______________________________________________________________________________
 
 
@@ -117,7 +123,7 @@ MODULE PHYSICAL_MODULE
     
     Real(8), parameter       :: ratio_of_pressures  = gravity_stress/Pchar
 
-    Real(8)                  :: ReN, ArN, BoN  !  REYNOLDS NUMBER
+    Real(8)                  :: ReN, ArN, BoN, PeN, KoN, IdN  !  REYNOLDS NUMBER
     
 
     Real(8)                  :: eo1, eo2
@@ -125,7 +131,7 @@ MODULE PHYSICAL_MODULE
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
     Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble
-    Real(8)                  :: ambient_position_o, ambient_position, vm_ambient, dVtankdt
+    Real(8)                  :: ambient_position_o, ambient_position, vm_ambient
   
     Contains
 
@@ -144,6 +150,10 @@ MODULE PHYSICAL_MODULE
         ReN   =  inertial_stress/inertial_stress
         ArN   =  inertial_stress/Pchar
         BoN   =  gravity_stress/capillary_stress
+        
+        IdN    =  gravity_stress/IdG_pressure
+        KoN    =  gravity_stress/Solubility_pressure
+        PeN    =  velocity_char*length_char/Dcoef
         ! print*, "pi  =", pi
         ! print*, " "
         ! print*, "rho  =", rho
@@ -181,7 +191,7 @@ MODULE PHYSICAL_MODULE
         
         eo1   = 0.0D0
         eo2   = 0.1D0
-        eo = [0.5d0, 0.5d0]
+        eo = [0.1d0, 0.1d0]
         e_bnd = - 1.0D+4
         
 
@@ -217,9 +227,9 @@ Module TIME_INTEGRATION
   contains
 
   subroutine set_DT
-      Dt_constant = 0.05d0
+      Dt_constant = 0.1d0
 
-      Dt_max = 25.d0*Dt_constant
+      ! Dt_max = 1.5d0*Dt_constant
 
   end subroutine set_DT
   
@@ -252,7 +262,7 @@ Module ELEMENTS_MODULE
  Integer, Parameter:: NCD    = 2             ! number of coordinate dimensions: 2 for 2D and 2D axis, 3 for 3D
     
  !   NUMBER OF EQUATIONS
- Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
+ Integer, Parameter:: NEQ_f = 6             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
  Integer, Parameter:: NEX_f = 1 
 
  !   NUMBER OF ELEMENTS
@@ -468,7 +478,7 @@ End Module Elements_Module
   MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 2.d-8
+    REAL(8), PARAMETER :: ERROR_NR  = 1.d-7
     
     
     INTEGER            :: ITER_f

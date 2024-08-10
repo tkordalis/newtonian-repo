@@ -1,8 +1,11 @@
 module pressure_variation
-	use physical_module
+    use physical_module
     use time_integration
-	implicit none
-	Real(8), dimension(6), parameter :: crit_times = [100.d0, &
+    implicit none
+
+    private :: transientPressureChange, areConditionsSteady
+    public ::  PressureChamber
+    Real(8), dimension(6), parameter :: crit_times = [20.d0, &
                                                     2100.d0,  &
                                                     4100.d0,  & 
                                                     6100.d0,  &
@@ -11,14 +14,17 @@ module pressure_variation
                                                      
  
     
-    Real(8), dimension(7), parameter :: Pressure_before_crit_times = [Patm/gravity_stress,    &
+    Real(8), dimension(7), parameter :: Pressure_before_crit_times = [Pambient/gravity_stress,    &
                                                                       32000.d0/gravity_stress, &
                                                                       27000.d0/gravity_stress, &
                                                                       19000.d0/gravity_stress, &
                                                                       16000.d0/gravity_stress, &
                                                                       13000.d0/gravity_stress, &
                                                                       11000.d0/gravity_stress]
-    
+
+
+    ! Real(8), parameter       :: deltat_transientPressure = 60.d0
+    Real(8), parameter       :: deltat_transientPressure = 5.d0
     integer                  :: crit_times_counter, pressure_change_counter
     logical                  :: isThePressureTransient = .false.
     logical                  :: rampUpDt   = .false.
@@ -41,7 +47,7 @@ module pressure_variation
             ! it starts from value 1 and increases after each value has been reached
             ! it can be translated as: towards which crit_time is the problem heading to
             time_previous_P = crit_times(crit_times_counter - 1)
-            time_next_P     = time_previous_P + 60.d0
+            time_next_P     = time_previous_P + deltat_transientPressure
             previous_P = Pressure_before_crit_times(pressure_change_counter - 1)
             next_P     = Pressure_before_crit_times(pressure_change_counter    )
             
@@ -76,7 +82,7 @@ module pressure_variation
 
         if (crit_times_counter .ne. 1) then
           crit_time = crit_times(crit_times_counter-1)
-          if ( ( time .gt. crit_time ) .and. ( time .lt. (crit_time + 60.d0) ) ) then
+          if ( ( time .gt. crit_time ) .and. ( time .lt. (crit_time + deltat_transientPressure) ) ) then
                 isThePressureTransient = .true.
           else
                 isThePressureTransient = .false.
@@ -97,14 +103,20 @@ module pressure_variation
         real(8)            :: rampUpDt_time_period
         real(8)            :: rampDownDt_time_period
         
-        initial_time_period         = 60.d0
-        rampUpDt_time_period        = 60.d0 ! regulates the slope of the linear function increasing timestep
-        before_critTime_time_period = 10.d0
-        rampDownDt_time_period      = 30.d0 ! regulates the slope of the linear function decreasing timestep
-        fine_timestep_time          = 70.d0
+        ! initial_time_period         = 60.d0
+        ! rampUpDt_time_period        = 60.d0 ! regulates the slope of the linear function increasing timestep
+        ! before_critTime_time_period = 10.d0
+        ! rampDownDt_time_period      = 30.d0 ! regulates the slope of the linear function decreasing timestep
+        ! fine_timestep_time          = 70.d0
+        initial_time_period         = 5.d0
+        rampUpDt_time_period        = 5.d0 ! regulates the slope of the linear function increasing timestep
+        before_critTime_time_period = 5.d0
+        rampDownDt_time_period      = 5.d0 ! regulates the slope of the linear function decreasing timestep
+        fine_timestep_time          = 5.d0
+
 
         if ( crit_times_counter .eq. 1 ) then 
-            if ( abs(time - initial_time_period) .lt. 1.d-2 ) then
+            if ( abs(time - initial_time_period) .lt. 1.d-1 ) then
                 rampUpDt        = .true.
                 time_for_dto = time
                 time_for_dt1 = time + rampUpDt_time_period

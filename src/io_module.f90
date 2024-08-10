@@ -138,7 +138,7 @@ Module IO_module
     End Subroutine WriteTecplotFile
 
     
-! 888888888888888888888888888888888888888888888888888888888888888888888888888888888888
+    ! 888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 
 
     Subroutine exportFiles(Solution, elements, time, Increment, datapack)
@@ -197,6 +197,7 @@ Module IO_module
                 call tecfile%addVariable("Vz"      , Solution(:, getVariableId("Vz"  )))
                 call tecfile%addVariable("Vr"      , Solution(:, getVariableId("Vr"  )))
                 call tecfile%addVariable("P"      , Solution(:, getVariableId("P"  )))
+                call tecfile%addVariable("C"      , Solution(:, getVariableId("C"  )))
                 
 
                 call tecfile%addElements( elements )

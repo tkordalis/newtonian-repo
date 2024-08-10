@@ -134,14 +134,14 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
 
-!          !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-!          !$OMP& DEFAULT (SHARED)&
-!          !$OMP& PRIVATE (IEL)
+!         !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+!         !$OMP& DEFAULT (SHARED)&
+!         !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 ! CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-!             !$OMP END PARALLEL DO
+!            !$OMP END PARALLEL DO
               ! jj=1
               ! kk=0
               ! do ii = 1, size(B_f)
@@ -323,16 +323,18 @@ module newton_bulk_call
                 DO J = 1, NEQ_f
                     K = K + 1
                     TL(I,J) = TL(I,J) - xF*S_f(K)
-         ! print*, ' '
-         ! print*, '------------------------------------ '
-         ! print*, ' '
-         ! print '(a5, 3x,i3)', "node=", I
-         ! print*, ' '
-         ! print '(a7, 3x, f10.5, 3x, f10.5, 3x, f10.5)', '(X,Y,R) =', Xm(I), Ym(I), sqrt(Xm(I)**2+Ym(I)**2)
-         ! print*, ' '
-         ! print '(a9, 3x,a2, 3x, a11, e20.10)', "variable=", getVariableName(J), "correction=", s_f(k)
-         ! print*, ' '
-         ! pause 
+       !   if (xm(i) .gt. 97.d0) then
+       !   print*, ' '
+       !   print*, '------------------------------------ '
+       !   print*, ' '
+       !   print '(a5, 3x,i3)', "node=", I
+       !   print*, ' '
+       !   print '(a7, 3x, f10.5, 3x, f10.5, 3x, f10.5)', '(X,Y,R) =', Xm(I), Ym(I), sqrt(Xm(I)**2+Ym(I)**2)
+       !   print*, ' '
+       !   print '(a9, 3x,a2, 3x, a11, e20.10)', "variable=", getVariableName(J), "correction=", s_f(k)
+       !   print*, ' '
+       !   pause 
+       ! endif
 
                 ENDDO
             ENDDO
