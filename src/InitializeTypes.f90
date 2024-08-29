@@ -20,7 +20,7 @@ Module BoundaryConditions
         call symmetryaxis%setPosition('X')
 
         bubble          = NewBubbleDiffusionStaticCS (bnd3_elements, bnd3_faces)
-        call bubble%setProperties( gidP=1, gidC=2 )
+        call bubble%setProperties( gidP=1 )
 
         ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)

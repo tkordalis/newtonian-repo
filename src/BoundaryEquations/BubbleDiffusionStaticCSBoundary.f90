@@ -193,10 +193,11 @@ Module BubbleDiffusionStaticCSBoundary
     Subroutine setProperties(This, gidP, gidC)
         Implicit None 
         Class(BubbleDiffusionStaticCS)           :: This 
-        Integer, Intent(In)     :: gidP, gidC
+        Integer, Intent(In)             :: gidP
+        Integer, Intent(In), optional   ::  gidC
 
         this%gidP        = gidP
-        this%gidC        = gidC
+        if (present(gidC)) this%gidC = gidC
     End Subroutine setProperties
     Subroutine setInitialPressure(This, InitialPressure)
         Implicit None 

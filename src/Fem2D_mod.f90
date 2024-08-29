@@ -41,7 +41,7 @@ Module VariableMapping
         Case('R'  ) ; Vid = 5
         ! Case('C'  ) ; Vid = 6
 
-        Case Default; Vid = -1
+        Case Default; Vid = -1000000000
         End Select 
     End Function getVariableId
 

@@ -80,9 +80,9 @@ Module AmbientHenryBoundary
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
         Integer                              :: node_counter, node
 
-        call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
-        If (FlagNR == "NRP") &
-            call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
+        ! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
+        ! If (FlagNR == "NRP") &
+        !     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
         
         vm_ambient = dVtankdt / (pi*Rtank**2)
         ! vm_ambient = 0.d0
