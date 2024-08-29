@@ -103,11 +103,8 @@ PROGRAM FEM2D
     call setInitalConditions()
 
     INCREMENT      = 0
-    INCREMENT_STEP = 0
     TIME           = 0.0D0
-    DT             = Dt_constant
-    Dto            = DT
-    Dtb            = DT
+    DT             = Dt_constant  ;  Dto = DT  ;   Dtb = DT
 
     if (ReadSolutionFromFile) then
         ! call sol_b%getSolutionVars(timeb, TLb, increment, Remesh_counter, pressure_bubble  )
@@ -124,7 +121,6 @@ PROGRAM FEM2D
     LOOP_TIME_INTEGRATION: DO
 
         INCREMENT         = INCREMENT + 1
-        INCREMENT_STEP    = INCREMENT_STEP + 1
         TIME              = TIME + DT
 
 

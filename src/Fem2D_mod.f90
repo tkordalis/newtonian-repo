@@ -139,10 +139,6 @@ MODULE PHYSICAL_MODULE
 
         Implicit None
       
-      
-        ! initial_position =  ho/length_char
-        ! ambient_position =  ho/length_char
-
         ReN   =  inertial_stress/inertial_stress
         ArN   =  inertial_stress/Pchar
         BoN   =  gravity_stress/capillary_stress
@@ -150,36 +146,7 @@ MODULE PHYSICAL_MODULE
         IdN    =  gravity_stress/IdG_pressure
         KoN    =  gravity_stress/Solubility_pressure
         PeN    =  velocity_char*length_char/Dcoef
-        ! print*, "pi  =", pi
-        ! print*, " "
-        ! print*, "rho  =", rho
-        ! print*, " "
-        ! print*, "Ro  =", length_char
-        ! print*, " "
-        ! print*, "g_grav  =", g_grav
-        ! print*, " "
-        ! print*, "viscosity  =", viscosity
-        ! print*, " "
-        ! print*, "surface_tension  =", surface_tension
-        ! print*, " "
-        ! print*, "velocity_char  =", velocity_char
-        ! print*, " "
-        ! print*, "time_char  =", time_char
-        ! print*, " "
-        ! print*, "viscous_stress  =", viscous_stress
-        ! print*, " "
-        ! print*, "inertial_stress  =", inertial_stress
-        ! print*, " "
-        ! print*, "gravity_stress  =", gravity_stress
-        ! print*, " "
-        ! print*, "capillary_stress  =", capillary_stress
-        ! print*, " "
-        ! print*, "Pchar  =", Pchar
-        ! print*, " "
-        ! print*, "ratio_of_pressures  =", ratio_of_pressures
-        ! print*, " "
-        ! print*, "ReN  =", ReN
-        ! print*, " "
+
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
         write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
@@ -214,7 +181,7 @@ Module TIME_INTEGRATION
     Real(8) :: Dt_constant
     Real(8) :: Dt_min
     Real(8) :: Dt_max
-    integer :: INCREMENT_STEP, INCREMENT_TIME
+    integer :: INCREMENT
     LOGICAL :: Adjust_Dt
 
 
@@ -337,7 +304,7 @@ END MODULE OMP_PARALLEL
 
 MODULE CONTINUATION_MODULE
 
-    INTEGER            :: INCREMENT
+    INTEGER            :: INCREMENT_ArL
 
     REAL(8)            :: ArL
     REAL(8)            :: ArLo, ArLb, ArLp
@@ -498,7 +465,7 @@ MODULE NRAPSHON_MODULE
         REAL(8), INTENT(IN)  :: X
 
 
-        F_DX = EP_RES*DMAX1(1.0D0,DABS(X))*SIGN(1.0D0,X)
+        F_DX = EP_RES*max1(1.0D0,abs(X))*SIGN(1.0D0,X)
 
     END FUNCTION F_DX
 
@@ -2278,7 +2245,7 @@ module basis_calculations
 
         ! CALCULATE JACOBIAN OF THE TRANSFORMATION
         CJAC = DXDC*DYDE-DXDE*DYDC
-        AJAC = DABS(CJAC)
+        AJAC = abs(CJAC)
 
         ! CALCULATE DERIVATIVES OF BASIS FUNCTIONS WRT X,Y COORDINATES
         DO I = 1, NBF_2d

@@ -91,10 +91,10 @@ module solveAllExtraConstraints
 
             Call bubble%setPressure( Bubble1Pressure )
             Call bubble%applyBoundaryConditions(FlagNR)
-            ! Be_f(1) = bubble%PressureVolumeConservation()
-            ! Ah_f(:,:) = bubble%getVolume()
-            Be_f(1) = bubble%volumeConservation()
-            Ah_f(:,:) = 0.d0
+            Be_f(1) = bubble%PressureVolumeConservation()
+            Ah_f(:,:) = bubble%getVolume()
+            ! Be_f(1) = bubble%volumeConservation()
+            ! Ah_f(:,:) = 0.d0
 
             dVtankdt = bubble%getdVtankdt()
             ! write(404,'(4(f16.9,2x))') time, dVtankdt, Rtank, dVtankdt / (pi*Rtank**2)
@@ -106,7 +106,6 @@ module solveAllExtraConstraints
             call wall%applyBoundaryConditions(FlagNR)
 
             call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time) )
-            ! call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, Pambient_o_Pchar )
 
     End Subroutine applyBCs_solveExtraConstraints
     

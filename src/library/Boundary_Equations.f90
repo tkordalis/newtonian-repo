@@ -299,7 +299,7 @@ Module Boundary_Equations
             !*********************************************************************
             ! Calculate pspg values
             !*********************************************************************
-            ! Uelem = dabs( Vr * tr + Vz * tz  )
+            ! Uelem = abs( Vr * tr + Vz * tz  )
             ! tsupg = dS/(Uelem + dS/dt)
 
             !*********************************************************************
@@ -599,7 +599,7 @@ Module Boundary_Equations
                 Print*, "[Error] : Stresses. Wrong Value of face. Possible values 1,2,3."
             End Select
 
-            dS = dsqrt(n_ksi**2 + n_eta**2)
+            dS = sqrt(n_ksi**2 + n_eta**2)
             n_eta = n_eta/dS
             n_ksi = n_ksi/dS
                         
@@ -615,7 +615,7 @@ Module Boundary_Equations
             !*********************************************************************
             ! Define Scale Factor
             !*********************************************************************
-            QKsi = dsqrt(dZdKsi**2 + dRdKsi**2)
+            QKsi = sqrt(dZdKsi**2 + dRdKsi**2)
 
             !*********************************************************************
             ! Iterate over weighting Functions
@@ -775,7 +775,7 @@ Module Boundary_Equations
                 Print*, "[Error] : Stresses. Wrong Value of face. Possible values 1,2,3."
             End Select
 
-            dS    = dsqrt(n_ksi**2 + n_eta**2)
+            dS    = sqrt(n_ksi**2 + n_eta**2)
             n_eta = n_eta/dS
             n_ksi = n_ksi/dS
                         
@@ -791,7 +791,7 @@ Module Boundary_Equations
             !*********************************************************************
             ! Define Scale Factor
             !*********************************************************************
-            QEta = dsqrt(dZdEta**2 + dRdEta**2)
+            QEta = sqrt(dZdEta**2 + dRdEta**2)
 
             !*********************************************************************
             ! Iterate over weighting Functions
@@ -997,8 +997,8 @@ Module Boundary_Equations
                 Case(1); n_x1 =  0.d0            ; n_x2 = -1.d0
                         t_x1 = +1.d0            ; t_x2 =  0.d0
                 !---------------------------------------------------------------------
-                Case(2); n_x1 =  1.d0/dsqrt(2.d0); n_x2 =  1.d0/dsqrt(2.d0)
-                        t_x1 = -1.d0/dsqrt(2.d0); t_x2 =  1.d0/dsqrt(2.d0)
+                Case(2); n_x1 =  1.d0/sqrt(2.d0); n_x2 =  1.d0/sqrt(2.d0)
+                        t_x1 = -1.d0/sqrt(2.d0); t_x2 =  1.d0/sqrt(2.d0)
                 !---------------------------------------------------------------------
                 Case(3); n_x1 =-(-1.d0)          ; n_x2 =   0.d0
                         t_x1 =   0.d0           ; t_x2 =-(-1.d0) ! The minus is for reverse numbering
@@ -1015,7 +1015,7 @@ Module Boundary_Equations
                     Print*, "[Error] : Stresses. Wrong Value of face. Possible values 1,2,3."
                 End Select
 
-                dS    = dsqrt(n_ksi**2 + n_eta**2)
+                dS    = sqrt(n_ksi**2 + n_eta**2)
                 n_eta = n_eta/dS
                 n_ksi = n_ksi/dS
      
@@ -1025,24 +1025,24 @@ Module Boundary_Equations
             SELECT CASE(NED)
       
                 CASE(1)
-                    dL           =   DSQRT(w1*DXDC**2+w2*DYDC**2)
-                    dL0          =   DSQRT(DX0DC**2+DY0DC**2)
+                    dL           =   sqrt(w1*DXDC**2+w2*DYDC**2)
+                    dL0          =   sqrt(DX0DC**2+DY0DC**2)
                     DFDL0        =   DFDC/dL0
-                    Scale_Factor = DSQRT(w1*DX0DC**2+w2*DY0DC**2)
+                    Scale_Factor = sqrt(w1*DX0DC**2+w2*DY0DC**2)
                  
              
                 CASE(3)
-                    dL           =    DSQRT(w1*DXDE**2+w2*DYDE**2)
-                    dL0          =    DSQRT(DX0DE**2+DY0DE**2)
+                    dL           =    sqrt(w1*DXDE**2+w2*DYDE**2)
+                    dL0          =    sqrt(DX0DE**2+DY0DE**2)
                     DFDL0        =    DFDE/dL0
-                    Scale_Factor = DSQRT(w1*DX0DE**2+w2*DY0DE**2) 
+                    Scale_Factor = sqrt(w1*DX0DE**2+w2*DY0DE**2) 
                
              
                 CASE(2)
-                    dL           =   DSQRT(w1*(DXDC-DXDE)**2+w2*(DYDC-DYDE)**2)
-                    dL0          =   DSQRT((DX0DC-DX0DE)**2+(DY0DC-DY0DE)**2)
+                    dL           =   sqrt(w1*(DXDC-DXDE)**2+w2*(DYDC-DYDE)**2)
+                    dL0          =   sqrt((DX0DC-DX0DE)**2+(DY0DC-DY0DE)**2)
                     DFDL0        =   (DFDC-DFDE)/dL0
-                    Scale_Factor = DSQRT(w1*(DX0DC-DX0DE)**2+w2*(DY0DC-DY0DE)**2) 
+                    Scale_Factor = sqrt(w1*(DX0DC-DX0DE)**2+w2*(DY0DC-DY0DE)**2) 
             END SELECT
 
             WET = WO_1d(KK)*dL0
@@ -1199,13 +1199,13 @@ Module Boundary_Equations
 !               SELECT CASE(NED)
               
 !                       CASE(1)
-!                               dL = DSQRT(DRDC**2+DZDC**2)
+!                               dL = sqrt(DRDC**2+DZDC**2)
 !                               nz =   DRDC/dL
 !                               nr = - DZDC/dL
 
               
 !                       CASE(2)
-!                               dL = DSQRT((DRDC-DRDE)**2+(DZDC-DZDE)**2)
+!                               dL = sqrt((DRDC-DRDE)**2+(DZDC-DZDE)**2)
 !                               nr = - (DZDC-DZDE)/dL
 !                               nz =   (DRDC-DRDE)/dL
               
@@ -1214,7 +1214,7 @@ Module Boundary_Equations
 !                       !  mutually changed case 2 and case 3 and it worked
 !                       ! in the future  need to call subroutines to do the procedure automatically
                               
-!                               dL = DSQRT(DRDE**2+DZDE**2)
+!                               dL = sqrt(DRDE**2+DZDE**2)
 !                               nr = + DZDE/dL
 !                               nz = - DRDE/dL
 !               END SELECT

@@ -12,13 +12,10 @@ module newton_bulk_call
         Use GLOBAL_ARRAYS_MODULE, only: TL, TLp
         Use CSR_STORAGE
         Use OMP_PARALLEL
-
-        Use ExtraEquations    
+        Use ExtraEquations
         Use DirichletBoundaries
         Use ArrayTools
         Use solveAllExtraConstraints
-        ! use BoundaryConditions
-        use enumeration_module, only: gntr
         use VariableMapping
         Use RemeshVariables
         IMPLICIT NONE
@@ -142,7 +139,7 @@ module newton_bulk_call
 
             ! CALCULATE RESIDUAL NORM
             RES_NORM = DOT_PRODUCT(B_f,B_f)+DOT_PRODUCT(Be_f,Be_f)
-            RES_NORM = DSQRT(RES_NORM)
+            RES_NORM = sqrt(RES_NORM)
 
             ! if ((iter_f .gt. 5) .and. (increment .gt. 0)) then
               jj=1
@@ -291,9 +288,9 @@ module newton_bulk_call
             PHASE_f    = 33  ! ONLY SOLUTION
             IPARM_f(8) = 2   ! MAX NUMBERS OF ITERATIVE REFINEMENT STEPS
 
-            CALL PARDISO&
-            (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
-            IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Bw_f, S_f, ERROR_f)
+            ! CALL PARDISO&
+            ! (PT_f, MAXFCT_f, MNUM_f, MTYPE_f, PHASE_f, N_f, A_f, IA_f, CA_f,&
+            ! IDUM_f, NRHS_f, IPARM_f, MSGLVL_f, Bw_f, S_f, ERROR_f)
 
 
             DO I = 1, SIZE(S_f)

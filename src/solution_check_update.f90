@@ -8,6 +8,7 @@ module solution_check_update
         
         use check_for_floating_point_exceptions
         USE NRAPSHON_MODULE,         only: ERROR_NR, NITER
+        use time_integration,        only: increment
         IMPLICIT NONE
 
         ! ARGUMENTS
@@ -35,9 +36,9 @@ module solution_check_update
         
 
         
-        RSUM_NEW  = DSQRT(DOT_PRODUCT(B,B)+DOT_PRODUCT(Be,Be))
+        RSUM_NEW  = sqrt(DOT_PRODUCT(B,B)+DOT_PRODUCT(Be,Be))
         
-        ERROR_NEW = MAX(MAXVAL(DABS(B)),MAXVAL(DABS(Be)))
+        ERROR_NEW = MAX(MAXVAL(abs(B)),MAXVAL(abs(Be)))
         
         If (ITER==1)   Res_Norm_First_Iteration = RSUM_NEW
         
@@ -122,7 +123,9 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        FLAG_NR = 'NRP'
+        ! FLAG_NR = 'NRP'
+        if (increment .lt. 3) FLAG_NR = 'NRP'
+
 
 
         IF( RSUM_NEW .GT. 5.0D+9 )THEN
@@ -148,7 +151,7 @@ module solution_check_update
          
        !  FORMAT STATEMENTS
        50 FORMAT(I3,'. ITERATION. FULL NEWTON RAPSHON - Elapsed Time = ', I4, ' seconds' )
-       51 FORMAT(3x,'  RESIDUAL NORM = ', E12.4, 7x, 'CORRECTION NORM = ', E12.4)
+       51 FORMAT(3x,'  RESIDUAL NORM = ', E12.5, 7x, 'CORRECTION NORM = ', E12.5)
        52 FORMAT(I3,'. ITERATION. MODIFIED NEWTON RAPSHON - Elapsed Time = ', I4, ' seconds')
 
 

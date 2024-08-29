@@ -428,7 +428,7 @@ Module BulkEquations
     !<><><><><><><><><><><><><><><>
     Real(8)              :: EP_RES = 1.0D-8
       
-    Perturb =  ep_res*dmax1(1.0d0,dabs(x))*sign(1.0d0,x)
+    Perturb =  ep_res*max1(1.0d0,abs(x))*sign(1.0d0,x)
 
   End Function Perturb
 

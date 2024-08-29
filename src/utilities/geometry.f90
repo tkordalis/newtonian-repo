@@ -106,7 +106,7 @@ module geometry
                 dist = dist + (point1(i) - point2(i))**2
             end do
 
-            output = dsqrt(dist)
+            output = sqrt(dist)
         End function distance_array
 
 
@@ -130,7 +130,7 @@ module geometry
 
             ! Herons Formula
             s  = (AB + BC + CA)/2.d0
-            A  = dsqrt( s * (s-AB) * (s-BC) * (s-CA) )
+            A  = sqrt( s * (s-AB) * (s-BC) * (s-CA) )
         End Function area_array
 
 
@@ -153,7 +153,7 @@ module geometry
 
             ! Herons Formula
             s  = (AB + BC + CA)/2.d0
-            A  = dsqrt( s * (s-AB) * (s-BC) * (s-CA) )
+            A  = sqrt( s * (s-AB) * (s-BC) * (s-CA) )
 
             Radius = AB * BC * CA / ( 4.d0 * A )
 
