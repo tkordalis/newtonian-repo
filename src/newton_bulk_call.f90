@@ -9,7 +9,7 @@ module newton_bulk_call
         Use ELEMENTS_MODULE
         Use NRAPSHON_MODULE
         Use FLOW_ARRAYS_MODULE
-        Use GLOBAL_ARRAYS_MODULE, only: TL, TLo, TLp, DpL
+        Use GLOBAL_ARRAYS_MODULE, only: TL, TLp
         Use CSR_STORAGE
         Use OMP_PARALLEL
 
@@ -21,17 +21,17 @@ module newton_bulk_call
         use enumeration_module, only: gntr
         use VariableMapping
         Use RemeshVariables
-        ! Use RemeshProcedure, only: AfterRemesh_counter
         IMPLICIT NONE
+        external :: PARDISO, DGETRF, DGETRS
 
         Logical,  Intent(in):: ReallocateForRemesh
 
 
         ! LOCAL VARIABLES
-        INTEGER          :: I, J, IERROR, IEL, K, INFO, N_dense
-        INTEGER          :: xNITER, BvNiter
-        CHARACTER(LEN=1) :: CCL, FoM
-        LOGICAL          :: EMERGENCY, LMSG, FG_WS, changeBvN
+        INTEGER          :: I, J, IEL, K, INFO, N_dense
+        INTEGER          :: xNITER
+        CHARACTER(LEN=1) :: CCL
+        LOGICAL          :: EMERGENCY, LMSG
         logical          :: MNR_FAILED
         REAL(8)          :: xERROR_NR, xF
         real(8)          :: Res_Norm_First_Iteration
@@ -43,16 +43,9 @@ module newton_bulk_call
         Character(len=:)     , Allocatable :: title
         Character(len=:)     , Allocatable :: zone
 
-        Integer, Dimension(:), Allocatable :: elements 
-        Integer, Dimension(:), Allocatable :: faces 
-        Integer                            :: nelements, ii, jj, kk
-        Integer, Dimension(:), Allocatable :: all_nodes
+        Integer                            :: ii, jj, kk
 
-
-
-
-
-        integer              :: n_timer, n_timer_o, time, time_in_seconds, counter_print
+        integer              :: n_timer, n_timer_o, time, time_in_seconds
 
         ! INITIALIZE NEWTON LOOP VARIABLES
         ERR_nr     = 0
@@ -142,41 +135,56 @@ module newton_bulk_call
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
 !            !$OMP END PARALLEL DO
-              ! jj=1
-              ! kk=0
-              ! do ii = 1, size(B_f)
-              !    if (jj .gt. NEQ_f) jj=1
-              !    if (jj .eq. 1) then
-              !      kk=kk+1
-              !    endif
-              !    !! if ( getVariableName(jj) == 'P' ) then
-              !      ! if ( abs(B_f(ii)) .gt. 1.d0) then 
-              !      print*,'global_node=', kk
-              !      print*, ' ' 
-              !      print '(A9,2x,f10.5,2x,f10.5,2x,f10.5)','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
-              !      print*, ' ' 
-              !      print*, 'variable','     ', 'residual' 
-              !      print*, getVariableName(jj), '     ',B_f(ii) 
-              !      print*, ' ' 
-              !      print*, ' ' 
-              !      print*, ' ' 
-              !      print*, ' //////////////////////////////////////////////////////// ' 
-              !      pause
-              !      ! endif
-              !    !! endif
-              !    jj=jj+1
-              ! enddo
-
+              
+            
             call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble )
 
-           
 
             ! CALCULATE RESIDUAL NORM
             RES_NORM = DOT_PRODUCT(B_f,B_f)+DOT_PRODUCT(Be_f,Be_f)
             RES_NORM = DSQRT(RES_NORM)
 
-            ! print *, DOT_PRODUCT(B_f,B_f)
-            ! print *, DOT_PRODUCT(Be_f,Be_f)
+            ! if ((iter_f .gt. 5) .and. (increment .gt. 0)) then
+              jj=1
+              kk=0
+              do ii = 1, size(B_f)
+                 if (jj .gt. NEQ_f) jj=1
+                 if (jj .eq. 1) then
+                   kk=kk+1
+                 endif
+            !      !! if ( getVariableName(jj) == 'P' ) then
+            !        ! if ( abs(B_f(ii)) .gt. 1.d0) then 
+            !        if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
+                   ! if ( ii .eq. 23536) then 
+                   !   print*,'global_node=', kk
+                   !   print*, ' ' 
+                   !   print '(A9,2x,f10.5,2x,f10.5,2x,f10.5)','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
+                   !   print*, ' ' 
+                   !   print*, 'variable','     ', 'residual' 
+                   !   print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+
+                     ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM
+                     ! print*, ' ' 
+                     ! print*, ' ' 
+                     ! print*, ' ' 
+                     ! print*, ' //////////////////////////////////////////////////////// ' 
+                     ! pause
+            !        endif
+                 ! endif
+                 jj=jj+1
+              enddo
+            ! endif
+                     ! write(404,*),  ' '
+                     ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), 1, Be_f(1), Be_f(1)/ RES_NORM, RES_NORM
+
+            
+
+
+           
+
+
+            ! print *, sqrt(DOT_PRODUCT(B_f,B_f))
+            ! print *, sqrt(DOT_PRODUCT(Be_f,Be_f))
             ! pause
 
 
@@ -297,7 +305,7 @@ module newton_bulk_call
             n_timer_o       = n_timer
             ! CHECK CONVERGENCE & CHOOSE KIND OF NR METHOD
             CALL CHECK_CONVERGENCE&
-            (ITER_f, xNITER, FLAG_NR, CCL, FoM, COR_NORM_NEW_f, COR_NORM_OLD_f, S_f, Se_f,&
+            (ITER_f, xNITER, FLAG_NR, CCL, COR_NORM_NEW_f, COR_NORM_OLD_f, S_f, Se_f,&
             NUNKNOWNS_f, NEX_f, RES_NORM, LMSG, MNR_FAILED, Res_Norm_First_Iteration, time_in_seconds)
 
             ! print *, DOT_PRODUCT(S_f,S_f)
@@ -349,7 +357,7 @@ module newton_bulk_call
             zone     = toStr(ITER_f)
 
             call WriteTecplotFile(filename, title, zone, TL, NM_MESH)
-            ! pause
+            pause
 
         ENDDO LOOP_NEWTON_RAPSHON_f
 
@@ -372,9 +380,7 @@ module newton_bulk_call
        Use PHYSICAL_MODULE
        Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
        Use ENUMERATION_MODULE,          Only: NM_MESH
-       Use BOUNDARY_ENUMERATION_MODULE, Only: NBE
        Use GLOBAL_ARRAYS_MODULE,        Only: TL
-       Use MESH_MODULE,                 Only: Xm, Ym, EPS_MESH
        Use Boundary_EquationsDO
        Use BulkEquations 
        Use NumericalBoundaryJacobian
@@ -382,17 +388,14 @@ module newton_bulk_call
        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
        !  ARGUMENTS
        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-       Integer          :: IEL, ICH
+       Integer          :: IEL
        Character(len=3) :: FLAG_NR
        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
        !  LOCAL VARIABLES
        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-       Integer :: INOD, II, IBND, NOD
-       Logical :: FLAG
-       Real(8) :: SGN, XX, YY
+       Integer :: INOD, II
        Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_TL
        Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_RES
-       Integer                          :: face
 
 
        ! COPY SOLUTION TO A LOCAL ARRAY
@@ -408,57 +411,6 @@ module newton_bulk_call
         
        
     END SUBROUTINE FLOW_EQUATIONS
-
-
-    !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
-
-
-    SUBROUTINE CONCENTRATION_EQUATION(IEL, FLAG_NR)
-     
-       Use PHYSICAL_MODULE
-       Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-       Use ENUMERATION_MODULE,          Only: NM_MESH
-       Use BOUNDARY_ENUMERATION_MODULE, Only: NBE
-       Use GLOBAL_ARRAYS_MODULE,        Only: TL
-       Use MESH_MODULE,                 Only: Xm, Ym, EPS_MESH
-       Use Boundary_EquationsDO 
-       Use BulkEquations 
-       Use NumericalBoundaryJacobian
-       Implicit None
-       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-       !  ARGUMENTS
-       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-       Integer          :: IEL, ICH
-       Character(len=3) :: FLAG_NR
-       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-       !  LOCAL VARIABLES
-       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-       Integer :: INOD, II, IBND, NOD
-       Logical :: FLAG
-       Real(8) :: SGN, XX, YY
-       Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_TL
-       Real(8), Dimension(NBF_2d,NEQ_f) :: TEMP_RES
-       Integer                          :: face
-
-
-       ! COPY SOLUTION TO A LOCAL ARRAY
-       TEMP_TL = 0.D0
-       DO INOD = 1, NBF_2d
-         II = NM_MESH(IEL,INOD)
-         TEMP_TL(INOD,:) = TL(II,:)
-       ENDDO
-
-
-       ! CALL DOMI_RESIDUAL_chemSpecies( IEL, TEMP_TL, TEMP_RES, .TRUE. )
-           
-       ! IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
-       ! IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_chemSpecies  ,IEL, TEMP_TL, TEMP_RES)
-     
-       
-    END SUBROUTINE CONCENTRATION_EQUATION
-
-
 
 
 end module newton_bulk_call

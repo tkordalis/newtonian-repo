@@ -117,7 +117,7 @@ Module TecplotInterpolation
         Class(TecplotInterpolator)    :: this
         Type(SalomeMeshGeneration)    :: mesh
 
-        Integer                       :: t_int
+        ! Integer                       :: t_int
         Character(len=:), Allocatable :: new
         Character(len=:), Allocatable :: old
         Character(len=:), Allocatable :: out

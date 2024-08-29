@@ -46,6 +46,7 @@ contains
 
     ! Subroutine to check for exceptions in an array of dim1
     subroutine check_fp_exceptions_array_dim1(input, var_name)
+        implicit none
         real(8), intent(in) :: input(:)     ! Assumed-shape array
         character(len=*), intent(in) :: var_name
         integer :: i
@@ -74,6 +75,7 @@ contains
 
     ! Subroutine to check for exceptions in a scalar
     subroutine check_fp_exceptions_scalar(input, var_name)
+        implicit none
         real(8), intent(in) :: input
         character(len=*), intent(in) :: var_name
         logical :: is_nan, is_inf, is_zero

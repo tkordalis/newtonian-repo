@@ -2,22 +2,22 @@
 Module UNV
     Use Formats
     Use MeshGeneration, only: python
-
- Private 
- 
-
- Public  :: unvFileReader
+    external :: fdate
+    Private 
 
 
- Type unvFileReader
-    Character(len=:)       , Allocatable :: filename
-    Character(len=:)       , Allocatable :: foldername
-    Real(8), Dimension(:,:), Allocatable :: nodes 
-    Integer, Dimension(:,:), Allocatable :: elements
-    Integer, Dimension(:,:), Allocatable :: surface_elements 
-    Integer, Dimension(:)  , Allocatable :: faces
+    Public  :: unvFileReader
 
-    contains 
+
+    Type unvFileReader
+        Character(len=:)       , Allocatable :: filename
+        Character(len=:)       , Allocatable :: foldername
+        Real(8), Dimension(:,:), Allocatable :: nodes 
+        Integer, Dimension(:,:), Allocatable :: elements
+        Integer, Dimension(:,:), Allocatable :: surface_elements 
+        Integer, Dimension(:)  , Allocatable :: faces
+
+        contains 
         procedure :: readNodes 
         procedure :: readElements
         procedure :: readSurfaceElements
@@ -36,15 +36,15 @@ Module UNV
         procedure :: FileNotFound
         procedure :: executePythonScript
         procedure :: dumpToTecplotFile
- End Type unvFileReader
+    End Type unvFileReader
 
 
- Interface unvFileReader 
-    module procedure constructor
- End Interface unvFileReader
+    Interface unvFileReader 
+        module procedure constructor
+    End Interface unvFileReader
 
 
- contains
+    contains
 
 
     Function constructor(filename) Result(this)
@@ -59,15 +59,15 @@ Module UNV
         ! Check if File exist
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         if ( .not. this%FileNotFound()) Then 
-            print*, replace("[Error] unvFileReader : The file * does not exist.","*",this%filename)
-            stop
+        print*, replace("[Error] unvFileReader : The file * does not exist.","*",this%filename)
+        stop
         end if
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
         call this%executePythonScript()
         call this%readNodes          ("nodes.dat")
-    call this%readElements       ("elements.dat")
+        call this%readElements       ("elements.dat")
         Call this%readSurfaceElements("surface_elements.dat")   
     End Function constructor
 
@@ -104,10 +104,10 @@ Module UNV
         Implicit None 
         Class(unvFileReader), Intent(In) :: this
         Integer                          :: output
-    
+
         Character(len=:), Allocatable    :: item
         Integer                          :: tmpfile
-    
+
         item       = pathJoin( this%foldername, "bnd_*_elements.dat")
 
         Call Execute_Command_Line("ls -l "//item//"| wc -l > .boundaries.list")
@@ -134,10 +134,10 @@ Module UNV
         ! Constrains
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         if (nBnd < 0 )&
-        stop "[Error] getBoundaryName : The nBnd should be positive"
+            stop "[Error] getBoundaryName : The nBnd should be positive"
 
         if (nBnd > this%getNumberOfBoundaries())&
-        stop "[Error] getBoundaryName : The number of boundaries exceeds the maximum value."
+            stop "[Error] getBoundaryName : The number of boundaries exceeds the maximum value."
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
@@ -168,7 +168,7 @@ Module UNV
             if (this%getBoundaryName(i) == name ) exit      
         end do
         output = i
-    
+
     End Function getBoundaryId
 
     Subroutine getBoundary (this, name, elements, faces)
@@ -189,7 +189,7 @@ Module UNV
         call readBoundaryFile(bnd, faces)   
     End Subroutine getBoundary
 
-  Subroutine executePythonScript (this)
+    Subroutine executePythonScript (this)
         Implicit None 
         Class(unvFileReader), Intent(In) :: this
         Integer                          :: pyscript
@@ -219,20 +219,20 @@ Module UNV
 
 
         If ( Allocated(this%nodes) ) Deallocate(this%nodes)
- 
+
         Open(newunit = nodefile, file = pathJoin(this%foldername, filename) ) 
 
         ! Read The Maximum Values of the file (num)
         Read(nodefile ,'(a)') line
-        
+
         line = remove(line,"#")
         num  = toInt (line)
 
         Allocate( this%nodes(num,3) ) ! x, y, z
 
         Do i = 1, num ; Read(nodefile,*) this%nodes(i,1), & 
-                                             this%nodes(i,2), &
-                                                                         this%nodes(i,3)
+            this%nodes(i,2), &
+            this%nodes(i,3)
         End Do 
 
         Close(nodefile)
@@ -253,7 +253,7 @@ Module UNV
 
 
         If ( Allocated( this%elements) ) Deallocate( this%elements)
- 
+
 
         Open(newunit = elementfile, file = pathJoin(this%foldername,filename) ) 
         ! Read The Maximum Values of the file (num)
@@ -264,8 +264,8 @@ Module UNV
 
         Do i = 1, num
         Read(elementfile,*) this%elements(i,1), &
-                        this%elements(i,2), &
-                        this%elements(i,3)
+        this%elements(i,2), &
+        this%elements(i,3)
         End Do 
 
         Close(elementfile)
@@ -285,7 +285,7 @@ Module UNV
 
 
         If ( Allocated(this%surface_elements) ) Deallocate(this%surface_elements)
- 
+
         Open(newunit = elementfile, file = pathJoin(this%foldername, filename)) 
 
         ! Read The Maximum Values of the file (num)
@@ -295,8 +295,8 @@ Module UNV
         Allocate( this%surface_elements(num,2) ) 
 
         Do i = 1, num
-        Read(elementfile,*) this%surface_elements(i,1), &
-                        this%surface_elements(i,2)
+            Read(elementfile,*) this%surface_elements(i,1), &
+            this%surface_elements(i,2)
         End Do 
 
         Close(elementfile)
@@ -373,7 +373,7 @@ Module UNV
         Logical                             :: dir_exist
 
         If (Allocated(this%nodes)           ) Deallocate(this%nodes           )
-    If (Allocated(this%elements)        ) Deallocate(this%elements        )
+        If (Allocated(this%elements)        ) Deallocate(this%elements        )
         If (Allocated(this%surface_elements)) Deallocate(this%surface_elements)
         If (Allocated(this%faces)           ) Deallocate(this%faces           )
 
@@ -390,12 +390,12 @@ Module UNV
         Implicit None 
         Class(unvFileReader), Intent(In) :: this
 
-        Character(len=:), Allocatable :: buffer
+        ! Character(len=:), Allocatable :: buffer
         Character(len=:), Allocatable :: files
-        Character(len=:), Allocatable :: line 
+        ! Character(len=:), Allocatable :: line 
         Integer                       :: ibnd
         character(25)                 :: dateNtime
-        
+
 
         files = ""
         do ibnd = 1, this%getNumberOfBoundaries()
@@ -415,23 +415,23 @@ Module UNV
         print*, concatenate("  Number of Boundaries      : "         , toStr(this%getNumberOfBoundaries()     ))
         print*, concatenate("  Boundary Names            : "         , files                                   )
         print*, replace    ("  Coordinate X : Min = *, Max = *  ","*", [toStr(minval(this%nodes(:,1))), &
-                                                                        toStr(maxval(this%nodes(:,1)))]) 
+        toStr(maxval(this%nodes(:,1)))]) 
         print*, replace    ("  Coordinate Y : Min = *, Max = *  ","*", [toStr(minval(this%nodes(:,2))), &
-                                                                          toStr(maxval(this%nodes(:,2)))]) 
+        toStr(maxval(this%nodes(:,2)))]) 
 
     End Subroutine info
 
     Function FileNotFound(this) Result(output)
         Implicit None 
         Class(unvFileReader)         :: this
-    Logical                      :: output
-    Inquire(file = this%filename, exist = output)
+        Logical                      :: output
+        Inquire(file = this%filename, exist = output)
     End Function FileNotFound
 
 
-!<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-! Helpful Functions
-!<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    ! Helpful Functions
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 
     Subroutine readBoundaryFile(bndfile, array)

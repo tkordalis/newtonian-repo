@@ -62,7 +62,7 @@ Module SymmetryDiffusionBoundary
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-        Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
+        Use MESH_MODULE,                 only: Ym
 
         Implicit None 
         Class(SymmetryDiffusion) , Intent(In)         :: This 
@@ -85,11 +85,11 @@ Module SymmetryDiffusionBoundary
                 if (FlagNR == "NRP") Then
                     call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
                 end if
-        !     case('Y')
-        !         call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
-        !         if (FlagNR == "NRP") Then
-        !             call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
-        !         end if
+            case('Y')
+                call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
+                if (FlagNR == "NRP") Then
+                    call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
+                end if
             case default
                     Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."
             End Select
@@ -100,7 +100,7 @@ Module SymmetryDiffusionBoundary
             node = this%nodes(inode)
             call ApplyDirichletAtNode_(node, "Vr", 0.d0      , FlagNr )
             ! Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
-            Call ApplyDirichletAtNode_(node, 'R'  , Eta(node), FlagNr )
+            Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
         end do
 
         If ( Allocated(TL_) ) Deallocate(TL_)

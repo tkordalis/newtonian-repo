@@ -24,8 +24,7 @@ from salome.geom import geomtools
 # ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 # Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere
 
-from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, RSphere2, Sphere_position, dR_ref1, dR_ref2, \
-R_refinement1_Sphere1, R_refinement1_Sphere2, R_refinement2_Sphere1, R_refinement2_Sphere2, \
+from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, R_refinement1_Sphere1, R_refinement2_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere
 
@@ -143,7 +142,7 @@ Mesh_1.Segment(geom=Sphere1).NumberOfSegments(NumSegmentsOnSphere)
 # Mesh_1.Segment(geom=Ambient).NumberOfSegments(5)
 
 NETGEN_1D_2D   = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D)
-MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.2)
+MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.1)
 
 tankWall_1	 	=  Mesh_1.GroupOnGeom( tankWall 	,'tankWall'   ,SMESH.EDGE )
 Symmetry_1	 	=  Mesh_1.GroupOnGeom( Symmetry 	,'Symmetry'	  ,SMESH.EDGE )
@@ -153,7 +152,7 @@ rightPlane_1 	=  Mesh_1.GroupOnGeom( Ambient ,'Ambient' 		,SMESH.EDGE )
 isDone = Mesh_1.Compute()
 
 try:
-  Mesh_1.ExportUNV( r'./UnBounded.unv' )
+  Mesh_1.ExportUNV( r'./Bounded.unv' )
   pass
 except:
   print('ExportUNV() failed. Invalid file name?')

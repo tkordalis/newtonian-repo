@@ -54,32 +54,21 @@ Module FixWallConcentrationBoundary
 
 
     Subroutine applyBoundaryConditions(This, FlagNr)
-        Use GLOBAL_ARRAYS_MODULE,        Only: TL
-        Use ENUMERATION_MODULE,          Only: NM_MESH
-        Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-        Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
-
+        Use MESH_MODULE,                 only: Xm, Ym
         Implicit None 
         Class(FixWallConcentration)  , Intent(In)         :: This 
         Character(len=3), Intent(In)         :: FlagNr
 
-        Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
-        Integer                              :: iel, inode, node
-        Integer                              :: element 
-        Integer                              :: face
-        Integer                              :: i
-        Integer                              :: ii
+        Integer                              :: inode, node
 
-    
         do inode = 1, size(this%nodes)
             node = this%nodes(inode)
             call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
             call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
-            call ApplyDirichletAtNode_(node, "Z", Ksi(node), FlagNr )
-            call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
+            call ApplyDirichletAtNode_(node, "Z", Xm(node), FlagNr )
+            call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
 
-            call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr )
+            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr )
         end do 
 
     End Subroutine applyBoundaryConditions

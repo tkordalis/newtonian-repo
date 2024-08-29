@@ -21,7 +21,7 @@ Module BubbleDiffusionStaticCSBoundary
         Integer                            :: gidP, gidC
         Real(8)                            :: pressure, pressure_o, InitialPressure
         Real(8)                            ::           volume_o  , InitialVolume
-        Real(8)                            :: mol  , Initialmol, Initialmol_dim
+        ! Real(8)                            :: mol  , Initialmol, Initialmol_dim
         contains 
             ! constrains and boundary conditions
             procedure :: applyBoundaryConditions
@@ -36,7 +36,7 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: setInitialVolume
             procedure :: setCentroid_o
             procedure :: setVolume_o
-            procedure :: setInitialmol_dim
+            ! procedure :: setInitialmol_dim
 
             ! getters
             procedure :: getCentroid
@@ -153,10 +153,6 @@ Module BubbleDiffusionStaticCSBoundary
         Integer                              :: iel 
         Integer                              :: element 
         Integer                              :: face
-        Integer                              :: i
-        Integer                              :: ii
-
-
 
         if (present(kinematic_logical) .and. (kinematic_logical)) then
             call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
@@ -215,7 +211,6 @@ Module BubbleDiffusionStaticCSBoundary
 
         This%InitialVolume = this%getVolume()
         This%volume_o = This%InitialVolume
-        pause
     End Subroutine setInitialVolume
 
 
@@ -227,34 +222,32 @@ Module BubbleDiffusionStaticCSBoundary
         This%Pressure = Pressure
     End Subroutine setPressure
 
-    Subroutine setInitialmol_dim(This)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
+    ! Subroutine setInitialmol_dim(This)
+    !     Implicit None 
+    !     Class(BubbleDiffusionStaticCS)       :: This
 
-        This%Initialmol_dim = (Pchar*this%InitialPressure) * (length_char**3*this%InitialVolume) / ( 8.314 * (273.d0 + 20.d0) )
-    End Subroutine setInitialmol_dim
-    Subroutine setInitialmol(This)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        ! dimensionless equation is P*V=n
+    !     This%Initialmol_dim = (Pchar*this%InitialPressure) * (length_char**3*this%InitialVolume) / ( 8.314 * (273.d0 + 20.d0) )
+    ! End Subroutine setInitialmol_dim
+    ! Subroutine setInitialmol(This)
+    !     Implicit None 
+    !     Class(BubbleDiffusionStaticCS)       :: This
+    !     ! dimensionless equation is P*V=n
 
-        This%Initialmol = (this%InitialPressure) * (this%InitialVolume)
-    End Subroutine setInitialmol
+    !     This%Initialmol = (this%InitialPressure) * (this%InitialVolume)
+    ! End Subroutine setInitialmol
     
-    Subroutine setmol(This, mol)
-        use physical_module, only: Pchar, length_char
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: mol
+    ! Subroutine setmol(This, mol)
+    !     use physical_module, only: Pchar, length_char
+    !     Implicit None 
+    !     Class(BubbleDiffusionStaticCS)       :: This
+    !     Real(8), Intent(In) :: mol
 
-    End Subroutine setmol
+    ! End Subroutine setmol
 
 
     Subroutine setCentroid_o(this)
         Implicit None 
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
+        Class(BubbleDiffusionStaticCS)              :: this
         Real(8)                                     :: Centroid, Volume
         
         Volume   = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
@@ -266,10 +259,7 @@ Module BubbleDiffusionStaticCSBoundary
 
     Subroutine setVolume_o(this)
         Implicit None 
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
-        Real(8)                                     :: Centroid, Volume
+        Class(BubbleDiffusionStaticCS)              :: this
         
         This%volume_o   = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
     end Subroutine setVolume_o
@@ -293,7 +283,7 @@ Module BubbleDiffusionStaticCSBoundary
     end Function getCentroid
 
     Function getVelocity(this) Result(output)
-        use TIME_INTEGRATION, only:dt, time
+        use TIME_INTEGRATION, only: dt
         Implicit None 
         Class(BubbleDiffusionStaticCS)              :: this
         Real(8)                                     :: zcenter

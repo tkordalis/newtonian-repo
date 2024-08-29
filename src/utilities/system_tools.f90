@@ -3,6 +3,7 @@ module system_tools
     contains
 
     subroutine execute_command(cmd)
+        implicit none
         character(len=100), intent(in) :: cmd
         integer :: status
         integer, external :: system
@@ -17,6 +18,7 @@ module system_tools
     end subroutine execute_command
 
     subroutine check_dir(dir)
+        implicit none
         character(len=*), intent(in) :: dir
         character(len=100) :: command
 

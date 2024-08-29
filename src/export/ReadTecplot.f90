@@ -123,8 +123,8 @@ Module ReadTecplot
         Character(len=*),              Intent(In)   :: file
         Character(len=:), Allocatable, Intent(InOut):: dest
 
-        Character(len=:), Allocatable :: filename
-        Integer                       :: funit
+        ! Character(len=:), Allocatable :: filename
+        ! Integer                       :: funit
 
         ! the output is a hidden folder
         dest = replace(".{}", "{}", getFileName(file))
@@ -140,7 +140,7 @@ Module ReadTecplot
         Integer, Dimension(:,:), Allocatable:: output
 
         Integer                             :: funit
-        Integer                             :: i,j
+        Integer                             :: i
         Integer                             :: nelem, nnodes
     
         open(funit, file = pathJoin(dest,"elements"), action="read")

@@ -10,8 +10,7 @@ Module BoundaryConditions
   Type(AmbientHenry)                 :: ambientinterf
   Type(BubbleDiffusionStaticCS)      :: bubble
 
-  
-  contains
+    contains
     Subroutine DefineTheBoundaries()
         Implicit None
 
@@ -48,7 +47,7 @@ Module InitialConditions
     TLo(:,getVariableId("Z"))   = Xm
     TLo(:,getVariableId("R"))   = Ym
     TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( initial_position - TLo(:,getVariableId("Z")) )
-    TLo(:,getVariableId("C"))   = 1.d0
+    ! TLo(:,getVariableId("C"))   = 1.d0
     TLb = TLo
     TL  = TLo
     TLp = TL
@@ -92,10 +91,10 @@ module solveAllExtraConstraints
 
             Call bubble%setPressure( Bubble1Pressure )
             Call bubble%applyBoundaryConditions(FlagNR)
-            Be_f(1) = bubble%PressureVolumeConservation()
-            Ah_f(:,:) = bubble%getVolume()
-            ! Be_f(1) = bubble%volumeConservation()
-            ! Ah_f(:,:) = 0.d0
+            ! Be_f(1) = bubble%PressureVolumeConservation()
+            ! Ah_f(:,:) = bubble%getVolume()
+            Be_f(1) = bubble%volumeConservation()
+            Ah_f(:,:) = 0.d0
 
             dVtankdt = bubble%getdVtankdt()
             ! write(404,'(4(f16.9,2x))') time, dVtankdt, Rtank, dVtankdt / (pi*Rtank**2)
@@ -136,12 +135,7 @@ Module BubbleOutput
         enddo
         write(20,*) " " 
     end Subroutine openBubbleFiles
-    Subroutine calculateVariables(DT)
-        Use Physical_module  
-        Implicit none
-        real(8), intent(in) :: DT
-        Real(8)             :: displacement1_dt, displacement2_dt
-    end Subroutine calculateVariables
+
     Subroutine WriteBubbleFiles(TIME)
         use pressure_variation, only: PressureChamber
         Use Physical_module, only: Pressure_Bubble

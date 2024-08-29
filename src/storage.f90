@@ -25,7 +25,7 @@ module storage
 
          ! ITERATE OVER INEQ EQUATIONS
            IROW  = NM(I) + IEQ - 1
-           !$OMP ATOMIC
+          !$OMP ATOMIC
            B(IROW) = B(IROW) + TEMP(I,IEQ)
 
          ENDDO
@@ -74,9 +74,12 @@ module storage
                ICOL = IAD + CSR(L) + JEQ - 1
 
              ! ITERATE OVER ALL EQUATIONS
-               !$OMP ATOMIC
+              !$OMP ATOMIC
                A(ICOL) = A(ICOL) + TP(I,J,JEQ,IEQ)
-               ! write(404,'(4(i3,2x),f20.10)') J, JEQ, I, IEQ, TP(I,J,JEQ,IEQ)
+
+               ! if ((I == 1) .and. (j==1)) then
+               ! write(404,'(2(i6,3x),f29.19)') JEQ, IEQ, TP(I,J,JEQ,IEQ)
+               ! endif
 
              ENDDO
            ENDDO

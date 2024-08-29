@@ -64,11 +64,9 @@ Module AmbientHenryBoundary
 
     Subroutine applyBoundaryConditions(This, FlagNr, dVtankdt, Pressure_bc)
         Use physical_module,             only: ambient_position_o, vm_ambient, Rtank, pi, KoN
-        Use TIME_INTEGRATION,            only: time, dt
-        Use GLOBAL_ARRAYS_MODULE,        Only: TL
-        Use ENUMERATION_MODULE,          Only: NM_MESH
+        Use TIME_INTEGRATION,            only: dt
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-        Use MESH_MODULE,                 only: Ksi => Xm, Eta => Ym
+        Use MESH_MODULE,                 only: Ym
         Use DirichletBoundaries, only : updateAllNodesOfTheBoundary, &
                                     ClearRowsOfResidual, ClearRowsOfJacobian
 
@@ -79,27 +77,24 @@ Module AmbientHenryBoundary
         Real(8),          Intent(In)         :: Pressure_bc
 
         Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2, RES_3
-        Integer                              :: iel, node_counter, node
-        Integer                              :: element 
-        Integer                              :: face
-        Integer                              :: i
-        Integer                              :: ii
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
+        Integer                              :: node_counter, node
 
         call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
         If (FlagNR == "NRP") &
             call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
         
         vm_ambient = dVtankdt / (pi*Rtank**2)
+        ! vm_ambient = 0.d0
        
         do node_counter = 1, size(this%nodes)
             node = this%nodes(node_counter)
             call ApplyDirichletAtNode_(node, "Z", ambient_position_o + dt*vm_ambient, FlagNr )
-            call ApplyDirichletAtNode_(node, "R", Eta(node), FlagNr )
+            call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
             call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
             
             call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
-            call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
+            ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
         enddo
 
         ! weak imposition of henry's law

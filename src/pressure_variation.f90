@@ -36,9 +36,8 @@ module pressure_variation
 
     function PressureChamber(time) result(P_t)
         implicit none
-        real(8) :: time, crit_time, P_t
+        real(8) :: time, P_t
         real(8) :: time_previous_P, time_next_P, previous_P, next_P
-        integer :: count
 
         call transientPressureChange(time)
 

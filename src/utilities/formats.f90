@@ -70,7 +70,7 @@
                 Character(len=:), Allocatable:: filename
             
                 Character(len=500), Dimension(:), Allocatable :: path_
-                Character(len=:), Allocatable:: str
+                ! Character(len=:), Allocatable:: str
                 
                 path_ = split(path, sep = "/")
                 filename = trim(adjustl(path_(size(path_))))

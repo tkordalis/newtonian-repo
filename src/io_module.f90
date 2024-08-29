@@ -149,17 +149,6 @@ Module IO_module
         Use FieldFunctions
         Use VariableMapping
         Use MESH_MODULE, only: Xm, Ym
-        Use GLOBAL_ARRAYS_MODULE, only: TL
-        USE ENUMERATION_MODULE,   only: NM_MESH
-        Use BOUNDARY_ENUMERATION_MODULE, only: NBE, &
-                                                        bnd1_elements, bnd1_faces, &
-                                                        bnd2_elements, bnd2_faces, &
-                                                        bnd3_elements, bnd3_faces, &
-                                                        bnd4_elements, bnd4_faces, &
-                                                        bnd5_elements, bnd5_faces, &
-                                                        bnd6_elements, bnd6_faces, &
-                                                        bnd7_elements, bnd7_faces, &
-                                                        getBoundaryNodesOfTheElement
         Implicit None 
         Real(8), Dimension(:,:), Intent(In) :: Solution
         Integer, Dimension(:,:), Intent(In) :: elements
@@ -170,10 +159,7 @@ Module IO_module
 
         Type(Tecplot_File)                  :: tecfile
         Character(len=:), Allocatable       :: title
-        Character(len=:), Allocatable       :: filename
         
-        Real(8), Dimension(:,:), Allocatable  :: stresses_nodes
-        Integer                             :: i
 
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Write Tecplot File

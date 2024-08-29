@@ -17,88 +17,7 @@ Module NumericalBoundaryJacobian
 
     Contains
 
-    Subroutine DOMI_JACOBIAN_f( NELEM, TEMP_TL, TEMP_RES )
-        Use BulkEquations, only: DOMI_RESIDUAL_fluid
-
-        Use PHYSICAL_MODULE 
-        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
-        Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f
-        Implicit None
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        !  ARGUMENTS
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer,                          Intent(In)    :: NELEM
-        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_TL
-        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)    :: TEMP_RES
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        !  LOCAL VARIABLES
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                         :: IROW, JCOL, ICOL, IAD, L
-        Real(8)                                         :: eps
-        Integer, Dimension(NBF_2d)                      :: NM
-        Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
-
-        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: JAC_
-        Real(8), Dimension(NBF_2d,NEQ_f)                :: dRES_
-        Real(8), Dimension(NBF_2d,NEQ_f)                ::  RES_
-        Real(8), Dimension(NBF_2d,NEQ_f)                ::  DER_
-        Real(8), Dimension(NBF_2d,NEQ_f)                ::  TL_
-
-        Real(8)                                         :: tmp 
-        Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP
-
-        !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
-        !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
-        JAC_  = 0.D0
-        dRES_ = 0.D0
-
-        RES_     = TEMP_RES 
-        TL_      = TEMP_TL
-
-        !******************************************************************** 
-        !  Elemental Jacobian
-        ! ** Iterate over the Nodes of the Element
-        !    (the jacobian has contibutions from inside the element only)
-        ! ** Iterate over the Unknowns
-        ! ** Perturb the Unknown
-        ! ** Compute the Perturbed Residuals
-        ! ** Update the Value to the preexisted state.
-        ! ** Compute the Jacobian Contributions with finite differences
-        !******************************************************************** 
-
-        do jw = 1, nbf_2d
-         do jeq = 1, neq_f
-            
-           eps               = f_dx( temp_tl(jw,jeq) )
-           tl_(jw,jeq)       = tl_ (jw,jeq) + eps
-            
-           call DOMI_RESIDUAL_fluid( nelem, tl_, dres_, .false. )
-            
-           tl_(jw,jeq)       = tl_(jw,jeq) - eps
-           der_              = (dres_ - res_ ) /eps
-           jac_ (:,jw,jeq,:) = der_
-            
-         end do
-        end do
-
-
-        !  STORE THE ELEMENT INTEGRATION MATRIX IN THE GLOBAL MATRIX A
-        NM  = NM_f (NELEM,1:NBF_2d       )
-        CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
-
-        CALL MATRIX_STORAGE_JACOBIAN&
-        (JAC_, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
-        CSC, NBF_2d*NBF_2d, A_f, NZ_f)
-
-        !****************************************************************
-        !****************************************************************
-
-
-    End Subroutine DOMI_JACOBIAN_f
-
-
+ 
     Subroutine NumericalJacobian_Simple(Equation, NELEM, NED, TEMP_TL, TEMP_RES )
         !********************************************************************
         ! Computes the interfacial contributions of the Equation in the
@@ -106,7 +25,7 @@ Module NumericalBoundaryJacobian
         !********************************************************************
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
 
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -132,15 +51,13 @@ Module NumericalBoundaryJacobian
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                                    :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                                    :: IROW, JCOL, ICOL, IAD, L
+        Integer                                                    :: JW, JEQ
         ! Real(8)                                                    :: F_DX, EPS_JAC
         Real(8)                                                    :: EPS_JAC
         Integer, Dimension(NBF_2d)                                 :: NM
         Integer, Dimension(NBF_2d*NBF_2d)                          :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                           :: dTEMP_RES
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f)            :: TEMP_JAC
-        Real(8), Dimension(NBF_2d, NEQ_f)                          :: TEMP_DpL
 
 
         !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
@@ -182,7 +99,7 @@ Module NumericalBoundaryJacobian
     Subroutine NumericalJacobian_Stresses(Equation, nelem, ned, temp_tl, temp_res, globalValue, globValuePresent)
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -209,15 +126,13 @@ Module NumericalBoundaryJacobian
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                         :: IROW, JCOL, ICOL, IAD, L
+        Integer                                         :: JW, JEQ
         ! Real(8)                                         :: F_DX, EPS_JAC
         Real(8)                                         :: EPS_JAC
         Integer, Dimension(NBF_2d)                      :: NM
         Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
-        Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP_DpL
         Real(8)                                         :: tmpGlobalValue
 
         if (globValuePresent .eqv. .true.) then
@@ -267,7 +182,7 @@ Module NumericalBoundaryJacobian
     Subroutine NumericalJacobian_NaturalBC(Equation, nelem, ned, temp_tl, temp_res, naturalBCvalue )
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -293,15 +208,13 @@ Module NumericalBoundaryJacobian
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                         :: IROW, JCOL, ICOL, IAD, L
+        Integer                                         :: JW, JEQ
         ! Real(8)                                         :: F_DX, EPS_JAC
         Real(8)                                         :: EPS_JAC
         Integer, Dimension(NBF_2d)                      :: NM
         Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
-        Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP_DpL
         Real(8)                                         :: tmpNaturalBCvalue
 
 
@@ -347,9 +260,9 @@ Module NumericalBoundaryJacobian
     Subroutine CalculateExtraJacobianContributionsOf_1_global&
         ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, store_id)
 
-        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: CSR_f
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -377,14 +290,10 @@ Module NumericalBoundaryJacobian
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                         :: IROW, JCOL, ICOL, IAD, L
-        ! Real(8)                                         :: F_DX 
         Real(8)                                         :: eps
         Integer, Dimension(NBF_2d)                      :: NM
         Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
-        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
         Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP_DpL
         Real(8)                                         :: gVal
 
@@ -431,9 +340,9 @@ Module NumericalBoundaryJacobian
     Subroutine CalculateExtraJacobianContributionsOf_2_global&
         ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, gVal2, store_id)
 
-        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: CSR_f
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -463,14 +372,11 @@ Module NumericalBoundaryJacobian
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                         :: IROW, JCOL, ICOL, IAD, L
         ! Real(8)                                         :: F_DX 
         Real(8)                                         :: eps
         Integer, Dimension(NBF_2d)                      :: NM
         Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
-        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
         Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP_DpL
         Real(8)                                         :: gVal
 
@@ -528,7 +434,7 @@ Module NumericalBoundaryJacobian
         !********************************************************************
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ac_f, Ar_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
 
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -544,26 +450,23 @@ Module NumericalBoundaryJacobian
 
         Interface 
             Subroutine Equation ( nelem, temp_tl, temp_res, store )
-            Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
-            Integer,                           Intent(In)           :: NELEM
-            Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: TEMP_TL
-            Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: TEMP_RES
-            LOGICAL,                           Intent(In)           :: STORE
+                Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
+                Integer,                           Intent(In)           :: NELEM
+                Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: TEMP_TL
+                Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: TEMP_RES
+                LOGICAL,                           Intent(In)           :: STORE
             End Subroutine Equation
         End Interface   
 
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                                    :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        Integer                                                    :: IROW, JCOL, ICOL, IAD, L
-        ! Real(8)                                                    :: F_DX, EPS_JAC
+        Integer                                                    :: JW, JEQ
         Real(8)                                                    :: EPS_JAC
         Integer, Dimension(NBF_2d)                                 :: NM
         Integer, Dimension(NBF_2d*NBF_2d)                          :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                           :: dTEMP_RES
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f)            :: TEMP_JAC
-        Real(8), Dimension(NBF_2d, NEQ_f)                          :: TEMP_DpL
 
 
         !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
@@ -638,10 +541,10 @@ module constrainJacobians
     contains
 
     Subroutine jacobianOfConstrain(gid, nelem, ned, Constrain )
-        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
         Use ENUMERATION_MODULE,   Only: NM_f, NM_MESH
         Use GLOBAL_ARRAYS_MODULE, Only: TL
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ar_f
+        Use CSR_STORAGE,          Only: Ar_f
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         ! Interface
@@ -662,13 +565,11 @@ module constrainJacobians
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-        INTEGER :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-        INTEGER :: IROW, JCOL, ICOL, IAD, L
+        INTEGER :: IW, JW, IEQ, JEQ
         ! REAL(8) :: F_DX, EPS_JAC
         REAL(8) :: EPS_JAC
 
         INTEGER, DIMENSION(NBF_2d)        :: NM
-        INTEGER, DIMENSION(NBF_2d*NBF_2d) :: CSC
 
         REAL(8) :: TEMP_RES
         REAL(8) :: dTEMP_RES
@@ -732,7 +633,7 @@ module constrainJacobians
 
 
     Subroutine loopOverElements(nelements, elements, faces, gid, procedure_, globUnknown, presentPressure)
-        Use CSR_STORAGE,               Only: Ar_f, Ah_f
+        Use CSR_STORAGE,               Only: Ar_f
 
         Implicit None
         Integer,                       Intent(In) :: nelements

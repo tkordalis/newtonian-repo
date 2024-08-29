@@ -54,7 +54,7 @@ Module MeshGeneration
             Implicit None 
             Class(SalomeMeshGeneration), Intent(InOut) :: this
 
-            Character(len=:), Allocatable              :: pfilename
+            ! Character(len=:), Allocatable              :: pfilename
             Real(8)                                    :: r ! random number from [0,1]
             Integer                                    :: ibnd  
             Character(len=:), Allocatable              :: line

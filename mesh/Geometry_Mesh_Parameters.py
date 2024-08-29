@@ -38,42 +38,38 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere = 40
+NumSegmentsOnSphere = 200
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
 
 
 
-dR_ref1 = 3*Element_size_on_Sphere
+dR_ref1 = 4*Element_size_on_Sphere
 dR_ref2 = 2*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
-R_refinement1_Sphere2 = RSphere2 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
-R_refinement2_Sphere2 = RSphere2 + dR_ref2
 
-
-Sphere_position + RSphere2 + dR_ref2 
 
 # if (2*Sphere_position) <= R_refinement2_Sphere1 + R_refinement2_Sphere2:
 # 	print("Sphere REFINEMENT ZONES are Touching")
 
 
 
-ellipse_Minor_Radius = dR_ref2 + 1
-ellipse_Major_Radius = dR_ref2 + 1
+ellipse_Minor_Radius = R_refinement2_Sphere1 + 1
+ellipse_Major_Radius = R_refinement2_Sphere1 + 1.1
 
 ellipse_position 	 = 0.
 
 
 
-outer_ellipse_Major_Radius = ellipse_Major_Radius + 1.0
 outer_ellipse_Minor_Radius = ellipse_Minor_Radius + 1.0
+outer_ellipse_Major_Radius = ellipse_Major_Radius + 1.0
 
 
 h_s = 0.0001
 
 
-Main_maxSize_element = 4
+Main_maxSize_element = 10
 Main_minSize_element = 0.1
 
 Netgen_Params = []
@@ -88,7 +84,7 @@ if check_drRef1_compatibility<3:
 # Fine Mesh parameters
 Netgen_Params.append([ 2.*Element_size_on_Sphere,  2.*Element_size_on_Sphere, 0.5])
 
-Netgen_Params.append([ 3*Element_size_on_Sphere,  3*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])
 
 Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
 Netgen_Params.append([ 6*Element_size_on_Sphere,  6*Element_size_on_Sphere, 0.1])

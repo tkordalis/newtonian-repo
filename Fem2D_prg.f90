@@ -31,6 +31,7 @@ PROGRAM FEM2D
     Use RemeshVariables
     use newton_bulk_call
     Implicit None
+    external :: fdate
     character(25)                        :: dateNtime
 
     Type(unvFileReader)                  :: unvf
@@ -85,7 +86,7 @@ PROGRAM FEM2D
     !  ! ----------------------------------------------------------------------
     call ALLOCATE_CONTINUATION_ARRAYS( .TRUE., NUNKNOWNS_f           )
     call ALLOCATE_FLOW_ARRAYS        ( .TRUE., NUNKNOWNS_f, NEX_f    )
-    call ALLOCATE_GLOBAL_ARRAYS      ( .TRUE., NODTOL, NEL_2d, NEQ_f )
+    call ALLOCATE_GLOBAL_ARRAYS      ( .TRUE., NODTOL, NEQ_f )
 
 
 
@@ -170,7 +171,7 @@ PROGRAM FEM2D
     CALL ALLOCATE_ENUMERATION_INDICES         (.FALSE.,NEL_2d,NBF_1d,NBF_2d,NED_2d)
     CALL ALLOCATE_CONTINUATION_ARRAYS         (.FALSE., NUNKNOWNS_f )
     CALL ALLOCATE_FLOW_ARRAYS                 (.FALSE.,NUNKNOWNS_f, NEX_f)
-    CALL ALLOCATE_GLOBAL_ARRAYS               (.FALSE., NODTOL, NEL_2d, NEQ_f )
+    CALL ALLOCATE_GLOBAL_ARRAYS               (.FALSE., NODTOL, NEQ_f )
     CALL ALLOCATE_CSR_ARRAYS                  (.FALSE., 1, NUNKNOWNS_f, NZ_f, NEX_f )
     CALL ALLOCATE_CSR_CONNECTIVITY            (.FALSE.,NBF_2d,NEL_2d)
     CALL ALLOCATE_BOUNDARY_ENUMERATION_INDICES(.FALSE.,NEL_2d)

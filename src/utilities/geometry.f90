@@ -37,7 +37,7 @@ module geometry
             implicit none
             real(8), dimension(:,:), intent(in) :: array
             real(8)                 :: output
-            integer                 :: i
+            ! integer                 :: i
             real(8), dimension(size(array,1),size(array,2))  :: array2
 
             array2 = matmul(array,array) ! array**2

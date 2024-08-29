@@ -3,12 +3,11 @@ module solution_check_update
     contains
 
     SUBROUTINE CHECK_CONVERGENCE&
-        (ITER, MITER, FLAG_NR, CCL, FoM, RSUM_NEW, RSUM_OLD, B, Be, IDIM_B, IDIM_Be,&
+        (ITER, MITER, FLAG_NR, CCL, RSUM_NEW, RSUM_OLD, B, Be, IDIM_B, IDIM_Be,&
            RES_NRM, LMSG, MNR_FAILED, Res_Norm_First_Iteration, time_in_seconds )
         
         use check_for_floating_point_exceptions
         USE NRAPSHON_MODULE,         only: ERROR_NR, NITER
-        use TIME_INTEGRATION,        only: TIME
         IMPLICIT NONE
 
         ! ARGUMENTS
@@ -16,7 +15,6 @@ module solution_check_update
         INTEGER,          INTENT(IN)    :: ITER, MITER
         CHARACTER(len=3), INTENT(INOUT) :: FLAG_NR
         CHARACTER(len=1), INTENT(OUT)   :: CCL
-        CHARACTER(len=1), INTENT(IN)    :: FoM
         REAL(8),          INTENT(OUT)   :: RSUM_NEW
         REAL(8),          INTENT(INOUT) :: RSUM_OLD, RES_NRM, Res_Norm_First_Iteration
 
@@ -28,7 +26,6 @@ module solution_check_update
 
         ! LOCAL VARIABLES
         REAL(8)  :: ERROR_NEW
-        INTEGER  :: I, IJ
         
         
         

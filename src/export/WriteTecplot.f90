@@ -287,9 +287,9 @@ module WriteTecplot
             Character(len=*)   , Intent(In) :: filename
 
             Integer                         :: tfile
-            Type(TecVar)                    :: variable
-            Integer                         :: v
-            Integer                         :: i
+            ! Type(TecVar)                    :: variable
+            ! Integer                         :: v
+            ! Integer                         :: i
             Integer                         :: j,k
             Integer                         :: size_nodes_elem
 
@@ -364,7 +364,7 @@ module WriteTecplot
             Integer                         :: i, ivar, iii
             Character(len=:), Allocatable   :: varline 
             Real(4), Dimension(:), Allocatable :: tmp_var
-            Integer :: element(3)
+            ! Integer :: element(3)
             Integer(4), Dimension(:,:), Allocatable :: elements
 
             nnodes    = this%nnodes
