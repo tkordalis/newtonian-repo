@@ -92,8 +92,8 @@ Module BulkEquations
 
 
         P_n = TEMP_TL(:,getVariableId("P"))
-        ! C_n = TEMP_TL(:,getVariableId("C"))       ;  Co_n = TLo_loc(:,getVariableId("C"))  
-        C_n = 0.d0       ;  Co_n = 0.d0  
+        C_n = TEMP_TL(:,getVariableId("C"))       ;  Co_n = TLo_loc(:,getVariableId("C"))  
+        ! C_n = 0.d0       ;  Co_n = 0.d0  
 
         U_n(1,:) = TEMP_TL(:,getVariableId("Vz")) ;  Uo_n(1,:) = TLo_loc(:,getVariableId("Vz"))
         U_n(2,:) = TEMP_TL(:,getVariableId("Vr")) ;  Uo_n(2,:) = TLo_loc(:,getVariableId("Vr"))
@@ -137,7 +137,7 @@ Module BulkEquations
             call basis_spatial_derivs( KK  , X_n, dBFNdX_, Jac )
 
             call basis_interp_scalar ( P_n  , KK, X_n , Pgp , dPgpdX )
-            ! call basis_interp_scalar ( C_n  , KK, X_n , Cgp , dCgpdX )
+            call basis_interp_scalar ( C_n  , KK, X_n , Cgp , dCgpdX )
             call basis_interp_vector ( U_n  , KK, X_n , Ugp , gradUgp)
             call basis_interp_vector ( X_n  , KK, X0_n, Xgp , dXdX0gp)
             call basis_interp_vector ( X0_n , KK, X_n , X0gp, dX0dXgp)
@@ -233,9 +233,13 @@ Module BulkEquations
                 elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
                 elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
 
-                mass_transfer       = ( dCdM*BIFN - dot_product(gradm,dCgpdX) ) * Xgp(2)
+                ! mass_transfer       = ( dCdM*BIFN - dot_product(gradm,dCgpdX) ) * Xgp(2)
+                mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
 
-
+                ! if ((kk==1) .and. (Iw==1))  then
+                !     write(*,*)dCdM, dot_product(gradm,dCgpdX)
+                !     pause
+                ! endif
 
                 ! print*, BIFN, SBFN
                 ! print*, 's=',S(1), S(2)
@@ -252,7 +256,7 @@ Module BulkEquations
                 TERM_RES(getVariableId("Z"  ))  = elliptic_grid(1) 
                 TERM_RES(getVariableId("R"  ))  = elliptic_grid(2)
                 
-                ! TERM_RES(getVariableId("C"  ))  = mass_transfer
+                TERM_RES(getVariableId("C"  ))  = mass_transfer
 
                 ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_2d(KK) * Jac

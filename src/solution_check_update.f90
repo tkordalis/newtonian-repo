@@ -123,8 +123,8 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        ! FLAG_NR = 'NRP'
-        if (increment .lt. 3) FLAG_NR = 'NRP'
+        FLAG_NR = 'NRP'
+        ! if (increment .lt. 3) FLAG_NR = 'NRP'
 
 
 

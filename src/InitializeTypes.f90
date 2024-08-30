@@ -47,7 +47,7 @@ Module InitialConditions
     TLo(:,getVariableId("Z"))   = Xm
     TLo(:,getVariableId("R"))   = Ym
     TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( initial_position - TLo(:,getVariableId("Z")) )
-    ! TLo(:,getVariableId("C"))   = 1.d0
+    TLo(:,getVariableId("C"))   = 1.d0
     TLb = TLo
     TL  = TLo
     TLp = TL

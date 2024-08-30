@@ -52,8 +52,6 @@ Module AmbientHenryBoundary
         call getBoundaryNodesOfWholeBoundary( This%nelem, This%elements, This%faces, This%nodes )
 
         ! this%minimumZcoord = Xm(   this%nodes(  minloc( Xm(this%nodes), dim=1 )  )   )
-        ! this%maximumRcoord = Ym(   this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )   )
-
         this%minimumZcoord = minval(  Xm( this%nodes )  )
 
         initial_position   = this%minimumZcoord  ;  position_o = initial_position 
@@ -94,7 +92,7 @@ Module AmbientHenryBoundary
             call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
             
             ! call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
-            ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
+            call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
         enddo
 
         node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )

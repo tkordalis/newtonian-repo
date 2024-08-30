@@ -39,7 +39,7 @@ Module VariableMapping
         Case('P'  ) ; Vid = 3
         Case('Z'  ) ; Vid = 4
         Case('R'  ) ; Vid = 5
-        ! Case('C'  ) ; Vid = 6
+        Case('C'  ) ; Vid = 6
 
         Case Default; Vid = -1000000000
         End Select 
@@ -57,9 +57,9 @@ Module VariableMapping
         Case(3)      ; Var = 'P'  
         Case(4)      ; Var = 'Z'  
         Case(5)      ; Var = 'R'  
-        ! Case(6)      ; Var = 'C'  
+        Case(6)      ; Var = 'C'  
 
-        Case Default ; Var = ''
+        Case Default ; Var = 'NotAvariable'
         End Select 
     End Function getVariableName
 
@@ -80,7 +80,7 @@ MODULE PHYSICAL_MODULE
 
 
   
-    Real(8), parameter       :: viscosity = 0.14d-1
+    Real(8), parameter       :: viscosity = 0.04429d0
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
 
 
@@ -144,15 +144,19 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  gravity_stress/IdG_pressure
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  velocity_char*length_char/Dcoef
+        PeN    =  10.d0!velocity_char*length_char/Dcoef
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
         write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
         write(*,"(10X,A6,2X,F16.8)") "BoN  ="    , BoN
+        write(*,*) ' '
+        write(*,"(10X,A6,2X,F16.8)") "IdN  ="    , IdN
+        write(*,"(10X,A6,2X,F16.8)") "KoN  ="    , KoN
+        write(*,"(10X,A6,2X,F16.8)") "PeN  ="    , PeN
         
 
-        eo = [0.15d0, 0.15d0]
+        eo = [0.1d0, 0.1d0]
         e_bnd = - 1.0D+4
         
 
@@ -219,7 +223,7 @@ Module ELEMENTS_MODULE
     Integer, Parameter:: NCD    = 2             ! number of coordinate dimensions: 2 for 2D and 2D axis, 3 for 3D
 
     !   NUMBER OF EQUATIONS
-    Integer, Parameter:: NEQ_f = 5             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
+    Integer, Parameter:: NEQ_f = 6             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
     Integer, Parameter:: NEX_f = 1 
 
     !   NUMBER OF ELEMENTS
@@ -444,7 +448,7 @@ END MODULE GLOBAL_ARRAYS_MODULE
 MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 1000
-    REAL(8), PARAMETER :: ERROR_NR  = 5.d-8
+    REAL(8), PARAMETER :: ERROR_NR  = 5.d-7
     
 
     REAL(8), PARAMETER :: EP_RES   = 1.0D-9
