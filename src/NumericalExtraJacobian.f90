@@ -7,7 +7,6 @@ Module NumericalBoundaryJacobian
     Interface CalculateJacobianContributionsOf
         Module Procedure NumericalJacobian_Simple
         Module Procedure NumericalJacobian_Stresses
-        Module Procedure NumericalJacobian_NaturalBC
     End Interface CalculateJacobianContributionsOf
 
     Interface CalculateExtraJacobianContributionsOf
@@ -96,7 +95,7 @@ Module NumericalBoundaryJacobian
         CSC, NBF_2d*NBF_2d, A_f, NZ_f)
     End Subroutine NumericalJacobian_Simple
 
-    Subroutine NumericalJacobian_Stresses(Equation, nelem, ned, temp_tl, temp_res, globalValue, globValuePresent)
+    Subroutine NumericalJacobian_Stresses(Equation, nelem, ned, temp_tl, temp_res, globalValue)
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
         Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
@@ -108,7 +107,6 @@ Module NumericalBoundaryJacobian
         Real(8), Dimension(NBF_2d,NEQ_f), Intent(InOut)         :: TEMP_TL
         Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
         Real(8)                         , Intent(In)            :: globalValue
-        Logical                         , Intent(In)            :: globValuePresent
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Interface Equation 
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -135,93 +133,10 @@ Module NumericalBoundaryJacobian
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
         Real(8)                                         :: tmpGlobalValue
 
-        if (globValuePresent .eqv. .true.) then
-            !  initialize working (temporary) areas for element integration
-            !  before forming elemental jacobian and rhs vector
-            temp_jac       = 0.d0
-            tmpGlobalValue = globalValue 
-
-            !**********************************************************
-            !  elemental jacobian
-            !  ** iterate over elements nodes
-            !  ** iterate over equations 
-            !  ** perturb the node and compute the residual of the 
-            !     perturbed equation
-            !  ** return the residual in its original value 
-            !**********************************************************
-
-            do jw = 1, nbf_2d
-                do jeq = 1, neq_f
-                    eps_jac         = f_dx( temp_tl(jw,jeq) )
-                    temp_tl(jw,jeq) = temp_tl(jw,jeq) + eps_jac
-
-                    call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpGlobalValue )
-
-                    temp_tl(jw,jeq) = temp_tl(jw,jeq) - eps_jac
-
-                    temp_jac(:,jw,jeq,:) = ( dtemp_res - temp_res )/eps_jac
-
-                enddo
-            enddo
-
-
-            !  store the element integration matrix in the global matrix a
-            NM  = NM_f (NELEM,1:NBF_2d)
-            CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
-
-            CALL MATRIX_STORAGE_JACOBIAN&
-            (TEMP_JAC, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
-            CSC, NBF_2d*NBF_2d, A_f, NZ_f)
-        else
-            print*, "False logical input during the call of NumericalJacobian_Stresses: Set to true and try again"
-            stop
-        endif
-    end subroutine NumericalJacobian_Stresses
-
-
-    Subroutine NumericalJacobian_NaturalBC(Equation, nelem, ned, temp_tl, temp_res, naturalBCvalue )
-        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
-        Use ENUMERATION_MODULE,   Only: NM_f
-        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
-        Implicit None
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        !  ARGUMENTS
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer,                          Intent(In)            :: NELEM, NED
-        Real(8), Dimension(NBF_2d,NEQ_f), Intent(InOut)         :: TEMP_TL
-        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
-        Real(8)                         , Intent(In)            :: naturalBCvalue 
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        ! Interface Equation 
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Interface 
-            Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, naturalBCvalue  )
-            Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
-            Integer,                           Intent(In)           :: nelem
-            Integer,                           Intent(In)           :: ned
-            Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: temp_tl
-            Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: temp_res
-            Logical,                           Intent(In)           :: store
-            Real(8),                           Intent(In)           :: naturalBCvalue 
-            End Subroutine Equation
-        End Interface   
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        !  LOCAL VARIABLES
-        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        Integer                                         :: JW, JEQ
-        ! Real(8)                                         :: F_DX, EPS_JAC
-        Real(8)                                         :: EPS_JAC
-        Integer, Dimension(NBF_2d)                      :: NM
-        Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
-        Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
-        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
-        Real(8)                                         :: tmpNaturalBCvalue
-
-
         !  initialize working (temporary) areas for element integration
         !  before forming elemental jacobian and rhs vector
         temp_jac       = 0.d0
-        tmpNaturalBCvalue = naturalBCvalue 
+        tmpGlobalValue = globalValue 
 
         !**********************************************************
         !  elemental jacobian
@@ -237,7 +152,7 @@ Module NumericalBoundaryJacobian
                 eps_jac         = f_dx( temp_tl(jw,jeq) )
                 temp_tl(jw,jeq) = temp_tl(jw,jeq) + eps_jac
 
-                call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpnaturalBCvalue )
+                call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpGlobalValue )
 
                 temp_tl(jw,jeq) = temp_tl(jw,jeq) - eps_jac
 
@@ -254,7 +169,7 @@ Module NumericalBoundaryJacobian
         CALL MATRIX_STORAGE_JACOBIAN&
         (TEMP_JAC, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
         CSC, NBF_2d*NBF_2d, A_f, NZ_f)
-    end subroutine NumericalJacobian_NaturalBC
+    end subroutine NumericalJacobian_Stresses
 
 
     Subroutine CalculateExtraJacobianContributionsOf_1_global&

@@ -93,10 +93,14 @@ Module AmbientHenryBoundary
             call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
             call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
             
-            call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
+            ! call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
             ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
         enddo
 
+        node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
+        call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
+        
+        
         ! weak imposition of henry's law
         ! do iel = 1, this%nelem
         !     element =This%elements(iel)

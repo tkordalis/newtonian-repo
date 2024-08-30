@@ -109,7 +109,7 @@ Module BulkEquations
         Uelem = sum( [ (distance( U_(:,ii), dXdt_(:,ii) )/dble(NBF_2d) , ii=1, NBF_2d) ] )
 
         Gravity_Term = -1.d0
-        ! Gravity_Term = Gravity_Term*ratio_of_pressures
+        Gravity_Term = Gravity_Term*ratio_of_pressures
 
         ! unity tensor
         I1 = 0.d0 ; I1(1,1) = 1.d0 ; I1(2,2) = 1.d0 ; I1(3,3) = 1.d0 

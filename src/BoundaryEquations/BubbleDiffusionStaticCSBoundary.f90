@@ -179,7 +179,7 @@ Module BubbleDiffusionStaticCSBoundary
                     call CalculateJacobianContributionsOf(Kinematic                        ,element, face, TL_, RES_1)
                 else
                     call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
-                    call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure, .true. )
+                    call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure )
                     !Extra Unknowns
                     call CalculateExtraJacobianContributionsOf(Stresses, element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                 endif

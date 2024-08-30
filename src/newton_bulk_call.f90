@@ -124,14 +124,14 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
 
-!         !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-!         !$OMP& DEFAULT (SHARED)&
-!         !$OMP& PRIVATE (IEL)
+        !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+        !$OMP& DEFAULT (SHARED)&
+        !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 ! CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-!            !$OMP END PARALLEL DO
+           !$OMP END PARALLEL DO
               
             
             call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble )
@@ -354,7 +354,7 @@ module newton_bulk_call
             zone     = toStr(ITER_f)
 
             call WriteTecplotFile(filename, title, zone, TL, NM_MESH)
-            pause
+            ! pause
 
         ENDDO LOOP_NEWTON_RAPSHON_f
 

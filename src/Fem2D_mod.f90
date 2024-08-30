@@ -80,7 +80,7 @@ MODULE PHYSICAL_MODULE
 
 
   
-    Real(8), parameter       :: viscosity = 0.14d0
+    Real(8), parameter       :: viscosity = 0.14d-1
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
 
 
@@ -96,7 +96,7 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
   
 
-    Real(8), parameter       :: surface_tension = 0.00997d0
+    Real(8), parameter       :: surface_tension = 0.00997d-2*5.d0*4.d0
     
     Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
     ! Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
@@ -126,7 +126,6 @@ MODULE PHYSICAL_MODULE
     Real(8)                  :: ReN, ArN, BoN, PeN, KoN, IdN  !  REYNOLDS NUMBER
     
 
-    Real(8)                  :: eo1, eo2
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
     Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble
@@ -152,9 +151,8 @@ MODULE PHYSICAL_MODULE
         write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
         write(*,"(10X,A6,2X,F16.8)") "BoN  ="    , BoN
         
-        eo1   = 0.0D0
-        eo2   = 0.1D0
-        eo = [0.d0, 0.1d0]
+
+        eo = [0.15d0, 0.15d0]
         e_bnd = - 1.0D+4
         
 
@@ -272,7 +270,7 @@ MODULE OMP_PARALLEL
         logical :: success
         CHARACTER(LEN=100) :: STR_ITER_TMP, FN, homedir
 
-        NTHREADS = 1 ! number of threads that pardiso will use and the loop of the jacobian
+        NTHREADS = 12 ! number of threads that pardiso will use and the loop of the jacobian
 
         WRITE(STR_ITER_TMP,'(I4)') NTHREADS
 
