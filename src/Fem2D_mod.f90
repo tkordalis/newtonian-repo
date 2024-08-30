@@ -74,13 +74,13 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
 
-    Real(8), parameter       :: rho           = 1000.d0           ! kg/m3: density of water
     Real(8), parameter       :: length_char   =  0.001d0         ! m
+    Real(8), parameter       :: rho           = 1000.d0           ! kg/m3: density of water
     
 
 
   
-    Real(8), parameter       :: viscosity = 0.04429d0
+    Real(8), parameter       :: viscosity = 0.1d0
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
 
 
@@ -144,7 +144,7 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  gravity_stress/IdG_pressure
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  10.d0!velocity_char*length_char/Dcoef
+        PeN    =  0.d0!velocity_char*length_char/Dcoef
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
@@ -192,7 +192,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.1d0
+        Dt_constant = 0.02d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
