@@ -192,7 +192,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.02d0
+        Dt_constant = 0.05d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
