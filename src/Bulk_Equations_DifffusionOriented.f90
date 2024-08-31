@@ -177,7 +177,7 @@ Module BulkEquations
 
             dUdM = ArN*dUdM
 
-            dCdM = dCdt !+ dot_product( (Ugp-dXdt) , dCgpdX )
+            dCdM = dCdt + dot_product( (Ugp-dXdt) , dCgpdX )
 
             dCdM = PeN*dCdM 
             ! --------------------------------------------------
@@ -223,18 +223,20 @@ Module BulkEquations
                 ! Calculation of the bulk equations
                 ! =====================================================================================
                 ! momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN + tlsic*[gradW(1,1),gradW(2,2)+gradW(3,3)]*trace(gradU) ) * Xgp(2)
-                momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN  ) * Xgp(2)
-
+                ! momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN  ) * Xgp(2)
+                momentum_equation   = ( dUdM*SBFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN + tlsic*[gradW(1,1),gradW(2,2)+gradW(3,3)]*trace(gradU) ) * Xgp(2)
+                ! ------------------------------
                 continuity_equation = ( trace(gradU)*BIFN + tlsme*dot_product(gradq,MomStr) ) * Xgp(2)
-
+                ! ------------------------------
                 ! elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
                 mtml = matmul(gradk, dX0dXgp)
 
                 elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
                 elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
-
-                ! mass_transfer       = ( dCdM*BIFN - dot_product(gradm,dCgpdX) ) * Xgp(2)
-                mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
+                ! ------------------------------
+                ! mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
+                mass_transfer       = ( dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
+                ! ------------------------------
 
                 ! if ((kk==1) .and. (Iw==1))  then
                 !     write(*,*)dCdM, dot_product(gradm,dCgpdX)

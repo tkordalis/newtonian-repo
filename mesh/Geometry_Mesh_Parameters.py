@@ -38,7 +38,7 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere = 200
+NumSegmentsOnSphere = 150
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
 
@@ -69,7 +69,7 @@ outer_ellipse_Major_Radius = ellipse_Major_Radius + 1.0
 h_s = 0.0001
 
 
-Main_maxSize_element = 10
+Main_maxSize_element = 2
 Main_minSize_element = 0.1
 
 Netgen_Params = []

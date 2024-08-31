@@ -5,7 +5,7 @@ module pressure_variation
 
     private :: transientPressureChange, areConditionsSteady
     public ::  PressureChamber
-    Real(8), dimension(6), parameter :: crit_times = [20.d0, &
+    Real(8), dimension(6), parameter :: crit_times = [10.d0, &
                                                     2100.d0,  &
                                                     4100.d0,  & 
                                                     6100.d0,  &
