@@ -10,6 +10,8 @@ module solution_check_update
         USE NRAPSHON_MODULE,         only: ERROR_NR, NITER
         use time_integration,        only: increment
         IMPLICIT NONE
+        external :: fdate
+
 
         ! ARGUMENTS
         LOGICAL,          INTENT(INOUT) :: LMSG, MNR_FAILED
@@ -23,6 +25,8 @@ module solution_check_update
         REAL(8), DIMENSION(IDIM_B),  INTENT(IN) :: B
         REAL(8), DIMENSION(IDIM_Be), INTENT(IN) :: Be
         INTEGER   ,                  INTENT(IN) :: time_in_seconds
+        character(25)                           :: dateNtime
+
 
 
         ! LOCAL VARIABLES
@@ -126,13 +130,21 @@ module solution_check_update
         FLAG_NR = 'NRP'
         ! if (increment .lt. 3) FLAG_NR = 'NRP'
 
-
+        if (ITER.gt.MITER) then
+            WRITE(*,*) 'ITER LARGER THAN THE THRESHOLD, SWITCHING TO RELAXATION'
+            LMSG = .TRUE.
+            call fdate(dateNtime)
+            WRITE(*,*) dateNtime
+            RETURN
+        endif
 
         IF( RSUM_NEW .GT. 5.0D+9 )THEN
             WRITE(*,*)'PROGRAM UNABLE TO CONVERGE'
             WRITE(*,*)'TOO LARGE NORMA !!!'
             WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
             LMSG = .TRUE.
+            call fdate(dateNtime)
+            WRITE(*,*) dateNtime
             RETURN
         ENDIF
 
@@ -142,6 +154,8 @@ module solution_check_update
             WRITE(*,*)'TOO MANY ITERATIONS !!!'
             WRITE(*,*)'OVER-RELAXATION NR ITERATIONS !!!'
             LMSG = .TRUE.
+            call fdate(dateNtime)
+            WRITE(*,*) dateNtime
             RETURN
         ENDIF
          

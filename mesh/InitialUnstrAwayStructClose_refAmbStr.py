@@ -37,7 +37,8 @@ from salome.geom import geomtools
 
 from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, R_refinement1_Sphere1, R_refinement2_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
-Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere
+Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
+dZ_refAmb, Element_size_on_Ambient_cb
 
 
 
@@ -89,8 +90,17 @@ outer_ellipse_position_left  = ellipse_position_left	+ 1.0
 outer_ellipse_position_right = ellipse_position_right	+ 1.0
 
 
+vertex_dZ_amb1  = geompy.MakeVertex(dZ_refAmb, 0, 0)
+vertex_dZ_amb2  = geompy.MakeVertex(dZ_refAmb, Radius_tank, 0)
 
-PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer], True, True)
+line_dZ_amb 	= geompy.MakeLineTwoPnt(vertex_dZ_amb1, vertex_dZ_amb2)
+
+
+
+
+# PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer], True, True)
+PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer, line_dZ_amb], True, True)
+
 Partition_1   = geompy.MakePartition([Domain_cut], [PartitionTool], [], [], geompy.ShapeType["FACE"], 0, [], 0)
 
 
@@ -146,17 +156,27 @@ idtankWall = []
 tankWall       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 idtankWall.append(returnIDofShape(0, [ 0, Radius_tank ], [0, 0], "EDGE"))
 idtankWall.append( returnIDofShape(0, [ -0.5*Height_tank, +h_s ], [0, 0], "EDGE") ) 
+idtankWall.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,Radius_tank ], [0, 0], "EDGE" ) )
 tankWall_union = geompy.UnionIDs(tankWall , idtankWall  )
 # geompy.addToStudyInFather(Partition_1, tankWall, "tankWall")
 
+idz_ambz     = []
+z_ambz       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+idz_ambz.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,Radius_tank ], [0, 0], "EDGE" ) )
+idz_ambz.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,0 ], [0, 0], "EDGE" ) )
+idz_ambz_union = geompy.UnionIDs(z_ambz , idz_ambz  )
 
 
 idrightPlane = [] 
 rightPlane   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
-idrightPlane.append( returnIDofShape(0, [ 0.5*Height_tank, +h_s ], [0, 0], "EDGE") ) 
+idrightPlane.append( returnIDofShape(0, [ 0.5*Height_tank, +h_s ], [0, 0], "EDGE") )
 rightPlane_union = geompy.UnionIDs( rightPlane , idrightPlane )
 
-
+idz_ambr     = []
+z_ambr       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+idz_ambr.append( returnIDofShape( 0, [ 0.5*Height_tank,h_s ], [0, 0], "EDGE" ) )
+idz_ambr.append( returnIDofShape( 0, [ dZ_refAmb,h_s ], [0, 0], "EDGE" ) )
+idz_ambr_union = geompy.UnionIDs(z_ambr , idz_ambr  )
 
 # idleftPlane = [] 
 # leftPlane   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
@@ -229,6 +249,8 @@ for i in range(len(Symmetry_groups)):
 
 
 
+idSymmetry.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,0 ], [0, 0], "EDGE" ) )
+
 
 
 Symmetry   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
@@ -267,6 +289,7 @@ Groups_faces.append( getgroupFace("Sphere1", "Ref_1", None, None, None, None) )
 Groups_faces.append( getgroupFace("Sphere1", "Ref_2", None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "1"    , None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "2"    , None, None, None, None) )
+Groups_faces.append( getgroupFace("Ambient", None   , None, None, None, None) )
 
 for i in range(len(Groups_faces)):
 
@@ -282,6 +305,9 @@ for i in range(len(Groups_faces)):
 			x_tilt = [0,ellipse_Minor_Radius - 2*h_s]
 		elif Groups_faces[i]["refZone"] == "2":
 			x_tilt = [0,ellipse_Minor_Radius + 2*h_s]
+	elif Groups_faces[i]["mainGroup"] == "Ambient":
+		x_tilt = [ 0.5*Height_tank-h_s, h_s ]
+
 
 	theta_degrees = 0
 
@@ -341,8 +367,10 @@ Mesh_1.Segment(geom=Sphere1Ref1).NumberOfSegments(NumSegmentsOnSphere)
 Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
 
 
+Mesh_1.Segment(geom=z_ambr).StartEndLength ( Element_size_on_Ambient, Element_size_on_Ambient )
+# Mesh_1.Segment(geom=z_ambr).PropagationOfDistribution()
 
-
+Mesh_1.Segment(geom=z_ambz).StartEndLength ( Element_size_on_Ambient_cb, Element_size_on_Ambient_cb )
 
 
 
@@ -352,16 +380,34 @@ MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.1)
 Params = []
 
 Groups_faces[0]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[0]["obj"]) 
+j=0
+for i in range(1,len(Groups_faces)-1):
+	# print(str(i))
+	Params = Netgen_Params[j]
+	Groups_faces[i]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[i]["obj"])
+	MeshParameters(Groups_faces[i]["mesh_obj"], Params[0], Params[1], Params[2])
+	j+=1
 
-for i in range(len(Groups_faces)-1):
-	print(str(i))
-	Params = Netgen_Params[i+1]
-	Groups_faces[i+1]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[i+1]["obj"])
-	MeshParameters(Groups_faces[i+1]["mesh_obj"], Params[0], Params[1], Params[2])
 
+
+Groups_faces[-1]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[-1]["obj"]) 
+
+
+# for i in range(len(Groups_faces)):
+# 	print(str(i)+' '+str(Groups_faces[i]["mesh_obj"]))
+# 	input('...')
+
+# print(Groups_faces[-1]["mesh_obj"])
 SymmOut_params = Netgen_Params[-1]
 Mesh_1.Segment(geom=SymmetryB1out).StartEndLength ( Main_maxSize_element, SymmOut_params[0] )
-Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxSize_element )
+# Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxSize_element )
+
+
+
+SymmetryB2out_mesh_distribution = Mesh_1.Segment(geom=SymmetryB2out).NumberOfSegments(2*NumSegmentsOnAmbient)
+SymmetryB2out_mesh_distribution.SetExpressionFunction(NodeDensityFunction_Sym)
+
+
 
 tankWall_1	 	=  Mesh_1.GroupOnGeom( tankWall 	,'tankWall'   ,SMESH.EDGE )
 Symmetry_1	 	=  Mesh_1.GroupOnGeom( Symmetry 	,'Symmetry'	  ,SMESH.EDGE )
@@ -373,6 +419,7 @@ Priority_list = []
 
 for item in Groups_faces:
 	SubMesh = item["mesh_obj"]
+	# print(SubMesh)
 	Priority_list.append(SubMesh.GetSubMesh())
 
 # print(Priority_list)
@@ -380,8 +427,8 @@ isDone = Mesh_1.SetMeshOrder( [Priority_list] )
 
 isDone = Mesh_1.Compute()
 
-isDone = Mesh_1.QuadTo4Tri( )
-# isDone = Mesh_1.SplitQuadObject( Mesh_1, 1 )
+# isDone = Mesh_1.QuadTo4Tri( )
+isDone = Mesh_1.SplitQuadObject( Mesh_1, 1 )
 
 
 

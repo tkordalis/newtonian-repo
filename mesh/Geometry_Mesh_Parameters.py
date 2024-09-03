@@ -24,7 +24,7 @@ import SALOMEDS
 
 
 
-blockage_ratio = 0.01
+blockage_ratio = 0.02
 
 # Domain Construction
 
@@ -38,16 +38,21 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere = 150
+NumSegmentsOnSphere  = 150
+NumSegmentsOnAmbient = 100
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
-
+Element_size_on_Ambient= Radius_tank/NumSegmentsOnAmbient
+Element_size_on_Ambient_cb = 0.1*Element_size_on_Ambient
 
 
 dR_ref1 = 4*Element_size_on_Sphere
 dR_ref2 = 2*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
+
+dZ_refAmb = 30.0*Element_size_on_Ambient_cb
+dZ_refAmb = 0.5*Height_tank - dZ_refAmb
 
 
 # if (2*Sphere_position) <= R_refinement2_Sphere1 + R_refinement2_Sphere2:
@@ -72,6 +77,9 @@ h_s = 0.0001
 Main_maxSize_element = 2
 Main_minSize_element = 0.1
 
+NodeDensityFunction_Sym   = '(2*t-0.99)^6+0.05' 
+
+
 Netgen_Params = []
 
 check_drRef1_compatibility = int(dR_ref1/Element_size_on_Sphere)
@@ -82,13 +90,10 @@ if check_drRef1_compatibility<3:
 	sys.exit()
 
 # Fine Mesh parameters
-Netgen_Params.append([ 2.*Element_size_on_Sphere,  2.*Element_size_on_Sphere, 0.5])
-
 Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])
 
 Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
 Netgen_Params.append([ 6*Element_size_on_Sphere,  6*Element_size_on_Sphere, 0.1])
-
 
 # # --------------------------- End of Geometry --------------------------- #
 

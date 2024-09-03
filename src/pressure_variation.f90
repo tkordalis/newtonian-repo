@@ -5,7 +5,7 @@ module pressure_variation
 
     private :: transientPressureChange, areConditionsSteady
     public ::  PressureChamber
-    Real(8), dimension(6), parameter :: crit_times = [10.d0, &
+    Real(8), dimension(6), parameter :: crit_times = [7.d0, &
                                                     2100.d0,  &
                                                     4100.d0,  & 
                                                     6100.d0,  &
@@ -24,7 +24,7 @@ module pressure_variation
 
 
     ! Real(8), parameter       :: deltat_transientPressure = 60.d0
-    Real(8), parameter       :: deltat_transientPressure = 5.d0
+    Real(8), parameter       :: deltat_transientPressure = 10.d0
     integer                  :: crit_times_counter, pressure_change_counter
     logical                  :: isThePressureTransient = .false.
     logical                  :: rampUpDt   = .false.

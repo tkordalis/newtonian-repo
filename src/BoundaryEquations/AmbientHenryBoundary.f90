@@ -62,6 +62,9 @@ Module AmbientHenryBoundary
 
     Subroutine applyBoundaryConditions(This, FlagNr, dVtankdt, Pressure_bc)
         Use physical_module,             only: ambient_position_o, vm_ambient, Rtank, pi, KoN
+        Use GLOBAL_ARRAYS_MODULE,        Only: TL
+        Use ENUMERATION_MODULE,          Only: NM_MESH
+
         Use TIME_INTEGRATION,            only: dt
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Use MESH_MODULE,                 only: Ym
@@ -77,10 +80,8 @@ Module AmbientHenryBoundary
         Real(8), Dimension(:,:), Allocatable :: TL_
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
         Integer                              :: node_counter, node
+        Integer                              :: iel, element, face
 
-        ! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
-        ! If (FlagNR == "NRP") &
-        !     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
         
         vm_ambient = dVtankdt / (pi*Rtank**2)
         ! vm_ambient = 0.d0
@@ -100,6 +101,10 @@ Module AmbientHenryBoundary
         
         
         ! weak imposition of henry's law
+        ! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
+        ! If (FlagNR == "NRP") &
+        !     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
+
         ! do iel = 1, this%nelem
         !     element =This%elements(iel)
         !     face    =This%faces   (iel)
@@ -111,7 +116,7 @@ Module AmbientHenryBoundary
         !             ! call CalculateJacobianContributionsOf(Henry  ,element, face, TL_, RES_1, Pressure_bc, .true.)
         ! enddo
 
-        If ( Allocated(TL_) ) Deallocate(TL_)
+        ! If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
 
 

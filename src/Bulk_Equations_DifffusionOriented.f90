@@ -201,7 +201,9 @@ Module BulkEquations
 
             tlsic   = helem**2/tlsme
 
-            tlsmt   = hugn/(Uelem+1.d-8)
+            ! tlsmt   = hugn/(Uelem+1.d-8)
+            tlsmt   = sqrt((2.d0/dt)**2 + (Uelem)/(hugn+1.d-8)**2)
+            tlsmt = 1.d0/tlsmt
             ! print*, hugn, tlsmt, uelem
             ! pause
             ! --------------------------------------------------

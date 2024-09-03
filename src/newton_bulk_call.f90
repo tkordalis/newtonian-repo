@@ -50,12 +50,14 @@ module newton_bulk_call
         MNR_FAILED = .FALSE.
         xF         = 1.D0
         Res_Norm_First_Iteration = 0.d0
+        
         300 CONTINUE
 
         IF(EMERGENCY)THEN
-            xNITER = 10*NITER
+            xNITER = 5*NITER
             xF     = 0.5D0*xF
-            IF ( (xF.LT.1.d-2) .or. (ITER_f .ge. 50) ) THEN
+            ! IF ( (xF.LT.1.d-2) .or. (ITER_f .ge. 50) ) THEN
+            IF ( (xF.LT.1.d-2) ) THEN
                 WRITE(*,*) 'VERY SMALL RELAXATION FACTOR, GENERAL STOP!'
                 STOP
 

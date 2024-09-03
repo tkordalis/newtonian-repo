@@ -150,9 +150,7 @@ Module BubbleDiffusionStaticCSBoundary
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_2
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_3
-        Integer                              :: iel 
-        Integer                              :: element 
-        Integer                              :: face
+        Integer                              :: iel, element, face
 
         if (present(kinematic_logical) .and. (kinematic_logical)) then
             call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)

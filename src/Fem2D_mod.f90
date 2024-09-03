@@ -144,7 +144,7 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  gravity_stress/IdG_pressure
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  10.d0!velocity_char*length_char/Dcoef
+        PeN    =  1.d-1*velocity_char*length_char/Dcoef
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
@@ -447,11 +447,11 @@ END MODULE GLOBAL_ARRAYS_MODULE
 
 MODULE NRAPSHON_MODULE
 
-    INTEGER, PARAMETER :: NITER     = 1000
+    INTEGER, PARAMETER :: NITER     = 50
     REAL(8), PARAMETER :: ERROR_NR  = 5.d-7
     
 
-    REAL(8), PARAMETER :: EP_RES   = 1.0D-9
+    REAL(8), PARAMETER :: EP_RES   = 1.0D-7
 
 
     INTEGER            :: ITER_f
