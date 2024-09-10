@@ -57,6 +57,18 @@ Module InitialConditions
     
     call bubble%setInitialPressure(Pressure_Bubble)
     call bubble%setInitialvolume()
+
+    print*, ' '
+    ! print*, 'Pressure_Bubble = ', Pressure_Bubble*Pchar
+    print*, 'NondimPressure_Bubble = ', Pressure_Bubble
+    ! print*, 'Volume_Bubble = ', bubble%InitialVolume*length_char**3
+    print*, 'NondimVolume_Bubble = ', bubble%InitialVolume
+    print*, 'NondimPV = ', Pressure_Bubble*bubble%InitialVolume
+    print*, 'Mol_Bubble = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas
+    print*, '2--Mol_Bubble = ', Cchar*length_char**3
+    print*, 'NondimMol_Bubble = ', Pressure_Bubble*bubble%InitialVolume/IdN
+    print*, 'NondimMol_Bubble/4pi/3 = ', Pressure_Bubble*bubble%InitialVolume/IdN/4.1889d0
+    pause
     
     ! do i=1, size(tlo,1)
     !     write(404,'(f16.8,3x)') (tlo(i,j),j=1,size(tlo,2))
@@ -92,7 +104,7 @@ module solveAllExtraConstraints
             Call bubble%setPressure( Bubble1Pressure )
             Call bubble%applyBoundaryConditions(FlagNR)
             Be_f(1) = bubble%PressureVolumeConservation()
-            Ah_f(:,:) = bubble%getVolume()
+            Ah_f(1,1) = bubble%getVolume()
             ! Be_f(1) = bubble%volumeConservation()
             ! Ah_f(:,:) = 0.d0
 

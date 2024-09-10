@@ -77,7 +77,7 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: length_char   =  0.001d0         ! m
     Real(8), parameter       :: rho           = 1000.d0           ! kg/m3: density of water
     
-
+ 
 
   
     Real(8), parameter       :: viscosity = 0.1d0
@@ -91,8 +91,9 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 298d0           ! K
-    Real(8), parameter       :: KHenry      = 1.3d-5          ! mol/m3/Pa
+    Real(8), parameter       :: KHenry      = 7.8d-6          ! mol/m3/Pa
     Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
+    Real(8), parameter       :: Mr          = 28.d-3          ! kg/mol
     !_______________________________________________________________________________
   
 
@@ -123,7 +124,7 @@ MODULE PHYSICAL_MODULE
     
     Real(8), parameter       :: ratio_of_pressures  = gravity_stress/Pchar
 
-    Real(8)                  :: ReN, ArN, BoN, PeN, KoN, IdN  !  REYNOLDS NUMBER
+    Real(8)                  :: ReN, ArN, BoN, PeN, KoN, IdN
     
 
     Real(8)                  :: e_bnd
@@ -142,9 +143,10 @@ MODULE PHYSICAL_MODULE
         ArN   =  inertial_stress/Pchar
         BoN   =  gravity_stress/capillary_stress
         
-        IdN    =  gravity_stress/IdG_pressure
+        IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
         PeN    =  1.d-1*velocity_char*length_char/Dcoef
+
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
@@ -155,7 +157,7 @@ MODULE PHYSICAL_MODULE
         write(*,"(10X,A6,2X,F16.8)") "KoN  ="    , KoN
         write(*,"(10X,A6,2X,F16.8)") "PeN  ="    , PeN
         
-
+        ! pause
         eo = [0.1d0, 0.1d0]
         e_bnd = - 1.0D+4
         
