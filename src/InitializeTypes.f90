@@ -20,7 +20,7 @@ Module BoundaryConditions
         call symmetryaxis%setPosition('X')
 
         bubble          = NewBubbleDiffusionStaticCS (bnd3_elements, bnd3_faces)
-        call bubble%setProperties( gidP=1 )
+        call bubble%setProperties( gidP=1, gidC=1 )
 
         ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)
@@ -57,17 +57,27 @@ Module InitialConditions
     
     call bubble%setInitialPressure(Pressure_Bubble)
     call bubble%setInitialvolume()
+    call bubble%setInitialmol()
+
+    Mol_Bubbleo = bubble%getmol()
+    Mol_Bubble   = Mol_Bubbleo
+
+    
 
     print*, ' '
+    ! print*, 'initialMol = ', bubble%Initialmol
+    ! print*, 'initialMol = ', Mol_Bubbleo
+    ! print*, 'cchar = ', cchar 
     ! print*, 'Pressure_Bubble = ', Pressure_Bubble*Pchar
-    print*, 'NondimPressure_Bubble = ', Pressure_Bubble
+    ! print*, 'NondimPressure_Bubble = ', Pressure_Bubble
     ! print*, 'Volume_Bubble = ', bubble%InitialVolume*length_char**3
-    print*, 'NondimVolume_Bubble = ', bubble%InitialVolume
-    print*, 'NondimPV = ', Pressure_Bubble*bubble%InitialVolume
-    print*, 'Mol_Bubble = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas
-    print*, '2--Mol_Bubble = ', Cchar*length_char**3
-    print*, 'NondimMol_Bubble = ', Pressure_Bubble*bubble%InitialVolume/IdN
-    print*, 'NondimMol_Bubble/4pi/3 = ', Pressure_Bubble*bubble%InitialVolume/IdN/4.1889d0
+    ! print*, 'NondimVolume_Bubble = ', bubble%InitialVolume
+    ! print*, 'NondimPV = ', Pressure_Bubble*bubble%InitialVolume
+    ! print*, 'Mol_Bubble = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas
+    ! print*, 'Mol_Bubble/4pi/3 = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas/(4.d0*pi/3.d0)
+    ! print*, '2--Mol_Bubble = ', Cchar*length_char**3
+    ! print*, 'NondimMol_Bubble = ', Pressure_Bubble*bubble%InitialVolume/IdN
+    ! print*, 'NondimMol_Bubble/4pi/3 = ', Pressure_Bubble*bubble%InitialVolume/IdN/4.1889d0
     pause
     
     ! do i=1, size(tlo,1)
@@ -89,28 +99,34 @@ module solveAllExtraConstraints
     Implicit None 
     
     contains
-    Subroutine applyBCs_solveExtraConstraints( FlagNR, Bubble1Pressure )
+    Subroutine applyBCs_solveExtraConstraints( FlagNR, BubblePressure, BubbleMol )
         use CSR_STORAGE, only: Ah_f
         use FLOW_ARRAYS_MODULE, only: Be_f
-        use Physical_module, only: Pambient_o_Pchar, Rtank, pi
-        use TIME_INTEGRATION, only:time
+        use Physical_module, only: PeN, IdN
+        use TIME_INTEGRATION, only:time, dt
         use pressure_variation
         implicit none
         character(*),                    intent(in)  :: FlagNR
-        Real(8),                         intent(in)  :: Bubble1Pressure
+        Real(8),                         intent(in)  :: BubblePressure
+        Real(8),                         intent(in)  :: BubbleMol
         Real(8)                                       :: dVtankdt
 
-
-            Call bubble%setPressure( Bubble1Pressure )
+            Ah_f = 0.d0
+            Call bubble%setPressure( BubblePressure )
+            Call bubble%setmol( BubbleMol )
             Call bubble%applyBoundaryConditions(FlagNR)
-            Be_f(1) = bubble%PressureVolumeConservation()
+            Be_f(1) = bubble%PressureVolumeMolConservation()
             Ah_f(1,1) = bubble%getVolume()
+            Ah_f(1,2) = -IdN
+
+            Be_f(2) = bubble%molBalance()
+            Ah_f(2,2) = PeN/dt
+
             ! Be_f(1) = bubble%volumeConservation()
             ! Ah_f(:,:) = 0.d0
 
             dVtankdt = bubble%getdVtankdt()
-            ! write(404,'(4(f16.9,2x))') time, dVtankdt, Rtank, dVtankdt / (pi*Rtank**2)
-            ! call bubble%check_engine()
+            
 
 
             call symmetryaxis%applyBoundaryConditions(FlagNR)

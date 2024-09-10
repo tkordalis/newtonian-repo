@@ -93,7 +93,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Tgas        = 298d0           ! K
     Real(8), parameter       :: KHenry      = 7.8d-6          ! mol/m3/Pa
     Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-    Real(8), parameter       :: Mr          = 28.d-3          ! kg/mol
+    Real(8), parameter       :: MrWater     = 28.d-3          ! kg/mol
+    Real(8), parameter       :: Cwater      = rho/MrWater     ! mol/m3
     !_______________________________________________________________________________
   
 
@@ -129,7 +130,7 @@ MODULE PHYSICAL_MODULE
 
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
-    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble
+    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble, mol_bubbleo, mol_bubble
     Real(8)                  :: ambient_position_o, ambient_position, vm_ambient
   
     Contains
@@ -145,7 +146,7 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  1.d-1*velocity_char*length_char/Dcoef
+        PeN    =  1.d+1!1.d-1*velocity_char*length_char/Dcoef
 
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
@@ -226,7 +227,7 @@ Module ELEMENTS_MODULE
 
     !   NUMBER OF EQUATIONS
     Integer, Parameter:: NEQ_f = 6             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
-    Integer, Parameter:: NEX_f = 1 
+    Integer, Parameter:: NEX_f = 2 
 
     !   NUMBER OF ELEMENTS
     Integer :: NEL_1d                 ! TOTAL NUMBER OF 1D ELEMENTS

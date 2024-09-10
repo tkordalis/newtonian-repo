@@ -547,7 +547,7 @@ module constrainJacobians
     End Subroutine jacobianOfConstrain
 
 
-    Subroutine loopOverElements(nelements, elements, faces, gid, procedure_, globUnknown, presentPressure)
+    Subroutine loopOverElements(nelements, elements, faces, gid, procedure_, globUnknown)
         Use CSR_STORAGE,               Only: Ar_f
 
         Implicit None
@@ -555,7 +555,6 @@ module constrainJacobians
         Integer, Dimension(nelements), Intent(In) :: elements
         Integer, Dimension(nelements), Intent(In) :: faces
         Real(8),             intent(in), optional :: globUnknown
-        Logical,             intent(in), optional :: presentPressure
         Integer                                   :: gid
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
       !<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -583,8 +582,12 @@ module constrainJacobians
 
         ! multiply by pressure outside loop to create the jacobian derivative
         ! This is for PV equation
-        if (present(globUnknown) .and. presentPressure) then 
-          Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
+        if (present(globUnknown) ) then 
+            if (gid .eq. 1) then
+                Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
+                ! elseif (gid .eq. 2) then
+                !    Ar_f(gid,:) = Ar_f(gid,:)* globUnknown
+            endif
         endif
       
     End Subroutine loopOverElements

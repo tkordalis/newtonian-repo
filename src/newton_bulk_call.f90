@@ -66,6 +66,7 @@ module newton_bulk_call
             xERROR_NR          = 1.D+0*ERROR_NR
             TL                 = TLp
             Pressure_Bubble    = Pressure_Bubbleo
+            mol_Bubble         = mol_Bubbleo
 
 
             WRITE(*,*) 'xF=', xF
@@ -136,7 +137,7 @@ module newton_bulk_call
            !$OMP END PARALLEL DO
               
             
-            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble )
+            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble )
 
 
             ! CALCULATE RESIDUAL NORM
@@ -348,6 +349,10 @@ module newton_bulk_call
 
 
             Pressure_bubble = Pressure_bubble - xF*Se_f(1)
+            mol_bubble      = mol_bubble      - xF*Se_f(2)
+
+    ! call bubble%setPressure(Pressure_bubble)
+
 
             filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 
 
@@ -361,6 +366,7 @@ module newton_bulk_call
         ENDDO LOOP_NEWTON_RAPSHON_f
 
         call bubble%setPressure(Pressure_bubble)
+        call bubble%setmol(mol_bubble)
 
         ! If convergence is achieved, remove iteration_*.plt
         call execute_command_line("rm -f Iteration_*.plt")
