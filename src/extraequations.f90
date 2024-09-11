@@ -112,7 +112,7 @@ Module ExtraEquations
 
 
             ! TERM_1  = TERM_1 + (Z)*(nr*(R) + (nZ)*(Z) )*R*WET
-            TERM_1  = TERM_1 + ( nR*dCdR + nZ*dCdZ - PeN*( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C ) * (R*WET)
+            TERM_1  = TERM_1 + ( (nR*dCdR + nZ*dCdZ)/PeN - ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C ) * (R*WET)
 
         ENDDO LOOP_GAUSS
 

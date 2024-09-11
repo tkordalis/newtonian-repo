@@ -47,9 +47,9 @@ rm -f nohup.out
 								./src/BoundaryEquations/SymmetryDiffusionBoundary.f90 \
 								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary.f90 \
 								./src/BoundaryEquations/AmbientHenryBoundary.f90 \
+							./src/InitializeTypes.f90\
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
-							./src/InitializeTypes.f90\
 							./src/solution_check_update.f90\
 							./src/newton_bulk_call.f90\
                      Fem2D_prg.f90            \

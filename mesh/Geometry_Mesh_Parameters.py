@@ -38,20 +38,20 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere  = 150
+NumSegmentsOnSphere  = 300
 NumSegmentsOnAmbient = 100
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
 Element_size_on_Ambient= Radius_tank/NumSegmentsOnAmbient
-Element_size_on_Ambient_cb = 0.1*Element_size_on_Ambient
+Element_size_on_Ambient_cb = 0.2*Element_size_on_Ambient
 
 
 dR_ref1 = 4*Element_size_on_Sphere
-dR_ref2 = 2*dR_ref1
+dR_ref2 = 3*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
 
-dZ_refAmb = 30.0*Element_size_on_Ambient_cb
+dZ_refAmb = 10.0*Element_size_on_Ambient_cb
 dZ_refAmb = 0.5*Height_tank - dZ_refAmb
 
 

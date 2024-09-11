@@ -47,6 +47,7 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: setmol
 
             ! getters
+            procedure :: getPressure
             procedure :: getCentroid
             procedure :: getVelocity
             procedure :: getDragForce
@@ -162,7 +163,7 @@ Module BubbleDiffusionStaticCSBoundary
 
         totalMolFlux = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_F )
         
-        output = PeN*(this%mol - this%mol_o)/dt + totalMolFlux
+        output = (this%mol - this%mol_o)/dt + totalMolFlux
      
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
         
@@ -345,6 +346,15 @@ Module BubbleDiffusionStaticCSBoundary
 
     ! ********************************************************************
 
+
+    function getPressure(this)  Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: output
+
+        output = This%pressure 
+
+    end function getPressure
 
     Function getmol(This)  Result(output)
         Implicit None 

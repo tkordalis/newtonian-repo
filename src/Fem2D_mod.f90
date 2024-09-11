@@ -146,7 +146,7 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  1.d+1!1.d-1*velocity_char*length_char/Dcoef
+        PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
 
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
@@ -1608,6 +1608,7 @@ Module DirichletBoundaries
 
 
     Subroutine ApplyDirichletAtNode_(node, FemValueName, value, FlagNr, gid )
+        use PHYSICAL_MODULE, only: KoN
         Implicit None 
         Integer,          Intent(In)           :: node
         Character(len=*), Intent(In)           :: FemValueName
@@ -1632,7 +1633,11 @@ Module DirichletBoundaries
         if (FlagNr == "NRP") then 
             call updateJacobian(irow+v_id)
             if (isAssociatedWithGlobalVar)&
-              call updateExtraJacobian(gid, irow+v_id, 1.d0 )
+              ! call updateExtraJacobian(gid, irow+v_id, 1.d0 )
+
+              ! since the bc residual of concentration on the bubble is c - KoN*Pb=0
+              ! the jac with respect to the Pb is -KoN
+              call updateExtraJacobian(gid, irow+v_id, -KoN )
         end if  
 
     End Subroutine ApplyDirichletAtNode_

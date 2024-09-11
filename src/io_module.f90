@@ -27,9 +27,6 @@ Module IO_module
         allocate( sol , source = this%TL    )
         time              = this%time
         increment         = this%increment
-        
-        
-
     End Subroutine getSolutionVars
 
 
@@ -184,6 +181,7 @@ Module IO_module
                 call tecfile%addVariable("Vr"      , Solution(:, getVariableId("Vr"  )))
                 call tecfile%addVariable("P"      , Solution(:, getVariableId("P"  )))
                 call tecfile%addVariable("C"      , Solution(:, getVariableId("C"  )))
+                call tecfile%addVariable("Canalytic" , CanalyticLandau( Solution(:,:) ) )
                 
 
                 call tecfile%addElements( elements )

@@ -120,7 +120,7 @@ module solveAllExtraConstraints
             Ah_f(1,2) = -IdN
 
             Be_f(2) = bubble%molBalance()
-            Ah_f(2,2) = PeN/dt
+            Ah_f(2,2) = 1.d0/dt
 
             ! Be_f(1) = bubble%volumeConservation()
             ! Ah_f(:,:) = 0.d0
@@ -151,12 +151,12 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(6) :: title_results
+        character(18), dimension(7) :: title_results
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
-        title_results = [ 'time', 'displacement', 'velocity', 'pressure', 'volume', 'ChamberP' ]
+        title_results = [ 'time', 'displacement', 'velocity', 'pressure', 'volume', 'ChamberP', 'mol' ]
         do i=1,size(title_results)
             write(20,'(A17,3x)', advance='no') title_results(i)
         enddo
@@ -171,7 +171,7 @@ Module BubbleOutput
         Implicit none
         Real(8), Intent(In) :: Time
 
-        write(20,'(6(f16.7,3x))') TIME, bubble%getCentroid(), bubble%getVelocity(), Pressure_Bubble, bubble%getVolume(), PressureChamber(time)
+        write(20,'(7(f16.7,3x))') TIME, bubble%getCentroid(), bubble%getVelocity(), Pressure_Bubble, bubble%getVolume(), PressureChamber(time), bubble%getmol()
         
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput
