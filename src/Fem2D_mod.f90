@@ -73,32 +73,57 @@ MODULE PHYSICAL_MODULE
     Real(8), PARAMETER       :: pi            = 4.d0*atan(1.d0)
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
+    ! ! !_______________________________________________________________________________
+    ! ! ! These numbers are for AIR in water
+    ! ! !-------------------------------------------------------------------------------
+    ! Real(8), parameter       :: Pambient    = 101325.d0       ! Pa
+    ! Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
+    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    ! Real(8), parameter       :: Tgas        = 298.d0           ! K
+    ! Real(8), parameter       :: KHenry      = 7.8d-6          ! mol/m3/Pa
+    ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
 
-    Real(8), parameter       :: length_char   =  0.001d0         ! m
-    Real(8), parameter       :: rho           = 1000.d0           ! kg/m3: density of water
+    ! Real(8), parameter       :: rho           = 1000.d0         ! kg/m3: density of water
+    ! Real(8), parameter       :: MrWater     = 28.d-3          ! kg/mol
+    ! Real(8), parameter       :: Cwater      = rho/MrWater     ! mol/m3
+
+    ! Real(8), parameter       :: surface_tension = 0.00997d-2*5.d0*4.d0
+    ! Real(8), parameter       :: viscosity = 0.1d0
+    ! !_______________________________________________________________________________
+    ! Real(8), parameter       :: length_char   =  1.d-3          ! m
+
+
+    !_______________________________________________________________________________
+    ! These numbers are for O2 in silicon oil - S1 - Jia et al.
+    !-------------------------------------------------------------------------------
+    Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
+    Real(8), parameter       :: Pinitial    = 78000.d0       ! Pa
+    ! Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
+    Real(8), parameter       :: Dcoef       = 4.55d-9          ! m2/s
+    Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
+    Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
+    ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
+
+    Real(8), parameter       :: rho           = 873.d0         ! kg/m3: density of fluid
+    Real(8), parameter       :: MrWater       = 0.41d0          ! kg/mol
+    Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
+    
+    Real(8), parameter       :: surface_tension = 0.0183d0
+    
+    Real(8), parameter       :: viscosity = 0.002d0
+    !_______________________________________________________________________________
+    
+    Real(8), parameter       :: length_char   =  0.36d-3          ! m
     
  
 
   
-    Real(8), parameter       :: viscosity = 0.1d0
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
-
-
-    !_______________________________________________________________________________
-    ! These numbers are for AIR in water
-    !-------------------------------------------------------------------------------
-    Real(8), parameter       :: Pambient    = 101325.d0       ! Pa
-    Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
-    Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
-    Real(8), parameter       :: Tgas        = 298d0           ! K
-    Real(8), parameter       :: KHenry      = 7.8d-6          ! mol/m3/Pa
-    Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-    Real(8), parameter       :: MrWater     = 28.d-3          ! kg/mol
-    Real(8), parameter       :: Cwater      = rho/MrWater     ! mol/m3
-    !_______________________________________________________________________________
   
 
-    Real(8), parameter       :: surface_tension = 0.00997d-2*5.d0*4.d0
+
     
     Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
     ! Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
@@ -146,7 +171,8 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
+        PeN    =  velocity_char*length_char/Dcoef
+        ! PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
 
 
         write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
@@ -157,9 +183,12 @@ MODULE PHYSICAL_MODULE
         write(*,"(10X,A6,2X,F16.8)") "IdN  ="    , IdN
         write(*,"(10X,A6,2X,F16.8)") "KoN  ="    , KoN
         write(*,"(10X,A6,2X,F16.8)") "PeN  ="    , PeN
+        write(*,*) ' '
+        write(*,*) ' '
         
+
         ! pause
-        eo = [0.1d0, 0.1d0]
+        eo = [0.1d0, 0.d0]
         e_bnd = - 1.0D+4
         
 
@@ -195,7 +224,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.05d0
+        Dt_constant = 0.04d0
 
         ! Dt_max = 1.5d0*Dt_constant
 

@@ -66,6 +66,19 @@ Module InitialConditions
 
     print*, ' '
     ! print*, 'initialMol = ', bubble%Initialmol
+    ! print*, 'initialMol = ', bubble%Initialmol/bubble%InitialVolume 
+    print*, 'KoN * Pambient = ', PeN * KoN
+
+    print*, ' '
+    ! write(*,"(10X,A15,2X,F16.8)") "velocity_char ="    , velocity_char
+    ! write(*,"(10X,A15,2X,F16.8)") "time_char ="    , time_char
+    ! write(*,"(10X,A15,2X,E12.5)") "P ="    , bubble%InitialPressure* Pchar
+    ! write(*,"(10X,A15,2X,E12.5)") "V ="    , bubble%InitialVolume * length_char**3.d0
+    ! write(*,"(10X,A15,2X,E12.5)") "PV ="    , bubble%InitialPressure* Pchar * bubble%InitialVolume * length_char**3.d0
+    ! write(*,"(10X,A15,2X,E12.5)") "RT ="    , Rgas*Tgas
+    ! write(*,"(10X,A15,2X,E12.5)") "n ="    , bubble%InitialPressure* Pchar * bubble%InitialVolume * length_char**3.d0/(Rgas*Tgas)
+    ! write(*,"(10X,A15,2X,E12.5)") "n_initMol ="    , bubble%Initialmol*cchar*length_char**3.d0
+    ! write(*,"(10X,A15,2X,E12.5)") "n_initMol2 ="    , bubble%InitialPressure* bubble%InitialVolume/IdN*cchar*length_char**3.d0
     ! print*, 'initialMol = ', Mol_Bubbleo
     ! print*, 'cchar = ', cchar 
     ! print*, 'Pressure_Bubble = ', Pressure_Bubble*Pchar
@@ -78,7 +91,7 @@ Module InitialConditions
     ! print*, '2--Mol_Bubble = ', Cchar*length_char**3
     ! print*, 'NondimMol_Bubble = ', Pressure_Bubble*bubble%InitialVolume/IdN
     ! print*, 'NondimMol_Bubble/4pi/3 = ', Pressure_Bubble*bubble%InitialVolume/IdN/4.1889d0
-    pause
+    ! pause
     
     ! do i=1, size(tlo,1)
     !     write(404,'(f16.8,3x)') (tlo(i,j),j=1,size(tlo,2))

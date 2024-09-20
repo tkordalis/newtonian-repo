@@ -398,14 +398,16 @@ Groups_faces[-1]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[-1]["obj"])
 # 	input('...')
 
 # print(Groups_faces[-1]["mesh_obj"])
+
+
 SymmOut_params = Netgen_Params[-1]
 Mesh_1.Segment(geom=SymmetryB1out).StartEndLength ( Main_maxSize_element, SymmOut_params[0] )
-# Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxSize_element )
+Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxSize_element )
 
 
-
-SymmetryB2out_mesh_distribution = Mesh_1.Segment(geom=SymmetryB2out).NumberOfSegments(2*NumSegmentsOnAmbient)
-SymmetryB2out_mesh_distribution.SetExpressionFunction(NodeDensityFunction_Sym)
+# Distribution of nodes on symmetry to pack them close to the ambient boundary
+# SymmetryB2out_mesh_distribution = Mesh_1.Segment(geom=SymmetryB2out).NumberOfSegments(2*NumSegmentsOnAmbient)
+# SymmetryB2out_mesh_distribution.SetExpressionFunction(NodeDensityFunction_Sym)
 
 
 

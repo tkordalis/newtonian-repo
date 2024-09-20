@@ -221,6 +221,8 @@ Module BubbleDiffusionStaticCSBoundary
             else
                 call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
                 call Stresses                         (element, face, TL_, RES_3, .true., This%pressure )
+                call weakHenry                        (element, face, TL_, RES_1, .true., This%pressure )
+
             endif
 
             
@@ -233,6 +235,10 @@ Module BubbleDiffusionStaticCSBoundary
                     call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure )
                     !Extra Unknowns
                     call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
+                    
+                    ! call CalculateJacobianContributionsOf(weakHenry                        ,element, face, TL_, RES_3, This%pressure )
+                    ! Extra Unknowns
+                    ! call CalculateExtraJacobianContributionsOf(weakHenry                   ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                 endif
           end if
         end do 

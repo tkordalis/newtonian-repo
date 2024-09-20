@@ -126,12 +126,11 @@ module newton_bulk_call
                 Ac_f = 0.D0
                 Ai_f = 0.D0
             ENDIF
-
+        
         !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
         !$OMP& DEFAULT (SHARED)&
         !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
-                ! CALL CONCENTRATION_EQUATION(IEL, FLAG_NR)
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
            !$OMP END PARALLEL DO
@@ -410,9 +409,11 @@ module newton_bulk_call
          TEMP_TL(INOD,:) = TL(II,:)
        ENDDO
 
-       CALL DOMI_RESIDUAL_fluid( IEL, TEMP_TL, TEMP_RES, .TRUE. )
-       ! IF (FLAG_NR=='NRP') CALL DOMI_JACOBIAN_f( IEL, TEMP_TL, TEMP_RES )
-       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_fluid  ,IEL, TEMP_TL, TEMP_RES)
+       ! CALL DOMI_RESIDUAL_fluid( IEL, TEMP_TL, TEMP_RES, .TRUE. )
+       ! IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_fluid  ,IEL, TEMP_TL, TEMP_RES)
+
+       CALL DOMI_RESIDUAL_IntByPartsConvection( IEL, TEMP_TL, TEMP_RES, .TRUE. )
+       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_IntByPartsConvection  ,IEL, TEMP_TL, TEMP_RES)
         
        
     END SUBROUTINE FLOW_EQUATIONS

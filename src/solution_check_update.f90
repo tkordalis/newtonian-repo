@@ -180,7 +180,9 @@ module solution_check_update
         use BoundaryConditions
         USE GLOBAL_ARRAYS_MODULE
         USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb
-        USE physical_module, only: mol_bubble, mol_bubbleo, Pressure_bubble, Pressure_bubbleo
+        USE physical_module, only: mol_bubble, mol_bubbleo, Pressure_bubble, Pressure_bubbleo, &
+                                    ambient_position_o
+
         IMPLICIT NONE
         ! ARGUMENTS
         INTEGER, INTENT(IN)        :: INCREMENT
@@ -192,6 +194,9 @@ module solution_check_update
         mol_bubbleo          = mol_bubble
 
         Pressure_bubbleo     = Pressure_bubble
+
+        ambient_position_o = ambient_position_o + dt*vm_ambient
+        
         call bubble%setCentroid_o()
         call bubble%setVolume_o()
         call bubble%setmol_o(mol_bubble)

@@ -98,31 +98,30 @@ Module AmbientHenryBoundary
             ! CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION multiplication by hand
             ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc*0.773d0, FlagNr )
             ! CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION multiplication by hand
-            call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
+            ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
 
         enddo
 
         node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
         call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
-        
-        
-        ! weak imposition of henry's law
-        ! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
-        ! If (FlagNR == "NRP") &
-        !     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
 
-        ! do iel = 1, this%nelem
-        !     element =This%elements(iel)
-        !     face    =This%faces   (iel)
+                
+        !!! weak imposition of henry's law
+        !!! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
+        !!! If (FlagNR == "NRP") &
+        !!!     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
 
-        !     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
-        !     call Henry                        (element, face, TL_, RES_1, .true., Pressure_bc)
-        !     if (FlagNR == "NRP") &
-        !             call CalculateJacobianContributionsOf(Henry  ,element, face, TL_, RES_1, Pressure_bc)
-        !             ! call CalculateJacobianContributionsOf(Henry  ,element, face, TL_, RES_1, Pressure_bc, .true.)
-        ! enddo
+        do iel = 1, this%nelem
+            element =This%elements(iel)
+            face    =This%faces   (iel)
 
-        ! If ( Allocated(TL_) ) Deallocate(TL_)
+            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+            call weakHenry             (element, face, TL_, RES_1, .true., Pressure_bc)
+            if (FlagNR == "NRP") &
+                call CalculateJacobianContributionsOf     (weakHenry  ,element, face, TL_, RES_1, Pressure_bc)
+        enddo
+
+        If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
 
 

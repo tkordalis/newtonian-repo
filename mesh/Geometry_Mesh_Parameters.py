@@ -39,11 +39,12 @@ Sphere_position = 0.
 
 # NumSegmentsOnSphere = 200
 NumSegmentsOnSphere  = 300
-NumSegmentsOnAmbient = 100
+NumSegmentsOnAmbient = 30
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
+
 Element_size_on_Ambient= Radius_tank/NumSegmentsOnAmbient
-Element_size_on_Ambient_cb = 0.2*Element_size_on_Ambient
+Element_size_on_Ambient_cb = 1*Element_size_on_Ambient
 
 
 dR_ref1 = 4*Element_size_on_Sphere
@@ -51,7 +52,7 @@ dR_ref2 = 3*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
 
-dZ_refAmb = 10.0*Element_size_on_Ambient_cb
+dZ_refAmb = 3.0*Element_size_on_Ambient_cb
 dZ_refAmb = 0.5*Height_tank - dZ_refAmb
 
 
@@ -93,7 +94,7 @@ if check_drRef1_compatibility<3:
 Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])
 
 Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
-Netgen_Params.append([ 6*Element_size_on_Sphere,  6*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 8*Element_size_on_Sphere,  8*Element_size_on_Sphere, 0.1])
 
 # # --------------------------- End of Geometry --------------------------- #
 
