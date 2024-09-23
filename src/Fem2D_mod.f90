@@ -189,6 +189,7 @@ MODULE PHYSICAL_MODULE
 
         ! pause
         eo = [0.1d0, 0.d0]
+        ! eo = [0.d0, 0.1d0]
         e_bnd = - 1.0D+4
         
 
@@ -224,7 +225,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.04d0
+        Dt_constant = 0.06d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
@@ -306,7 +307,7 @@ MODULE OMP_PARALLEL
         logical :: success
         CHARACTER(LEN=100) :: STR_ITER_TMP, FN, homedir
 
-        NTHREADS = 12 ! number of threads that pardiso will use and the loop of the jacobian
+        NTHREADS = 1 ! number of threads that pardiso will use and the loop of the jacobian
 
         WRITE(STR_ITER_TMP,'(I4)') NTHREADS
 
@@ -557,6 +558,10 @@ MODULE ENUMERATION_MODULE
         Type(unvFileReader), Intent(In) :: unvfile
 
         NM_MESH = unvfile%getElements() 
+        print*, '***********************'
+        print*, 'NNUM_element called'
+        print*, size(NM_MESH,1)
+        print*, '***********************'
     End Subroutine NNUM_ELEMENT
 
 
@@ -1466,9 +1471,11 @@ MODULE BOUNDARY_ENUMERATION_MODULE
 
             NodeMinDist = minloc(Dist, dim=1)
 
-            nodesOnBoundary(counter_i+1) = nodesOnBoundary_temp(NodeMinDist)
+            if ( (counter_i+1) .le. size(nodesOnBoundary) ) then
+                nodesOnBoundary(counter_i+1) = nodesOnBoundary_temp(NodeMinDist)
 
-            nodesOnBoundary_temp(NodeMinDist) = -1
+                nodesOnBoundary_temp(NodeMinDist) = -1
+            endif
 
         enddo outer_loop
 

@@ -16,11 +16,10 @@ echo $OPT
 MKL="-qmkl=parallel"
 
 #----------------------------------------------------------------------------
-
+# export OMP_NUM_THREADS=1
 rm -f $NEXE
 rm -f nohup.out
 
-								# ./src/Remesh/RemeshProcedure.f90\
  ifort $OPT -o $NEXE                           \
 								./src/utilities/check_for_floating_point_exceptions.f90 \
 								./src/utilities/system_tools.f90 \
@@ -48,10 +47,12 @@ rm -f nohup.out
 							./src/InitializeTypes.f90\
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
+								./src/Remesh/RemeshProcedure.f90\
 							./src/solution_check_update.f90\
 							./src/newton_bulk_call.f90\
                      Fem2D_prg.f90            \
-	             $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++
+	             $MKL -L./src/export/TECLIB/lib/ -ltecio -lstdc++
+	             # $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++
  
 #----------------------------------------------------------------------------
 ctags -R .

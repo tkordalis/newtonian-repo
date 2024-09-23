@@ -442,8 +442,8 @@ Module Boundary_EquationsDO
         
         
                     TERM_RES     = 0.D0
-                    ! TERM_RES(getVariableId("C"))  = PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar * R/PeN
-                    TERM_RES(getVariableId("C"))  = ( PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - (nR*dCdR + nZ*dCdZ) ) * R/PeN
+                    TERM_RES(getVariableId("C"))  = PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar * R/PeN
+                    ! TERM_RES(getVariableId("C"))  = ( PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - (nR*dCdR + nZ*dCdZ) ) * R/PeN
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK)  * dS
@@ -722,10 +722,7 @@ Module Boundary_EquationsDO
 
             call getNormalVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
                                          ned, nr, nz, dS, normalize = .true.)
-            ! if ((KK .eq. 1) .and. (store)) then
-            ! print*, Z, R
-            ! print*, nz, nr 
-            ! endif
+            
             !*********************************************************************
             ! Calculate the Solution of the previous time steps
             ! to take into account the time variation
@@ -769,7 +766,9 @@ Module Boundary_EquationsDO
                 SBFN         = BIFN !+ tsupg*(Term_R*tR+Term_Z*tZ)*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
-                TERM_RES(getVariableId("Z")) = SBFN * ( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) - (nR*dCdR + nZ*dCdZ) / ((cwater/cchar)*PeN)  )* R * dS
+                ! TERM_RES(getVariableId("Z")) = SBFN * ( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) - (cchar/cwater)/PeN*(nR*dCdR + nZ*dCdZ)  )* R * dS
+                TERM_RES(getVariableId("Z")) = SBFN * ( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) )  )* R * dS
+                ! TERM_RES(getVariableId("Z")) = SBFN * ( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) - (nR*dCdR + nZ*dCdZ)/PeN  )* R * dS
 
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)

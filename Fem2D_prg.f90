@@ -30,6 +30,7 @@ PROGRAM FEM2D
     USE OMP_PARALLEL
     Use RemeshVariables
     use newton_bulk_call
+    Use RemeshProcedure
     Implicit None
     external :: fdate
     character(25)                        :: dateNtime
@@ -90,7 +91,6 @@ PROGRAM FEM2D
 
 
 
-    Call DefineTheBoundaries()
 
     CALL DIMENSIONLESS_NUMBERS
 
@@ -100,11 +100,13 @@ PROGRAM FEM2D
     !  ! ----------------------------------------------------------------------
     !  ! ASSIGN INITIAL CONDITIONS
     !  ! ----------------------------------------------------------------------
-    call setInitalConditions()
-
     INCREMENT      = 0
     TIME           = 0.0D0
     DT             = Dt_constant  ;  Dto = DT  ;   Dtb = DT
+
+    Call DefineTheBoundaries()
+    call setInitalConditions()
+
 
     if (ReadSolutionFromFile) then
         ! call sol_b%getSolutionVars(timeb, TLb, increment, Remesh_counter, pressure_bubble  )
@@ -121,6 +123,7 @@ PROGRAM FEM2D
     LOOP_TIME_INTEGRATION: DO
 
         INCREMENT         = INCREMENT + 1
+        timeo             = time
         TIME              = TIME + DT
 
 
@@ -150,8 +153,8 @@ PROGRAM FEM2D
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Check Criteria for Remeshing  
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-
-        ! call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
+        if (time .gt. 0.1d0) &
+        call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
 
         call UPDATE_SOLUTION( INCREMENT )
 

@@ -45,7 +45,7 @@ Module BulkEquations
         Use GLOBAL_ARRAYS_MODULE,    Only: TLo
         Use FLOW_ARRAYS_MODULE,      Only: B_f
         Use MESH_MODULE,             Only: Xm, Ym
-        Use TIME_INTEGRATION,        Only: Dt
+        Use TIME_INTEGRATION,        Only: Dt, increment
         use geometry,                only: distance, trace, secondInvariant
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
@@ -103,7 +103,8 @@ Module BulkEquations
 
         X0_n(1,:) = Xm( NM_MESH(NELEM,:) )
         X0_n(2,:) = Ym( NM_MESH(NELEM,:) )
-
+        
+        
         Uelem = 0.d0
         ! Uelem = sum( [ (distance( U_n(:,ii), dXdt_n(:,ii) )/dble(NBF_2d) , ii=1, NBF_2d) ] )
         Uelem = sum( [ ( sqrt( (U_n(1,ii)- dXdt_n(1,ii))**2.d0 + (U_n(2,ii)- dXdt_n(2,ii))**2.d0 ), ii=1,NBF_2d ) ] )
@@ -131,13 +132,18 @@ Module BulkEquations
 
 
             BFN = BFN_2d(:,KK)
-
+            
             call basis_spatial_derivs( KK  , X_n, dBFNdX_, Jac )
+            
 
             call basis_interp_scalar ( P_n  , KK, X_n , Pgp , dPgpdX )
+            
             call basis_interp_scalar ( C_n  , KK, X_n , Cgp , dCgpdX )
+            
             call basis_interp_vector ( U_n  , KK, X_n , Ugp , gradUgp)
+            
             call basis_interp_vector ( X_n  , KK, X0_n, Xgp , dXdX0gp)
+            
             call basis_interp_vector ( X0_n , KK, X_n , X0gp, dX0dXgp)
 
             call FEMinterpolation(Xo_n, BFN(:), Xogp )  ;  call FEMinterpolation(Uo_n, BFN(:), Uogp )
@@ -233,8 +239,8 @@ Module BulkEquations
                 elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
                 elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
                 ! ------------------------------
-                ! mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
-                mass_transfer       = ( PeN * ( dCdt*BIFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                ! mass_transfer       = ( PeN * ( dCdt*BIFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
                 ! ------------------------------
 
                 
@@ -463,11 +469,11 @@ Module BulkEquations
                 ! ------------------------------
                 continuity_equation = ( trace(gradU)*BIFN + tlsme*dot_product(gradq,MomStr) ) * Xgp(2)
                 ! ------------------------------
-                ! elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
-                mtml = matmul(gradk, dX0dXgp)
+                elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
+                ! mtml = matmul(gradk, dX0dXgp)
 
-                elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
-                elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
+                ! elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
+                ! elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
                 ! ------------------------------
                 ! mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
                 mass_transfer       = ( dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2)

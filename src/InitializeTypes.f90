@@ -12,6 +12,7 @@ Module BoundaryConditions
 
     contains
     Subroutine DefineTheBoundaries()
+        use TIME_INTEGRATION, only : increment
         Implicit None
 
         wall            = NewFixWallConcentration    (bnd1_elements, bnd1_faces)
@@ -24,6 +25,13 @@ Module BoundaryConditions
 
         ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)
+
+        if (increment .gt. 1) then
+            call bubble%setPressure(Pressure_Bubble)
+            call bubble%setmol(mol_bubble)
+            call bubble%setmol_o(mol_bubbleo)
+            call bubble%setCentroid_o()
+        endif
        
     End Subroutine DefineTheBoundaries
 End Module BoundaryConditions

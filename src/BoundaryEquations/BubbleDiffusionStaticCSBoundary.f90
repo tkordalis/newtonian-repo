@@ -155,9 +155,10 @@ Module BubbleDiffusionStaticCSBoundary
     Function molBalance(this) Result(output)
         Use physical_module, only: PeN
         Use time_integration, only: dt
+        use NRAPSHON_MODULE, only:iter_f
         Implicit None
         Class(BubbleDiffusionStaticCS) :: this
-        Real(8)       :: output
+        Real(8)       :: output,output1, output2 
 
         Real(8)       :: totalMolFlux
 
@@ -167,6 +168,11 @@ Module BubbleDiffusionStaticCSBoundary
         output = (this%mol - this%mol_o)/dt + totalMolFlux
      
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
+
+        output1 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u )
+        output2 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC )
+
+        write(400,'(I15, 2x, E17.10, 2x, E17.10, 2x, E17.10, 2x, E17.10)') iter_f, output1, output2, totalMolFlux, totalMolFlux - output1 - output2
         
     end Function molBalance
 
@@ -300,21 +306,6 @@ Module BubbleDiffusionStaticCSBoundary
 
         This%mol = mol
     End Subroutine setmol
-
-    ! Subroutine setInitialmol_dim(This)
-    !     Implicit None 
-    !     Class(BubbleDiffusionStaticCS)       :: This
-
-    !     This%Initialmol_dim = (Pchar*this%InitialPressure) * (length_char**3*this%InitialVolume) / ( 8.314 * (273.d0 + 20.d0) )
-    ! End Subroutine setInitialmol_dim
-    
-    ! Subroutine setmol(This, mol)
-    !     use physical_module, only: Pchar, length_char
-    !     Implicit None 
-    !     Class(BubbleDiffusionStaticCS)       :: This
-    !     Real(8), Intent(In) :: mol
-
-    ! End Subroutine setmol
 
 
     Subroutine setCentroid_o(this)

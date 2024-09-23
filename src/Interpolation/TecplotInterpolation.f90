@@ -177,7 +177,7 @@ Module TecplotInterpolation
         !*****************************************************************
         iukn = 1
         do 
-            if ( getVariableName(iukn) == "") exit 
+            if ( getVariableName(iukn) == "NotAvariable") exit 
             iukn = iukn + 1
         end do
         numberOfUnknowns = iukn - 1

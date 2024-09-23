@@ -3,6 +3,8 @@ Module IO_module
     Type Solution
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: TL
+        Real(8)                              :: Pressure_Bubble
+        Real(8)                              :: mol_Bubble
 
         Integer                              :: Increment
 
@@ -13,20 +15,23 @@ Module IO_module
     contains
 
 
-    Subroutine getSolutionVars(this, time, sol, increment, RemeshCounter)
+    Subroutine getSolutionVars(this, time, sol, increment, Pressure_Bubble, mol_Bubble)
         Implicit None 
         Class(Solution), Intent(In)          :: this
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: sol
         Real(8)                              :: Pressure_Bubble
+        Real(8)                              :: mol_Bubble
         Integer                              :: increment
-        Integer, optional                    :: RemeshCounter
 
         if ( allocated(sol) ) deallocate(sol) 
 
         allocate( sol , source = this%TL    )
         time              = this%time
         increment         = this%increment
+        Pressure_Bubble   = this%Pressure_Bubble
+        mol_Bubble        = this%mol_Bubble
+
     End Subroutine getSolutionVars
 
 
@@ -64,6 +69,7 @@ Module IO_module
         
         var = "Z"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         var = "R"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
+        var = "C"  ; this%TL(:, getVariableId(var) ) = tf%getVariable(var)
         
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! The Globals are constained in the title of the file 
@@ -81,6 +87,8 @@ Module IO_module
         ! print*, toDouble( remove( strGlobal(3), ["Bubble_Pressure_1 ", "="]) )
 
         this%increment         = toInt   ( remove( strGlobal(1), ["Increment        ", "="]) )
+        this%Pressure_Bubble   = toDouble( remove( strGlobal(2), ["Pressure_Bubble", "="]) )
+        this%mol_Bubble        = toDouble( remove( strGlobal(3), ["mol__Bubble", "="]) )
         
 
       
@@ -167,8 +175,8 @@ Module IO_module
                 tecfile  = Tecplot_File( datapacking = datapack, femtype = "FETRIANGLE")
         
                 title = "" 
-                title = replace("Increment = *, time = *", "*", &
-                       [ toStr(Increment), toStr(time) ] )
+                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *", "*", &
+                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble) ] )
                 
         
                 call tecfile%setTitle   (title)

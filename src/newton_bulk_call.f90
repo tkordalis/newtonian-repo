@@ -84,9 +84,9 @@ module newton_bulk_call
         COR_NORM_NEW_f = 1.D0
 
 
-        if (ReallocateForRemesh) then
-            call DefineTheBoundaries()
-        endif
+        ! if (ReallocateForRemesh) then
+        !     call DefineTheBoundaries()
+        ! endif
 
         n_timer_o = time()
         n_timer   = 0
@@ -127,13 +127,13 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
         
-        !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-        !$OMP& DEFAULT (SHARED)&
-        !$OMP& PRIVATE (IEL)
+!        !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+!        !$OMP& DEFAULT (SHARED)&
+!        !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-           !$OMP END PARALLEL DO
+!           !$OMP END PARALLEL DO
               
             
             call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble )
@@ -142,36 +142,37 @@ module newton_bulk_call
             ! CALCULATE RESIDUAL NORM
             RES_NORM = DOT_PRODUCT(B_f,B_f)+DOT_PRODUCT(Be_f,Be_f)
             RES_NORM = sqrt(RES_NORM)
+            ! print*, "  "
+            ! print*, "norm B_f=", RES_NORM-sqrt(DOT_PRODUCT(B_f,B_f)), "norm Be_f=",  RES_NORM-sqrt(DOT_PRODUCT(Be_f,Be_f))
+            ! print*, "  "
 
-            ! if ((iter_f .gt. 5) .and. (increment .gt. 0)) then
-              jj=1
-              kk=0
-              do ii = 1, size(B_f)
-                 if (jj .gt. NEQ_f) jj=1
-                 if (jj .eq. 1) then
-                   kk=kk+1
-                 endif
-            !      !! if ( getVariableName(jj) == 'P' ) then
-            !        ! if ( abs(B_f(ii)) .gt. 1.d0) then 
+            ! ! if ((iter_f .gt. 5) .and. (increment .gt. 0)) then
+            !   jj=1
+            !   kk=0
+            !   do ii = 1, size(B_f)
+            !      if (jj .gt. NEQ_f) jj=1
+            !      if (jj .eq. 1) then
+            !        kk=kk+1
+            !      endif
+            ! !        ! if ( abs(B_f(ii)) .gt. 1.d0) then 
             !        if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
-                   ! if ( ii .eq. 23536) then 
-                   !   print*,'global_node=', kk
-                   !   print*, ' ' 
-                   !   print '(A9,2x,f10.5,2x,f10.5,2x,f10.5)','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
-                   !   print*, ' ' 
-                   !   print*, 'variable','     ', 'residual' 
-                   !   print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+            !          print*,'global_node=', kk
+            !          print*, ' ' 
+            !          print '(A9,2x,f10.5,2x,f10.5,2x,f10.5)','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
+            !          print*, ' ' 
+            !          print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
+            !          print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
 
-                     ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM
-                     ! print*, ' ' 
-                     ! print*, ' ' 
-                     ! print*, ' ' 
-                     ! print*, ' //////////////////////////////////////////////////////// ' 
-                     ! pause
+            !          ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM
+            !          ! print*, ' ' 
+            !          print*, ' ' 
+            !          print*, ' ' 
+            !          print*, ' //////////////////////////////////////////////////////// ' 
+            !          pause
             !        endif
-                 ! endif
-                 jj=jj+1
-              enddo
+            !      ! endif
+            !      jj=jj+1
+            !   enddo
             ! endif
                      ! write(404,*),  ' '
                      ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), 1, Be_f(1), Be_f(1)/ RES_NORM, RES_NORM
@@ -331,6 +332,7 @@ module newton_bulk_call
                     K = K + 1
                     TL(I,J) = TL(I,J) - xF*S_f(K)
        !   if (xm(i) .gt. 97.d0) then
+       !   if ( S_f(K)/sqrt(DOT_PRODUCT(S_f,S_f)) .gt.0.1d0 ) then
        !   print*, ' '
        !   print*, '------------------------------------ '
        !   print*, ' '
@@ -340,7 +342,8 @@ module newton_bulk_call
        !   print*, ' '
        !   print '(a9, 3x,a2, 3x, a11, e20.10)', "variable=", getVariableName(J), "correction=", s_f(k)
        !   print*, ' '
-       !   pause 
+       !   print*, ' '
+       !   ! pause 
        ! endif
 
                 ENDDO
@@ -349,8 +352,11 @@ module newton_bulk_call
 
             Pressure_bubble = Pressure_bubble - xF*Se_f(1)
             mol_bubble      = mol_bubble      - xF*Se_f(2)
+            ! print*, 'pressure correction',Se_f(1)/COR_NORM_NEW_f
+            ! print*, 'mol correction',Se_f(2)/COR_NORM_NEW_f
 
-    ! call bubble%setPressure(Pressure_bubble)
+            ! call bubble%setPressure(Pressure_bubble)
+            ! call bubble%setmol(mol_bubble)
 
 
             filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 

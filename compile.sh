@@ -21,7 +21,6 @@ MKL="-qmkl=parallel"
 
 rm -f $NEXE
 rm -f nohup.out
-								# ./src/Remesh/RemeshProcedure.f90\
 
  ifort $OPT -o $NEXE                           \
 								./src/utilities/check_for_floating_point_exceptions.f90 \
@@ -43,18 +42,18 @@ rm -f nohup.out
 							  ./src/extraequations.f90       \
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations_DifffusionOriented.f90     	 \
-								./src/BoundaryEquations/FixWallConcentrationBoundary_2.f90 \
-								./src/BoundaryEquations/SymmetryDiffusionBoundary_2.f90 \
-								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary_2.f90 \
-								./src/BoundaryEquations/AmbientHenryBoundary_2.f90 \
+								./src/BoundaryEquations/FixWallConcentrationBoundary.f90 \
+								./src/BoundaryEquations/SymmetryDiffusionBoundary.f90 \
+								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary.f90 \
+								./src/BoundaryEquations/AmbientHenryBoundary.f90 \
 							./src/InitializeTypes.f90\
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\
+								./src/Remesh/RemeshProcedure.f90\
 							./src/solution_check_update.f90\
 							./src/newton_bulk_call.f90\
                      Fem2D_prg.f90            \
 	             $MKL -qopenmp -L./src/export/TECLIB/lib/ -ltecio -lstdc++
-							# ./src/former_external_subroutines.f90\
  
 #----------------------------------------------------------------------------
 ctags -R .

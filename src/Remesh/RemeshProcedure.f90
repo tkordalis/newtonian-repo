@@ -128,6 +128,9 @@ module RemeshProcedure
         if ( AfterRemeshFading2_counter .ge. IterFading2Threshold ) then
             AfterRemeshFading2_logical = .false.
         endif
+
+        call Remesh
+
     
     end Subroutine checkAndRemesh
     
@@ -150,6 +153,7 @@ module RemeshProcedure
             Use FLOW_ARRAYS_MODULE
             Use GLOBAL_ARRAYS_MODULE
             Use CSR_STORAGE
+            use BoundaryConditions, only: DefineTheBoundaries
             Implicit None
             Character(len=:), Allocatable        :: new_mesh_name
             Type(unvFileReader)                  :: unvf
@@ -162,17 +166,15 @@ module RemeshProcedure
             Real(8), Dimension(:,:), ALlocatable :: solution
             Real(8), Dimension(:,:), ALlocatable :: solution_o
             Real(8), Dimension(:,:), ALlocatable :: solution_b
-            Integer, Dimension(:)  , Allocatable :: bnd3_e, bnd3_f
             Integer, Dimension(:)  , Allocatable :: globnodes
             integer :: ii 
 
             new_mesh_name = replace("remesh_{}.unv", "{}", toStr(time) )
+            
             !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
             ! Create New Mesh
             !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
             Remesh_counter = Remesh_counter + 1
-
-            if (StructMeshOnlyInTheFront) Remesh_counter_structuredInTheFront = Remesh_counter_structuredInTheFront + 1
 
 
             print*, "1. Create New Mesh"
@@ -198,7 +200,6 @@ module RemeshProcedure
 
             call new_mesh%setUnvFilename( new_mesh_name )
             call new_mesh%execute()
-
             !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
             ! Intepolate
             !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
@@ -217,7 +218,8 @@ module RemeshProcedure
 
             call tecint  %mapToReferenceDomain(time , TL , getVariableName)
             call tecint_o%mapToReferenceDomain(timeo, TLo, getVariableName)
-            call tecint_b%mapToReferenceDomain(timeo-dt, TLb, getVariableName)
+            ! call tecint_b%mapToReferenceDomain(timeo-dt, TLb, getVariableName)
+            call tecint_b%mapToReferenceDomain(timeo, TLb, getVariableName)
 
             print*, "  i. interpolation of the solution"
             call tecint  %interpolateInto(new_mesh)
@@ -285,7 +287,7 @@ module RemeshProcedure
     
             call ALLOCATE_CONTINUATION_ARRAYS( .TRUE., NUNKNOWNS_f           )
             call ALLOCATE_FLOW_ARRAYS        ( .TRUE., NUNKNOWNS_f, NEX_f    )
-            call ALLOCATE_GLOBAL_ARRAYS      ( .TRUE., NODTOL, NEL_2d, NEQ_f )
+            call ALLOCATE_GLOBAL_ARRAYS      ( .TRUE., NODTOL, NEQ_f )
 
           !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
           ! Copy Solution to Working Arrays
@@ -300,6 +302,8 @@ module RemeshProcedure
           TLo= solution_o
           !TLb= solution_b
           TLb= TLo
+
+          call DefineTheBoundaries()
 
           deallocate(Z)
           deallocate(R)

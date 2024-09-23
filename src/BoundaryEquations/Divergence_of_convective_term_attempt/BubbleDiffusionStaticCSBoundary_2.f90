@@ -236,17 +236,17 @@ Module BubbleDiffusionStaticCSBoundary
                     !Extra Unknowns
                     call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                     
-                    ! call CalculateJacobianContributionsOf(weakHenry                        ,element, face, TL_, RES_3, This%pressure )
+                    call CalculateJacobianContributionsOf(weakHenry                        ,element, face, TL_, RES_3, This%pressure )
                     ! Extra Unknowns
-                    ! call CalculateExtraJacobianContributionsOf(weakHenry                   ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
+                    call CalculateExtraJacobianContributionsOf(weakHenry                   ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                 endif
           end if
         end do 
 
-        do node_counter = 1, size(this%nodes)
-            node = this%nodes(node_counter)
-            call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
-        enddo
+        ! do node_counter = 1, size(this%nodes)
+        !     node = this%nodes(node_counter)
+        !     call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
+        ! enddo
 
         If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
@@ -306,21 +306,6 @@ Module BubbleDiffusionStaticCSBoundary
 
         This%mol = mol
     End Subroutine setmol
-
-    ! Subroutine setInitialmol_dim(This)
-    !     Implicit None 
-    !     Class(BubbleDiffusionStaticCS)       :: This
-
-    !     This%Initialmol_dim = (Pchar*this%InitialPressure) * (length_char**3*this%InitialVolume) / ( 8.314 * (273.d0 + 20.d0) )
-    ! End Subroutine setInitialmol_dim
-    
-    ! Subroutine setmol(This, mol)
-    !     use physical_module, only: Pchar, length_char
-    !     Implicit None 
-    !     Class(BubbleDiffusionStaticCS)       :: This
-    !     Real(8), Intent(In) :: mol
-
-    ! End Subroutine setmol
 
 
     Subroutine setCentroid_o(this)
