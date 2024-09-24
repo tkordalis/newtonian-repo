@@ -39,6 +39,7 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: setProperties
             procedure :: setInitialPressure
             procedure :: setPressure
+            procedure :: setPressure_o
             procedure :: setInitialVolume
             procedure :: setCentroid_o
             procedure :: setVolume_o
@@ -158,7 +159,7 @@ Module BubbleDiffusionStaticCSBoundary
         use NRAPSHON_MODULE, only:iter_f
         Implicit None
         Class(BubbleDiffusionStaticCS) :: this
-        Real(8)       :: output,output1, output2 
+        Real(8)       :: output,output1, output2, output3, output4
 
         Real(8)       :: totalMolFlux
 
@@ -169,8 +170,10 @@ Module BubbleDiffusionStaticCSBoundary
      
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
 
-        output1 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u )
+        output1 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u_minus_umesh )
         output2 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC )
+        output3 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u )
+        output4 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_umesh )
 
         write(400,'(I15, 2x, E17.10, 2x, E17.10, 2x, E17.10, 2x, E17.10)') iter_f, output1, output2, totalMolFlux, totalMolFlux - output1 - output2
         
@@ -208,6 +211,7 @@ Module BubbleDiffusionStaticCSBoundary
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_3
         Integer                              :: iel, element, face
         Integer                              :: node_counter, node
+        Real(8)                              :: Volume
 
 
         if (present(kinematic_logical) .and. (kinematic_logical)) then
@@ -216,6 +220,7 @@ Module BubbleDiffusionStaticCSBoundary
                 call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
         endif
 
+        
         do iel = 1, this%nelem
             element =This%elements(iel)
             face    =This%faces   (iel)
@@ -223,17 +228,19 @@ Module BubbleDiffusionStaticCSBoundary
             call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
             if (present(kinematic_logical) .and. (kinematic_logical)) then
                 ! call Kinematic                        (element, face, TL_, RES_1, .true.)
-                call Kinematic_mass                   (element, face, TL_, RES_1, .true.)
+                ! call Kinematic_mass                   (element, face, TL_, RES_1, .true.)
+                call Kinematic_mass_gasInterface        (element, face, TL_, RES_1, .true., This%mol, this%getVolume(), This%getVelocity())
             else
                 call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
                 call Stresses                         (element, face, TL_, RES_3, .true., This%pressure )
             endif
 
-            
     
             if (FlagNR == "NRP") Then
                 if (present(kinematic_logical) .and. (kinematic_logical)) then
-                    call CalculateJacobianContributionsOf(Kinematic_mass                   ,element, face, TL_, RES_1)
+                    ! call CalculateJacobianContributionsOf(Kinematic_mass                   ,element, face, TL_, RES_1)
+                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_1, This%mol, this%getVolume(), This%getVelocity())
+                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_3, 1, This%mol, this%getVolume(), This%getVelocity(),  this%gidC)
                 else
                     call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
                     call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure )
@@ -246,6 +253,7 @@ Module BubbleDiffusionStaticCSBoundary
         do node_counter = 1, size(this%nodes)
             node = this%nodes(node_counter)
             call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
+            ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
         enddo
 
         If ( Allocated(TL_) ) Deallocate(TL_)
@@ -268,6 +276,7 @@ Module BubbleDiffusionStaticCSBoundary
         Real(8), Intent(In) :: InitialPressure
 
         This%InitialPressure = InitialPressure
+        This%Pressure_o      = InitialPressure
     End Subroutine setInitialPressure
 
     Subroutine setInitialVolume(This)
@@ -319,6 +328,14 @@ Module BubbleDiffusionStaticCSBoundary
 
         this%Zcenter_o = Centroid
     end Subroutine setCentroid_o
+
+    Subroutine setPressure_o(This, Pressure_o)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Pressure_o
+
+        This%Pressure_o = Pressure_o
+    End Subroutine setPressure_o
 
     Subroutine setVolume_o(this)
         Implicit None 

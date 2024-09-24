@@ -5,7 +5,7 @@
 ###
 
 import sys
-import salome
+import salome 
 import read_datfile
 
 
@@ -166,13 +166,16 @@ Bubble1PointCoordinatesSorted = result_B1[0]
 
 Bubble1Points = [geompy.MakeVertex(*p, 0) for p in Bubble1PointCoordinatesSorted]
 
-B1_leftPoint  = Bubble1Points[0]
-B1_rightPoint = Bubble1Points[-1]
+B1_leftPoint  = Bubble1Points[-1]
+B1_rightPoint = Bubble1Points[0]
 
+geompy.addToStudy(B1_leftPoint,'B1_leftPoint')
 
 Curve_1 = geompy.MakeInterpol(Bubble1Points, False)
 B1_line = geompy.MakeLineTwoPnt(B1_leftPoint, B1_rightPoint)
 B1_Face = geompy.MakeFaceWires ([Curve_1, B1_line], 1)
+
+geompy.addToStudy(B1_Face,'B1_Face')
 
 
 bottomRightVertexTank = geompy.MakeVertex( *AmbientPointCoordinates[0] , 0 )
@@ -186,12 +189,15 @@ rightLineTank  = geompy.MakeLineTwoPnt( bottomRightVertexTank, topRightVertexTan
 topLineTank   = geompy.MakeLineTwoPnt( topRightVertexTank, topLeftVertexTank )
 leftLineTank  = geompy.MakeLineTwoPnt( topLeftVertexTank , bottomLeftVertexTank )
 
-Domain =  geompy.MakeFaceWires([ geompy.MakeWire([bottomLineTank, rightLineTank, topLineTank, leftLineTank], 1e-07) ] , 1)
+Domain =  geompy.MakeFaceWires([ geompy.MakeWire([bottomLineTank, rightLineTank, topLineTank, leftLineTank], 1e-08) ] , 1)
 
-Domain_cut = geompy.MakeCutList( Domain, \
-								 [ B1_Face, geompy.MakeTranslation( geompy.MakeFaceHW(Height_tank, 2*Radius_tank, 1), 0, -Radius_tank, 0 )], True )
+geompy.addToStudy(Domain,'Domain')
 
-geompy.addToStudy(Domain_cut,'Domain_cut')
+# halfCut = geompy.MakeTranslation( geompy.MakeFaceHW(Height_tank, 2*Radius_tank, 1), 0, -Radius_tank, 0 )
+Domain_cut = geompy.MakeCutList( Domain, [ B1_Face ], True )
+
+# geompy.addToStudy(Domain,'Domain')
+# geompy.addToStudy(Domain_cut,'Domain_cut')
 
 Scaled_Curve_Bubble1_Ref1_coords = []
 Scaled_Curve_Bubble1_Ref1_points = []
@@ -212,8 +218,17 @@ geompy.addToStudy(Scaled_Curve_Bubble1_Ref2,'Scaled_Curve_Bubble1_Ref2')
 Centroid        = geompy.MakeVertexOnCurve(B1_line, 0.5, True)
 Centroid_coords = geompy.PointCoordinates(Centroid)
 
-Ellipse_1     = geompy.MakeEllipse(Centroid, None, ellipse_Major_Radius, ellipse_Minor_Radius)
-Ellipse_outer = geompy.MakeEllipse(Centroid, None, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius)
+ellipse_Major_Radius_mod = (Bubble1PointCoordinatesSorted[0])[0] + (ellipse_Major_Radius - RSphere1)+0.2
+ellipse_Minor_Radius_mod = (Bubble1PointCoordinatesSorted[len(Bubble1PointCoordinatesSorted) // 2])[1] + (ellipse_Minor_Radius - RSphere1)
+
+if ellipse_Major_Radius_mod < ellipse_Minor_Radius_mod:
+    ellipse_Major_Radius_mod = ellipse_Minor_Radius_mod + 0.1
+
+outer_ellipse_Major_Radius_mod = ellipse_Major_Radius_mod + 1 
+outer_ellipse_Minor_Radius_mod = ellipse_Minor_Radius_mod + 1
+
+Ellipse_1     = geompy.MakeEllipse(Centroid, None, ellipse_Major_Radius_mod, ellipse_Minor_Radius_mod)
+Ellipse_outer = geompy.MakeEllipse(Centroid, None, outer_ellipse_Major_Radius_mod, outer_ellipse_Minor_Radius_mod)
 
 
 partition_line_list = [ Scaled_Curve_Bubble1_Ref1, Scaled_Curve_Bubble1_Ref2, Ellipse_1, Ellipse_outer ]
@@ -309,9 +324,9 @@ x_tilt = [0,0]
 
 for i in range(len(Symmetry_groups)):
 
+    origin_of_axes = [0,0]
+    theta_degrees = 0
     if Symmetry_groups[i]["mainGroup"] == "Sphere_1_Side":
-        origin_of_axes = [0,0]
-        theta_degrees = 0
 
         if Symmetry_groups[i]["refZone"] == "cb1" and Symmetry_groups[i]["leftOrRight"] == "left":
             x_tilt_dumy =  Bubble1PointCoordinatesSorted[-1]
@@ -350,19 +365,19 @@ for i in range(len(Symmetry_groups)):
 
         elif Symmetry_groups[i]["refZone"] == "ellipse2" and Symmetry_groups[i]["leftOrRight"] == "left":
             origin_of_axes = Centroid_coords
-            x_tilt =  [-ellipse_Major_Radius-h_s,0]
+            x_tilt =  [-ellipse_Major_Radius_mod-h_s,0]
 
         elif Symmetry_groups[i]["refZone"] == "ellipse2" and Symmetry_groups[i]["leftOrRight"] == "right":
             origin_of_axes = Centroid_coords
-            x_tilt =  [ellipse_Major_Radius+h_s,0]
+            x_tilt =  [ellipse_Major_Radius_mod+h_s,0]
 
         elif Symmetry_groups[i]["refZone"] == "out" and Symmetry_groups[i]["leftOrRight"] == "left":
             origin_of_axes = Centroid_coords
-            x_tilt =  [-outer_ellipse_Major_Radius-h_s,0]
+            x_tilt =  [-outer_ellipse_Major_Radius_mod-h_s,0]
 
         elif Symmetry_groups[i]["refZone"] == "out" and Symmetry_groups[i]["leftOrRight"] == "right":
             origin_of_axes = Centroid_coords
-            x_tilt =  [outer_ellipse_Major_Radius+h_s,0]
+            x_tilt =  [outer_ellipse_Major_Radius_mod+h_s,0]
 
             
     # if Symmetry_groups[i]["leftOrRight"] == "left":
@@ -463,7 +478,7 @@ print(Scaled_Curve_Bubble1_Ref2_coords[0])
 print(Scaled_Curve_Bubble1_Ref2_coords[-1])
 
 
-# # --------------------------- End of Geometry --------------------------- #
+# # # --------------------------- End of Geometry --------------------------- #
 
 # ###
 # ### SMESH component
@@ -514,6 +529,8 @@ for i in range(1,len(Groups_faces)):
     Groups_faces[i]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[i]["obj"])
     MeshParameters(Groups_faces[i]["mesh_obj"], Params[0], Params[1], Params[2])
     j+=1
+
+
 SymmOut_params = Netgen_Params[-1]
 Mesh_1.Segment(geom=SymmetryB1out).StartEndLength ( Main_maxSize_element, SymmOut_params[0] )
 Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxSize_element )

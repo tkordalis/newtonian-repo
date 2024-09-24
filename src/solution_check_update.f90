@@ -200,6 +200,7 @@ module solution_check_update
         call bubble%setCentroid_o()
         call bubble%setVolume_o()
         call bubble%setmol_o(mol_bubble)
+        call bubble%setPressure_o(Pressure_bubbleo)
 
         if (INCREMENT.GT.2) then 
             CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)

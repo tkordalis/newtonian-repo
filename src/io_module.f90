@@ -175,8 +175,8 @@ Module IO_module
                 tecfile  = Tecplot_File( datapacking = datapack, femtype = "FETRIANGLE")
         
                 title = "" 
-                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *", "*", &
-                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble) ] )
+                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *, Remesh_counter = *", "*", &
+                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble), toStr(Remesh_counter) ] )
                 
         
                 call tecfile%setTitle   (title)

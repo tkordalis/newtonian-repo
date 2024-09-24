@@ -7,11 +7,13 @@ Module NumericalBoundaryJacobian
     Interface CalculateJacobianContributionsOf
         Module Procedure NumericalJacobian_Simple
         Module Procedure NumericalJacobian_Stresses
+        Module Procedure NumericalJacobian_KinematicMass
     End Interface CalculateJacobianContributionsOf
 
     Interface CalculateExtraJacobianContributionsOf
         Module Procedure CalculateExtraJacobianContributionsOf_1_global
         Module Procedure CalculateExtraJacobianContributionsOf_2_global
+        Module Procedure CalculateExtraJacobianContributionsOf_1_global_2_auxiliary
     End Interface CalculateExtraJacobianContributionsOf
 
     Contains
@@ -70,7 +72,7 @@ Module NumericalBoundaryJacobian
             !    ITERATE OVER J EQUATIONS
             do JEQ = 1, NEQ_f         
                 !      ADD A SMALL CHANGE TO VARIABLE  
-                EPS_JAC         = F_DX( TEMP_TL(JW,JEQ) )    
+                EPS_JAC         = F_DX( TEMP_TL(JW,JEQ) )
                 TEMP_TL(JW,JEQ) = TEMP_TL(JW,JEQ) + EPS_JAC
 
                 !      RECOMPUTE RESIDUAL WITH A CHANGE IN VARIABLE
@@ -171,6 +173,87 @@ Module NumericalBoundaryJacobian
         CSC, NBF_2d*NBF_2d, A_f, NZ_f)
     end subroutine NumericalJacobian_Stresses
 
+    Subroutine NumericalJacobian_KinematicMass(Equation, nelem, ned, temp_tl, temp_res, globalValueMol, volume, bvelocity)
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+        Use ENUMERATION_MODULE,   Only: NM_f
+        Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
+        Implicit None
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  ARGUMENTS
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer,                          Intent(In)            :: NELEM, NED
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(InOut)         :: TEMP_TL
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
+        Real(8)                         , Intent(In)            :: globalValueMol
+        Real(8)                         , Intent(In)            :: volume
+        Real(8)                         , Intent(In)            :: bvelocity
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        ! Interface Equation 
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Interface 
+        Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, globalValueMol, volume, bvelocity )
+            Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
+            Integer,                           Intent(In)           :: nelem
+            Integer,                           Intent(In)           :: ned
+            Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: temp_tl
+            Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: temp_res
+            Logical,                           Intent(In)           :: store
+            Real(8),                           Intent(In)           :: globalValueMol
+            Real(8)                         , Intent(In)            :: volume
+            Real(8)                         , Intent(In)            :: bvelocity
+
+
+            End Subroutine Equation
+        End Interface   
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  LOCAL VARIABLES
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer                                         :: JW, JEQ
+        ! Real(8)                                         :: F_DX, EPS_JAC
+        Real(8)                                         :: EPS_JAC
+        Integer, Dimension(NBF_2d)                      :: NM
+        Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
+        Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
+        Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
+        Real(8)                                         :: tmpGlobalValue
+
+        !  initialize working (temporary) areas for element integration
+        !  before forming elemental jacobian and rhs vector
+        temp_jac       = 0.d0
+        tmpGlobalValue = globalValueMol 
+
+        !**********************************************************
+        !  elemental jacobian
+        !  ** iterate over elements nodes
+        !  ** iterate over equations 
+        !  ** perturb the node and compute the residual of the 
+        !     perturbed equation
+        !  ** return the residual in its original value 
+        !**********************************************************
+
+        do jw = 1, nbf_2d
+            do jeq = 1, neq_f
+                eps_jac         = f_dx( temp_tl(jw,jeq) )
+                temp_tl(jw,jeq) = temp_tl(jw,jeq) + eps_jac
+
+                call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpGlobalValue, volume, bvelocity )
+
+                temp_tl(jw,jeq) = temp_tl(jw,jeq) - eps_jac
+
+                temp_jac(:,jw,jeq,:) = ( dtemp_res - temp_res )/eps_jac
+
+            enddo
+        enddo
+
+
+        !  store the element integration matrix in the global matrix a
+        NM  = NM_f (NELEM,1:NBF_2d)
+        CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
+
+        CALL MATRIX_STORAGE_JACOBIAN&
+        (TEMP_JAC, NBF_2d, NBF_2d, NEQ_f, NEQ_f, NM, IA_f, NUNKNOWNS_f+1,&
+        CSC, NBF_2d*NBF_2d, A_f, NZ_f)
+    end subroutine NumericalJacobian_KinematicMass
 
     Subroutine CalculateExtraJacobianContributionsOf_1_global&
         ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, store_id)
@@ -250,6 +333,88 @@ Module NumericalBoundaryJacobian
         !**********************************************************
         Call updateJacobianExtraColumn ( store_id, nm, temp_dpl )
     end subroutine CalculateExtraJacobianContributionsOf_1_global
+
+
+    Subroutine CalculateExtraJacobianContributionsOf_1_global_2_auxiliary&
+        ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, auxiliary1, bvelocity, store_id)
+
+        Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
+        Use ENUMERATION_MODULE,   Only: NM_f
+        Use CSR_STORAGE,          Only: CSR_f
+        Implicit None
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  ARGUMENTS
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Integer,                          Intent(In)            :: NELEM, NED
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(InOut)         :: TEMP_TL
+        Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
+        Integer,                          Intent(In)            :: gid
+        Real(8)                         , Intent(In)            :: gVal1
+        Real(8)                         , Intent(In)            :: auxiliary1, bvelocity
+        Integer                         , Intent(In)            :: store_id
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        ! Interface Equation 
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Interface 
+            Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, gVal1, auxiliary1, bvelocity )
+            Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
+            Integer,                           Intent(In)           :: nelem
+            Integer,                           Intent(In)           :: ned
+            Real(8), Dimension(NBF_2d, NEQ_f), Intent(In)           :: temp_tl
+            Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: temp_res
+            Logical,                           Intent(In)           :: store
+            Real(8),                           Intent(In)           :: gVal1
+            Real(8),                           Intent(In)           :: auxiliary1, bvelocity
+            End Subroutine Equation
+        End Interface   
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        !  LOCAL VARIABLES
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+        Real(8)                                         :: eps
+        Integer, Dimension(NBF_2d)                      :: NM
+        Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
+        Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
+        Real(8), Dimension(NBF_2d, NEQ_f)               :: TEMP_DpL
+        Real(8)                                         :: gVal
+
+
+        !  initialize working (temporary) areas for element integration
+        !  before forming elemental jacobian and rhs vector
+
+
+        !**********************************************************
+        !  ELEMENTAL JACOBIAN FOR FLOW RATE IMPOSITION
+        !  ADD A SMALL CHANGE TO VARIABLE  
+        !**********************************************************
+        if ( gid == 1 ) Then 
+
+            gVal = gVal1 
+            eps  = F_DX( gVal1 )
+
+            gVal = gVal + eps 
+            call equation( NELEM, NED, TEMP_TL, dTEMP_RES, .FALSE., gVal, auxiliary1, bvelocity )
+            gVal = gVal - eps 
+        Else 
+            Print*, "[Error] CalculateExtraJacobianContributionsOf (_1_global)."
+            Print*, "        the gid should be 1"
+        End if      
+
+        !**********************************************************
+        !  COMPUTE DERIVATIVE USING FINITE DIFFERENCES
+        !**********************************************************
+        temp_dpl = ( dtemp_res - temp_res )/eps
+
+        !**********************************************************
+        !  STORE THE ELEMENT INTEGRATION MATRIX IN THE GLOBAL MATRIX A
+        !**********************************************************
+        NM  = NM_f (NELEM,1:NBF_2d)
+        CSC = CSR_f(NELEM,1:NBF_2d*NBF_2d)
+
+        !**********************************************************
+        !  STORE MATRIX Ac_f
+        !**********************************************************
+        Call updateJacobianExtraColumn ( store_id, nm, temp_dpl )
+    end subroutine CalculateExtraJacobianContributionsOf_1_global_2_auxiliary
 
 
     Subroutine CalculateExtraJacobianContributionsOf_2_global&

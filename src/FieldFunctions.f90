@@ -173,11 +173,11 @@ contains
 
         allocate( X( nnodes) )
         allocate( Y( nnodes) )
-        ! X = Solution_(:, getVariableId("Z"))
-        ! Y = Solution_(:, getVariableId("R"))
+        X = Solution_(:, getVariableId("Z"))
+        Y = Solution_(:, getVariableId("R"))
 
-        X = Xm
-        Y = Ym
+        ! X = Xm
+        ! Y = Ym
 
         ! X =  X - bubble%getCentroid()
         X = -X

@@ -225,7 +225,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.06d0
+        Dt_constant = 0.02d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
@@ -307,7 +307,7 @@ MODULE OMP_PARALLEL
         logical :: success
         CHARACTER(LEN=100) :: STR_ITER_TMP, FN, homedir
 
-        NTHREADS = 1 ! number of threads that pardiso will use and the loop of the jacobian
+        NTHREADS = 12 ! number of threads that pardiso will use and the loop of the jacobian
 
         WRITE(STR_ITER_TMP,'(I4)') NTHREADS
 

@@ -31,9 +31,10 @@ module RemeshProcedure
         Real(8), Dimension(:)  , Allocatable  :: Stretch, minimumAnglesAllTriangles
         Real(8)                               :: maxSkewness
 
-        Real(8), parameter  :: theta_degrees_threshold     = 10.d0  ! degrees
+        Real(8), parameter  :: theta_degrees_threshold     = 9.d0  ! degrees
 
         Real(8), parameter  :: remeshThreshold     = (3.1415926535d0/180.d0) * theta_degrees_threshold
+        ! Real(8), parameter  :: remeshThreshold     = 0.7d0
         Integer, parameter  :: IterThreshold       = 2
         Integer, parameter  :: IterFading1Threshold = 1
         Integer, parameter  :: IterFading2Threshold = 1
@@ -41,97 +42,96 @@ module RemeshProcedure
         
 
         ReallocateForRemesh = .false.
-        ! Stretch = relativeElementArea(Solution_, elements, x_mesh, y_mesh)
-        minimumAnglesAllTriangles = minimumAngleOfTriangle(Solution_, elements)
+        ! ! Stretch = relativeElementArea(Solution_, elements, x_mesh, y_mesh)
+        ! minimumAnglesAllTriangles = minimumAngleOfTriangle(Solution_, elements)
         
 
-        if ( BeforeRemesh_logical .eqv. .true. ) then 
-            BeforeRemesh_counter = BeforeRemesh_counter + 1
-        else
-            BeforeRemesh_counter = 0
-        endif
+        ! if ( BeforeRemesh_logical .eqv. .true. ) then 
+        !     BeforeRemesh_counter = BeforeRemesh_counter + 1
+        ! else
+        !     BeforeRemesh_counter = 0
+        ! endif
 
-        if ( AfterRemesh_logical .eqv. .true. ) then 
-            AfterRemesh_counter = AfterRemesh_counter + 1
-        else
-            AfterRemesh_counter = 0
-        endif
+        ! if ( AfterRemesh_logical .eqv. .true. ) then 
+        !     AfterRemesh_counter = AfterRemesh_counter + 1
+        ! else
+        !     AfterRemesh_counter = 0
+        ! endif
 
-        if ( AfterRemeshFading1_logical .eqv. .true. ) then 
-            AfterRemeshFading1_counter = AfterRemeshFading1_counter + 1
-        else
-            AfterRemeshFading1_counter = 0
-        endif
+        ! if ( AfterRemeshFading1_logical .eqv. .true. ) then 
+        !     AfterRemeshFading1_counter = AfterRemeshFading1_counter + 1
+        ! else
+        !     AfterRemeshFading1_counter = 0
+        ! endif
 
-        if ( AfterRemeshFading2_logical .eqv. .true. ) then 
-            AfterRemeshFading2_counter = AfterRemeshFading2_counter + 1
-        else
-            AfterRemeshFading2_counter = 0
-        endif
+        ! if ( AfterRemeshFading2_logical .eqv. .true. ) then 
+        !     AfterRemeshFading2_counter = AfterRemeshFading2_counter + 1
+        ! else
+        !     AfterRemeshFading2_counter = 0
+        ! endif
 
 
 
-        ! maxSkewness = abs(minval(Stretch))
-        maxSkewness = abs(minval(minimumAnglesAllTriangles))
+        ! ! maxSkewness = abs(minval(Stretch))
+        ! maxSkewness = abs(minval(minimumAnglesAllTriangles))
 
-        if ( BeforeRemesh_logical .eqv. .True. ) then
-            print*, 'Remesh will be performed shortly'
-            ! print*, 'Max Skewness =', maxSkewness
-            print*, 'Min Angle =', (180d0/3.14159265d0)*maxSkewness
-            print*, 'Steps to remesh:', IterThreshold - BeforeRemesh_counter
-            DT = Dt_constant
-            ! DT = Dt_constant/real(IterThreshold)
-        elseif ( AfterRemesh_logical .eqv. .True. ) then
-            print*, 'Remesh has already been performed'
-            print*, 'Steps after remesh:', AfterRemesh_counter
-            DT = Dt_constant
-            ! DT = Dt_constant/real(IterThreshold)
-        elseif ( (AfterRemesh_logical .eqv. .false.) .and. (AfterRemeshFading1_logical .eqv. .true.) ) then
-            print*, 'Restoring timestep to its initial value: Fade #1'
-            print*, 'Step increasing timestep:', AfterRemeshFading1_counter
-            DT = Dt_constant
-            ! DT = Dt_constant/(0.5d0*real(IterThreshold))
-        elseif ( (AfterRemeshFading1_logical .eqv. .false.) .and. (AfterRemeshFading2_logical .eqv. .true.) ) then
-            print*, 'Restoring timestep to its initial value: Fade #2'
-            print*, 'Step increasing timestep:', AfterRemeshFading2_counter
-            DT = Dt_constant
-        else 
-            DT = Dt_constant
-        endif
+        ! if ( BeforeRemesh_logical .eqv. .True. ) then
+        !     print*, 'Remesh will be performed shortly'
+        !     ! print*, 'Max Skewness =', maxSkewness
+        !     print*, 'Min Angle =', (180d0/3.14159265d0)*maxSkewness
+        !     print*, 'Steps to remesh:', IterThreshold - BeforeRemesh_counter
+        !     DT = Dt_constant
+        !     ! DT = Dt_constant/real(IterThreshold)
+        ! elseif ( AfterRemesh_logical .eqv. .True. ) then
+        !     print*, 'Remesh has already been performed'
+        !     print*, 'Steps after remesh:', AfterRemesh_counter
+        !     DT = Dt_constant
+        !     ! DT = Dt_constant/real(IterThreshold)
+        ! elseif ( (AfterRemesh_logical .eqv. .false.) .and. (AfterRemeshFading1_logical .eqv. .true.) ) then
+        !     print*, 'Restoring timestep to its initial value: Fade #1'
+        !     print*, 'Step increasing timestep:', AfterRemeshFading1_counter
+        !     DT = Dt_constant
+        !     ! DT = Dt_constant/(0.5d0*real(IterThreshold))
+        ! elseif ( (AfterRemeshFading1_logical .eqv. .false.) .and. (AfterRemeshFading2_logical .eqv. .true.) ) then
+        !     print*, 'Restoring timestep to its initial value: Fade #2'
+        !     print*, 'Step increasing timestep:', AfterRemeshFading2_counter
+        !     DT = Dt_constant
+        ! else 
+        !     DT = Dt_constant
+        ! endif
 
 
         ! If ( (maxSkewness .gt. remeshThreshold) .and. (BeforeRemesh_counter .eq. 0) ) then
-        If ( (maxSkewness .lt. remeshThreshold) .and. (BeforeRemesh_counter .eq. 0) ) then
-            BeforeRemesh_logical = .true.
-            BeforeRemesh_counter = 1
-        endif
+        ! ! If ( (maxSkewness .lt. remeshThreshold) .and. (BeforeRemesh_counter .eq. 0) ) then
+        !     BeforeRemesh_logical = .true.
+        !     BeforeRemesh_counter = 1
+        ! endif
 
-        if ( BeforeRemesh_counter .ge. IterThreshold ) then
-            BeforeRemesh_logical = .false.
-            call Remesh
-            ReallocateForRemesh  = .true.
-            AfterRemesh_logical  = .true.
-            AfterRemesh_counter  = 1
-        endif
+        ! if ( BeforeRemesh_counter .ge. IterThreshold ) then
+        !     BeforeRemesh_logical = .false.
+        !     call Remesh
+        !     ReallocateForRemesh  = .true.
+        !     AfterRemesh_logical  = .true.
+        !     AfterRemesh_counter  = 1
+        ! endif
 
 
-        if ( AfterRemesh_counter .ge. IterThreshold ) then
-            AfterRemesh_logical = .False.
-            AfterRemeshFading1_logical = .true.
-        endif
+        ! if ( AfterRemesh_counter .ge. IterThreshold ) then
+        !     AfterRemesh_logical = .False.
+        !     AfterRemeshFading1_logical = .true.
+        ! endif
 
-        if ( AfterRemeshFading1_counter .ge. IterFading1Threshold ) then
-            AfterRemeshFading1_logical = .false.
-            AfterRemeshFading2_logical = .true.
-        endif
+        ! if ( AfterRemeshFading1_counter .ge. IterFading1Threshold ) then
+        !     AfterRemeshFading1_logical = .false.
+        !     AfterRemeshFading2_logical = .true.
+        ! endif
 
-        if ( AfterRemeshFading2_counter .ge. IterFading2Threshold ) then
-            AfterRemeshFading2_logical = .false.
-        endif
-
+        ! if ( AfterRemeshFading2_counter .ge. IterFading2Threshold ) then
+        !     AfterRemeshFading2_logical = .false.
+        ! endif
+        
         call Remesh
 
-    
     end Subroutine checkAndRemesh
     
 
@@ -300,8 +300,7 @@ module RemeshProcedure
 
           TL = solution
           TLo= solution_o
-          !TLb= solution_b
-          TLb= TLo
+          TLb= solution_b
 
           call DefineTheBoundaries()
 

@@ -53,12 +53,13 @@ PROGRAM FEM2D
     unvf  = unvFileReader("Bounded.unv")
 
     if (ReadSolutionFromFile) Then
-        sol_b = ReadSolution("./sol/time_3.2000.plt")
-        sol_o = ReadSolution("./sol/time_3.4000.plt")
-        sol   = ReadSolution("./sol/time_3.6000.plt")
+        sol_b = ReadSolution("./sol/time_49.8400.plt")
+        sol_o = ReadSolution("./sol/time_49.8800.plt")
+        sol   = ReadSolution("./sol/time_49.9200.plt")
     else
         Remesh_counter_structuredInTheFront = 0
         Remesh_counter = 0
+        vm_ambient = 0.d0
     end if
     call unvf%info()
 
@@ -107,18 +108,16 @@ PROGRAM FEM2D
     Call DefineTheBoundaries()
     call setInitalConditions()
 
-
     if (ReadSolutionFromFile) then
-        ! call sol_b%getSolutionVars(timeb, TLb, increment, Remesh_counter, pressure_bubble  )
-        ! call sol_o%getSolutionVars(timeo, TLo, increment, Remesh_counter, Pressure_Bubbleo )
-        ! call sol  %getSolutionVars(time , TL , increment, Remesh_counter, pressure_bubble  )
+        call sol_b%getSolutionVars(timeb, TLb, increment, Pressure_Bubbleo, mol_Bubbleo  )
+        call sol_o%getSolutionVars(timeo, TLo, increment, Pressure_Bubbleo, mol_Bubbleo )
+        call sol  %getSolutionVars(time , TL , increment, Pressure_Bubble, mol_Bubble  )
     endif
 
     call WriteBubbleFiles(TIME)
 
     if (.not. ReadSolutionFromFile) call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
 
-    vm_ambient = 0.d0
 
     LOOP_TIME_INTEGRATION: DO
 
@@ -153,8 +152,9 @@ PROGRAM FEM2D
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Check Criteria for Remeshing  
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        if (time .gt. 0.1d0) &
+        if ((increment .gt. 499) .and. (mod(increment, 500) .eq. 0)) then
         call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
+        endif   
 
         call UPDATE_SOLUTION( INCREMENT )
 

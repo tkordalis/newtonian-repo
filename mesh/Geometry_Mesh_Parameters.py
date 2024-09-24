@@ -85,10 +85,6 @@ Netgen_Params = []
 
 check_drRef1_compatibility = int(dR_ref1/Element_size_on_Sphere)
 
-if check_drRef1_compatibility<3:
-	print('Segment length from sphere does not fit the symmetry egde')
-	print(check_drRef1_compatibility)
-	sys.exit()
 
 # Fine Mesh parameters
 Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])

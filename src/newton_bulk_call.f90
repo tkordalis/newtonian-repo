@@ -84,10 +84,6 @@ module newton_bulk_call
         COR_NORM_NEW_f = 1.D0
 
 
-        ! if (ReallocateForRemesh) then
-        !     call DefineTheBoundaries()
-        ! endif
-
         n_timer_o = time()
         n_timer   = 0
         ITER_f = 0
@@ -127,13 +123,13 @@ module newton_bulk_call
                 Ai_f = 0.D0
             ENDIF
         
-!        !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
-!        !$OMP& DEFAULT (SHARED)&
-!        !$OMP& PRIVATE (IEL)
+        !$OMP  PARALLEL DO NUM_THREADS(NTHREADS)&
+        !$OMP& DEFAULT (SHARED)&
+        !$OMP& PRIVATE (IEL)
             DO IEL = 1, NEL_2d
                 CALL FLOW_EQUATIONS(IEL, FLAG_NR)
             ENDDO
-!           !$OMP END PARALLEL DO
+           !$OMP END PARALLEL DO
               
             
             call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble )
