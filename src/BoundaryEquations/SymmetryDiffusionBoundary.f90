@@ -69,7 +69,7 @@ Module SymmetryDiffusionBoundary
         Character(len=3), Intent(In)         :: FlagNr
 
         Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2
         Integer                              :: iel, inode, node
         Integer                              :: element 
         Integer                              :: face
@@ -86,9 +86,9 @@ Module SymmetryDiffusionBoundary
                     call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
                 end if
             case('Y')
-                call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
+                call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
                 if (FlagNR == "NRP") Then
-                    call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
+                    call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
                 end if
             case default
                     Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."

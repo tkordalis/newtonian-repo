@@ -12,7 +12,7 @@ Module NumericalBoundaryJacobian
 
     Interface CalculateExtraJacobianContributionsOf
         Module Procedure CalculateExtraJacobianContributionsOf_1_global
-        Module Procedure CalculateExtraJacobianContributionsOf_2_global
+        ! Module Procedure CalculateExtraJacobianContributionsOf_2_global
         Module Procedure CalculateExtraJacobianContributionsOf_1_global_2_auxiliary
     End Interface CalculateExtraJacobianContributionsOf
 
@@ -173,10 +173,15 @@ Module NumericalBoundaryJacobian
         CSC, NBF_2d*NBF_2d, A_f, NZ_f)
     end subroutine NumericalJacobian_Stresses
 
-    Subroutine NumericalJacobian_KinematicMass(Equation, nelem, ned, temp_tl, temp_res, globalValueMol, volume, bvelocity)
+    Subroutine NumericalJacobian_KinematicMass(Equation, nelem, ned, temp_tl, temp_res, globalValueMol, volume, Z_now, Z_before)
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
         Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
+        Use DirichletBoundaries,         Only: integrateOverAllElementsOfTheBoundary
+        Use BOUNDARY_ENUMERATION_MODULE, Only: bnd3_elements, bnd3_faces
+        Use ENUMERATION_MODULE,   Only: NM_MESH
+        Use GLOBAL_ARRAYS_MODULE, Only: TL
+        Use ExtraEquations, only: SurfaceIntegration, int_Z_dV
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -186,12 +191,13 @@ Module NumericalBoundaryJacobian
         Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
         Real(8)                         , Intent(In)            :: globalValueMol
         Real(8)                         , Intent(In)            :: volume
-        Real(8)                         , Intent(In)            :: bvelocity
+        Real(8)                         , Intent(In)            :: Z_now
+        Real(8)                         , Intent(In)            :: Z_before
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Interface Equation 
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         Interface 
-        Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, globalValueMol, volume, bvelocity )
+        Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, globalValueMol, volume, Z_now, Z_before )
             Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
             Integer,                           Intent(In)           :: nelem
             Integer,                           Intent(In)           :: ned
@@ -200,8 +206,8 @@ Module NumericalBoundaryJacobian
             Logical,                           Intent(In)           :: store
             Real(8),                           Intent(In)           :: globalValueMol
             Real(8)                         , Intent(In)            :: volume
-            Real(8)                         , Intent(In)            :: bvelocity
-
+            Real(8)                         , Intent(In)            :: Z_now
+            Real(8)                         , Intent(In)            :: Z_before
 
             End Subroutine Equation
         End Interface   
@@ -209,13 +215,12 @@ Module NumericalBoundaryJacobian
         !  LOCAL VARIABLES
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         Integer                                         :: JW, JEQ
-        ! Real(8)                                         :: F_DX, EPS_JAC
         Real(8)                                         :: EPS_JAC
         Integer, Dimension(NBF_2d)                      :: NM
         Integer, Dimension(NBF_2d*NBF_2d)               :: CSC
         Real(8), Dimension(NBF_2d,NEQ_f)                :: dTEMP_RES
         Real(8), Dimension(NBF_2d,NBF_2d, NEQ_f, NEQ_f) :: TEMP_JAC
-        Real(8)                                         :: tmpGlobalValue
+        Real(8)                                         :: tmpGlobalValue, Z_now_perturbed, volume_perturbed
 
         !  initialize working (temporary) areas for element integration
         !  before forming elemental jacobian and rhs vector
@@ -230,13 +235,22 @@ Module NumericalBoundaryJacobian
         !     perturbed equation
         !  ** return the residual in its original value 
         !**********************************************************
-
         do jw = 1, nbf_2d
             do jeq = 1, neq_f
+                eps_jac       = f_dx( TL(NM_MESH(nelem,jw ),jeq) )
+
+                TL(NM_MESH(nelem,jw ),jeq) = TL(NM_MESH(nelem,jw ),jeq) + eps_jac
+
+                volume_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, SurfaceIntegration )
+                Z_now_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, int_Z_dV )
+                Z_now_perturbed = Z_now_perturbed/volume_perturbed
+
+                TL(NM_MESH(nelem,jw ),jeq) = TL(NM_MESH(nelem,jw ),jeq) - eps_jac
+
                 eps_jac         = f_dx( temp_tl(jw,jeq) )
                 temp_tl(jw,jeq) = temp_tl(jw,jeq) + eps_jac
 
-                call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpGlobalValue, volume, bvelocity )
+                call equation( nelem, ned, temp_tl, dtemp_res, .false., tmpGlobalValue, volume_perturbed, Z_now_perturbed, Z_before)
 
                 temp_tl(jw,jeq) = temp_tl(jw,jeq) - eps_jac
 
@@ -336,7 +350,7 @@ Module NumericalBoundaryJacobian
 
 
     Subroutine CalculateExtraJacobianContributionsOf_1_global_2_auxiliary&
-        ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, auxiliary1, bvelocity, store_id)
+        ( Equation, nelem, ned, temp_tl, temp_res, gid, gVal1, auxiliary1, Z_now, Z_before, store_id)
 
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
         Use ENUMERATION_MODULE,   Only: NM_f
@@ -350,13 +364,15 @@ Module NumericalBoundaryJacobian
         Real(8), Dimension(NBF_2d,NEQ_f), Intent(In)            :: TEMP_RES
         Integer,                          Intent(In)            :: gid
         Real(8)                         , Intent(In)            :: gVal1
-        Real(8)                         , Intent(In)            :: auxiliary1, bvelocity
+        Real(8)                         , Intent(In)            :: auxiliary1
+        Real(8)                         , Intent(In)            :: Z_now
+        Real(8)                         , Intent(In)            :: Z_before
         Integer                         , Intent(In)            :: store_id
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Interface Equation 
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         Interface 
-            Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, gVal1, auxiliary1, bvelocity )
+            Subroutine Equation ( nelem, ned, temp_tl, temp_res, store, gVal1, auxiliary1, Z_now, Z_before )
             Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f
             Integer,                           Intent(In)           :: nelem
             Integer,                           Intent(In)           :: ned
@@ -364,7 +380,9 @@ Module NumericalBoundaryJacobian
             Real(8), Dimension(NBF_2d, NEQ_f), Intent(Out)          :: temp_res
             Logical,                           Intent(In)           :: store
             Real(8),                           Intent(In)           :: gVal1
-            Real(8),                           Intent(In)           :: auxiliary1, bvelocity
+            Real(8),                           Intent(In)           :: auxiliary1
+            Real(8)                         , Intent(In)            :: Z_now
+            Real(8)                         , Intent(In)            :: Z_before
             End Subroutine Equation
         End Interface   
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -392,7 +410,7 @@ Module NumericalBoundaryJacobian
             eps  = F_DX( gVal1 )
 
             gVal = gVal + eps 
-            call equation( NELEM, NED, TEMP_TL, dTEMP_RES, .FALSE., gVal, auxiliary1, bvelocity )
+            call equation( NELEM, NED, TEMP_TL, dTEMP_RES, .FALSE., gVal, auxiliary1, Z_now, Z_before  )
             gVal = gVal - eps 
         Else 
             Print*, "[Error] CalculateExtraJacobianContributionsOf (_1_global)."
@@ -759,110 +777,110 @@ module constrainJacobians
 
 
     ! Subroutine jacobianOfConstrainCentroid( gid )
-    !   ! constrain is the integral Z dV of the interface
-    !   Use DirichletBoundaries,         Only: integrateOverAllElementsOfTheBoundary
-    !   Use BOUNDARY_ENUMERATION_MODULE, Only: bnd3_elements, bnd3_faces, bnd4_elements, bnd4_faces, getBoundaryNodesOfWholeBoundary
-    !   Use ExtraEquations,              Only: SurfaceIntegration, int_Z_dV
+    !     ! constrain is the integral Z dV of the interface
+    !     Use DirichletBoundaries,         Only: integrateOverAllElementsOfTheBoundary
+    !     Use BOUNDARY_ENUMERATION_MODULE, Only: bnd3_elements, bnd3_faces, bnd4_elements, bnd4_faces, getBoundaryNodesOfWholeBoundary
+    !     Use ExtraEquations,              Only: SurfaceIntegration, int_Z_dV
 
-    !   Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
-    !   Use ENUMERATION_MODULE,   Only: NM_f, NM_MESH, GNTR
-    !   Use GLOBAL_ARRAYS_MODULE, Only: TL
-    !   Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ar_f
-    !   Implicit None        
-    !   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-    !   !  ARGUMENTS
-    !   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-    !   Integer,       Intent(In) :: gid 
-    !   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-    !   !  LOCAL VARIABLES
-    !   !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
-    !   INTEGER :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
-    !   INTEGER :: IROW, JCOL, ICOL, IAD, L
-    !   REAL(8) :: F_DX, EPS_JAC
+    !     Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
+    !     Use ENUMERATION_MODULE,   Only: NM_f, NM_MESH, GNTR
+    !     Use GLOBAL_ARRAYS_MODULE, Only: TL
+    !     Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f, Ar_f
+    !     Implicit None        
+    !     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+    !     !  ARGUMENTS
+    !     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+    !     Integer,       Intent(In) :: gid 
+    !     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+    !     !  LOCAL VARIABLES
+    !     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+    !     INTEGER :: II, JJ, IW, JW, I, J, INOD, IEQ, JNOD, JEQ
+    !     INTEGER :: IROW, JCOL, ICOL, IAD, L
+    !     REAL(8) :: F_DX, EPS_JAC
 
-    !   INTEGER, DIMENSION(NBF_2d)        :: NM
-    !   INTEGER, DIMENSION(NBF_2d*NBF_2d) :: CSC
+    !     INTEGER, DIMENSION(NBF_2d)        :: NM
+    !     INTEGER, DIMENSION(NBF_2d*NBF_2d) :: CSC
 
-    !   REAL(8) :: TEMP_RES
-    !   REAL(8) :: dTEMP_RES
-    !   REAL(8) :: volume_unperturbed  , volume_perturbed
-    !   REAL(8) :: int_Z_dV_unperturbed, int_Z_dV_perturbed
+    !     REAL(8) :: TEMP_RES
+    !     REAL(8) :: dTEMP_RES
+    !     REAL(8) :: volume_unperturbed  , volume_perturbed
+    !     REAL(8) :: int_Z_dV_unperturbed, int_Z_dV_perturbed
 
-    !   ! REAL(8), DIMENSION(NBF_2d, NEQ_f) :: TEMP_JAC
-    !   REAL(8), DIMENSION(:, :), allocatable :: TEMP_JAC
-    !   Integer, dimension(:   ), allocatable :: boundary_nodes
+    !     ! REAL(8), DIMENSION(NBF_2d, NEQ_f) :: TEMP_JAC
+    !     REAL(8), DIMENSION(:, :), allocatable :: TEMP_JAC
+    !     Integer, dimension(:   ), allocatable :: boundary_nodes
 
-    !   REAL(8) :: derivative_int_dV, derivative_int_Z_dV
-
-
-    !   if     (gid .eq. 1) then 
-    !       call getBoundaryNodesOfWholeBoundary( size(bnd3_elements), bnd3_elements, bnd3_faces, boundary_nodes )
-    !       volume_unperturbed   = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, SurfaceIntegration )
-    !       int_Z_dV_unperturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, int_Z_dV )
-    !   elseif (gid .eq. 3) then 
-    !       call getBoundaryNodesOfWholeBoundary( size(bnd4_elements), bnd4_elements, bnd4_faces, boundary_nodes )
-    !       volume_unperturbed   = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, SurfaceIntegration )
-    !       int_Z_dV_unperturbed = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, int_Z_dV )
-    !   endif
-
-    !   allocate( TEMP_JAC( size(boundary_nodes), NEQ_f ) )
+    !     REAL(8) :: derivative_int_dV, derivative_int_Z_dV
 
 
-    !   TEMP_JAC  = 0.D0
+    !     if     (gid .eq. 1) then 
+    !         call getBoundaryNodesOfWholeBoundary( size(bnd3_elements), bnd3_elements, bnd3_faces, boundary_nodes )
+    !         volume_unperturbed   = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, SurfaceIntegration )
+    !         int_Z_dV_unperturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, int_Z_dV )
+    !     elseif (gid .eq. 3) then 
+    !         call getBoundaryNodesOfWholeBoundary( size(bnd4_elements), bnd4_elements, bnd4_faces, boundary_nodes )
+    !         volume_unperturbed   = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, SurfaceIntegration )
+    !         int_Z_dV_unperturbed = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, int_Z_dV )
+    !     endif
 
-    !   DO JW = 1, size(boundary_nodes)
-
-    !       ! ITERATE OVER J EQUATIONS
-    !       DO JEQ = 1, NEQ_f
-
-    !       derivative_int_dV   = 0.d0
-    !       derivative_int_Z_dV = 0.d0
-
-    !       ! ADD A SMALL CHANGE TO VARIABLE
-    !       EPS_JAC = F_DX( TL(boundary_nodes(JW),JEQ) )
-    !       TL(boundary_nodes(JW),JEQ) = TL(boundary_nodes(JW),JEQ) + EPS_JAC
+    !     allocate( TEMP_JAC( size(boundary_nodes), NEQ_f ) )
 
 
-    !       if (gid .eq. 1) then 
-    !           volume_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, SurfaceIntegration )
-    !           int_Z_dV_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, int_Z_dV )
+    !     TEMP_JAC  = 0.D0
+
+    !     DO JW = 1, size(boundary_nodes)
+
+    !         ! ITERATE OVER J EQUATIONS
+    !         DO JEQ = 1, NEQ_f
+
+    !             derivative_int_dV   = 0.d0
+    !             derivative_int_Z_dV = 0.d0
+
+    !             ! ADD A SMALL CHANGE TO VARIABLE
+    !             EPS_JAC = F_DX( TL(boundary_nodes(JW),JEQ) )
+    !             TL(boundary_nodes(JW),JEQ) = TL(boundary_nodes(JW),JEQ) + EPS_JAC
 
 
-    !       elseif (gid .eq. 3) then 
-    !           volume_perturbed   = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, SurfaceIntegration )
-    !           int_Z_dV_perturbed = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, int_Z_dV )
-
-    !       endif
-    !       ! *************************************************************** 
-
-    !       ! RETURN THE ORIGINAL VALUE TO THE UNKNOWN
-    !       TL(boundary_nodes(JW),JEQ) = TL(boundary_nodes(JW),JEQ) - EPS_JAC
+    !             if (gid .eq. 1) then 
+    !                 volume_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, SurfaceIntegration )
+    !                 int_Z_dV_perturbed = integrateOverAllElementsOfTheBoundary( bnd3_elements, bnd3_faces, int_Z_dV )
 
 
+    !             elseif (gid .eq. 3) then 
+    !                 volume_perturbed   = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, SurfaceIntegration )
+    !                 int_Z_dV_perturbed = integrateOverAllElementsOfTheBoundary( bnd4_elements, bnd4_faces, int_Z_dV )
 
-    !       derivative_int_dV   = ( volume_perturbed   - volume_unperturbed)    / eps_jac
+    !             endif
+    !             ! *************************************************************** 
 
-    !       derivative_int_Z_dV = ( int_Z_dV_perturbed - int_Z_dV_unperturbed ) / eps_jac
+    !             ! RETURN THE ORIGINAL VALUE TO THE UNKNOWN
+    !             TL(boundary_nodes(JW),JEQ) = TL(boundary_nodes(JW),JEQ) - EPS_JAC
 
-    !       ! TEMP_JAC(JW,JEQ) = derivative_int_Z_dV / volume_unperturbed - ( int_Z_dV_unperturbed / volume_unperturbed**2 ) * derivative_int_dV
 
-    !       TEMP_JAC(JW,JEQ) = ( int_Z_dV_perturbed / volume_perturbed - int_Z_dV_unperturbed / volume_unperturbed ) / eps_jac
-    !       ENDDO
-    !   ENDDO
 
-    !   ! STORE MATRIX Ar_f
-    !   ! NM  = NM_f(NELEM,1:NBF_2d)
+    !             derivative_int_dV   = ( volume_perturbed   - volume_unperturbed)    / eps_jac
 
-    !   DO IW = 1, size(boundary_nodes)
-    !       DO IEQ = 1, NEQ_f
-    !       ! STORE MATRIX Ar_f
-    !       JW = GNTR(boundary_nodes(IW)) + IEQ - 1
+    !             derivative_int_Z_dV = ( int_Z_dV_perturbed - int_Z_dV_unperturbed ) / eps_jac
 
-    !       ! i separated the jacobian contributions for the PV equations and
-    !       ! centroid and this subroutine only calculates the centroid, so line 2 of Ar_f
-    !       Ar_f(2,JW) = TEMP_JAC(IW,IEQ)
-    !       ENDDO
-    !   ENDDO
+    !             ! TEMP_JAC(JW,JEQ) = derivative_int_Z_dV / volume_unperturbed - ( int_Z_dV_unperturbed / volume_unperturbed**2 ) * derivative_int_dV
+
+    !             TEMP_JAC(JW,JEQ) = ( int_Z_dV_perturbed / volume_perturbed - int_Z_dV_unperturbed / volume_unperturbed ) / eps_jac
+    !         ENDDO
+    !     ENDDO
+
+    !     ! STORE MATRIX Ar_f
+    !     ! NM  = NM_f(NELEM,1:NBF_2d)
+
+    !     DO IW = 1, size(boundary_nodes)
+    !         DO IEQ = 1, NEQ_f
+    !             ! STORE MATRIX Ar_f
+    !             JW = GNTR(boundary_nodes(IW)) + IEQ - 1
+
+    !             ! i separated the jacobian contributions for the PV equations and
+    !             ! centroid and this subroutine only calculates the centroid, so line 2 of Ar_f
+    !             Ar_f(2,JW) = TEMP_JAC(IW,IEQ)
+    !         ENDDO
+    !     ENDDO
 
 
     ! END SUBROUTINE jacobianOfConstrainCentroid

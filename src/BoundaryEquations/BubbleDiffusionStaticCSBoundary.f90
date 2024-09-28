@@ -154,7 +154,7 @@ Module BubbleDiffusionStaticCSBoundary
 
 
     Function molBalance(this) Result(output)
-        Use physical_module, only: PeN
+        Use physical_module, only: PeN, pi4o3
         Use time_integration, only: dt
         use NRAPSHON_MODULE, only:iter_f
         Implicit None
@@ -227,9 +227,7 @@ Module BubbleDiffusionStaticCSBoundary
 
             call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
             if (present(kinematic_logical) .and. (kinematic_logical)) then
-                ! call Kinematic                        (element, face, TL_, RES_1, .true.)
-                ! call Kinematic_mass                   (element, face, TL_, RES_1, .true.)
-                call Kinematic_mass_gasInterface        (element, face, TL_, RES_1, .true., This%mol, this%getVolume(), This%getVelocity())
+                call Kinematic_mass_gasInterface        (element, face, TL_, RES_1, .true., This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o )
             else
                 call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
                 call Stresses                         (element, face, TL_, RES_3, .true., This%pressure )
@@ -238,13 +236,13 @@ Module BubbleDiffusionStaticCSBoundary
     
             if (FlagNR == "NRP") Then
                 if (present(kinematic_logical) .and. (kinematic_logical)) then
-                    ! call CalculateJacobianContributionsOf(Kinematic_mass                   ,element, face, TL_, RES_1)
-                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_1, This%mol, this%getVolume(), This%getVelocity())
-                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_3, 1, This%mol, this%getVolume(), This%getVelocity(),  this%gidC)
+                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_1, This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o)
+                    !Extra Unknown
+                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_1, 1, This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o,  this%gidC)
                 else
                     call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
                     call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure )
-                    !Extra Unknowns
+                    !Extra Unknown
                     call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
                 endif
           end if
@@ -253,6 +251,7 @@ Module BubbleDiffusionStaticCSBoundary
         do node_counter = 1, size(this%nodes)
             node = this%nodes(node_counter)
             call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
+            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr, this%gidP )
             ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
         enddo
 
@@ -277,6 +276,7 @@ Module BubbleDiffusionStaticCSBoundary
 
         This%InitialPressure = InitialPressure
         This%Pressure_o      = InitialPressure
+        This%Pressure        = InitialPressure
     End Subroutine setInitialPressure
 
     Subroutine setInitialVolume(This)
@@ -288,7 +288,7 @@ Module BubbleDiffusionStaticCSBoundary
     End Subroutine setInitialVolume
 
     Subroutine setInitialmol(This)
-        use physical_module, only:IdN
+        use physical_module, only:IdN, pi4o3
         Implicit None 
         Class(BubbleDiffusionStaticCS)       :: This
         ! dimensionless equation is P*V-IdN*n=0

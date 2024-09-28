@@ -2,7 +2,7 @@ Module Boundary_EquationsDO
     Use ArrayTools, Only: copyArrayToLocalValues
     use storage,    only: MATRIX_STORAGE_RESIDUAL
     use basis_calculations, only: BASIS_2d
-
+    use check_for_floating_point_exceptions
 
     Contains
 
@@ -597,7 +597,7 @@ Module Boundary_EquationsDO
 
 ! ********************************************************************
     
-     Subroutine Kinematic_mass_gasInterface( NELEM, NED, TEMP_TL, TEMP_RES, STORE, mol, volume, bvelocity )
+     Subroutine Kinematic_mass_gasInterface( NELEM, NED, TEMP_TL, TEMP_RES, STORE, mol, volume, Z_now, Z_before )
         Use VariableMapping
         Use PHYSICAL_MODULE
         Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
@@ -618,7 +618,7 @@ Module Boundary_EquationsDO
         Logical,                           Intent(In)  :: STORE
         Real(8),                           intent(in)  :: mol 
         Real(8),                           intent(in)  :: volume 
-        Real(8),                           intent(in)  :: bvelocity 
+        Real(8),                           intent(in)  :: Z_now, Z_before 
         
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         !  LOCAL VARIABLES
@@ -655,7 +655,7 @@ Module Boundary_EquationsDO
         Real(8)                                        :: BIFN, DBIR, DBIZ, SBFN
           
         Real(8)                                        :: Zo, Ro
-        Real(8)                                        :: dRdt, dZdt
+        Real(8)                                        :: dRdt, dZdt, bvelocity
     
         Integer, Dimension(NBF_2d)                     :: NM 
         Real(8), Dimension(NEQ_f)                      :: TERM_RES
@@ -667,6 +667,7 @@ Module Boundary_EquationsDO
         NM = NM_MESH(NELEM,:)
         call getBasisFunctionsAtFace(ned, bfn, dbfndx1, dbfndx2)
               
+        bvelocity = (Z_now - Z_before )/dt
         !---------------------------------------------------------------------
         !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
         !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
@@ -769,14 +770,16 @@ Module Boundary_EquationsDO
                 SBFN         = BIFN !+ tsupg*(Term_R*tR+Term_Z*tZ)*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
-                TERM_RES(getVariableId("Z")) = SBFN * (  -( nZ * (bvelocity - dZdt ) )*mol/volume + ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) )*C - (nR*dCdR + nZ*dCdZ)/PeN  )* R * dS
+                TERM_RES(getVariableId("Z")) = SBFN * (  +( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*mol &
+                                                            - volume*( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) )*C  &
+                                                                + (nR*dCdR + nZ*dCdZ)/PeN )  )* R * dS
 
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)
             end do loop_residuals_f
 
         end do loop_gauss
-      
+
         !*********************************************************************
         !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
         !*********************************************************************

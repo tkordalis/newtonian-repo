@@ -197,7 +197,7 @@ contains
 
             output(j)  =  1.d0 - erf(Svar)
 
-            call check_fp_exceptions(Svar, 'Svar')
+            ! call check_fp_exceptions(Svar, 'Svar')
         enddo
 
         output = Cao_o_Cinf + output*(Cao_o_Cinf-1.d0)

@@ -71,6 +71,7 @@ MODULE PHYSICAL_MODULE
   
     Real(8)                  :: Rtank
     Real(8), PARAMETER       :: pi            = 4.d0*atan(1.d0)
+    Real(8), PARAMETER       :: pi4o3         = 4.d0*pi/3.d0
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
     ! ! !_______________________________________________________________________________
@@ -116,6 +117,7 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
     
     Real(8), parameter       :: length_char   =  0.36d-3          ! m
+    Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
     
  
 
@@ -162,6 +164,7 @@ MODULE PHYSICAL_MODULE
 
 
       Subroutine DIMENSIONLESS_NUMBERS
+        use check_for_floating_point_exceptions
 
         Implicit None
       
@@ -186,7 +189,7 @@ MODULE PHYSICAL_MODULE
         write(*,*) ' '
         write(*,*) ' '
         
-
+        
         ! pause
         eo = [0.1d0, 0.d0]
         ! eo = [0.d0, 0.1d0]

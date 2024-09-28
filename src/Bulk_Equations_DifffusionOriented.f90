@@ -47,6 +47,7 @@ Module BulkEquations
         Use MESH_MODULE,             Only: Xm, Ym
         Use TIME_INTEGRATION,        Only: Dt, increment
         use geometry,                only: distance, trace, secondInvariant
+
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         !  ARGUMENTS
@@ -262,6 +263,8 @@ Module BulkEquations
             ENDDO LOOP_RESIDUALS_f
 
         ENDDO LOOP_GAUSS
+        
+
         !---------------------------------------------------------------------
         !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
         !---------------------------------------------------------------------

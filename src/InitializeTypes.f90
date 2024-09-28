@@ -45,68 +45,44 @@ Module InitialConditions
     Use GLOBAL_ARRAYS_MODULE, only : TL, TLo, TLb, TLp
     Use RemeshVariables
 
+
     contains
     subroutine setInitalConditions
-    Implicit None
-    ! integer :: i,j
-    ! I should print in the title of the .plts the Remesh_counter to read and define the boundaries correctly regardless
-    Remesh_counter = 0
-    TLo(:,:) = 0.D0
-    TLo(:,getVariableId("Z"))   = Xm
-    TLo(:,getVariableId("R"))   = Ym
-    TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( initial_position - TLo(:,getVariableId("Z")) )
-    TLo(:,getVariableId("C"))   = 1.d0
-    TLb = TLo
-    TL  = TLo
-    TLp = TL
+        Implicit None
+        ! integer :: i,j
+        ! I should print in the title of the .plts the Remesh_counter to read and define the boundaries correctly regardless
+        Remesh_counter = 0
+        TLo(:,:) = 0.D0
+        TLo(:,getVariableId("Z"))   = Xm
+        TLo(:,getVariableId("R"))   = Ym
+        TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( initial_position - TLo(:,getVariableId("Z")) )
+        TLo(:,getVariableId("C"))   = 1.d0
 
-    Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
-    Pressure_Bubble  = Pressure_Bubbleo
-    
-    call bubble%setInitialPressure(Pressure_Bubble)
-    call bubble%setInitialvolume()
-    call bubble%setInitialmol()
+        Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
+        Pressure_Bubble  = Pressure_Bubbleo
 
-    Mol_Bubbleo = bubble%getmol()
-    Mol_Bubble   = Mol_Bubbleo
+        ! TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
+        TLb = TLo
+        TL  = TLo
+        TLp = TL
 
-    
+        
+        call bubble%setInitialPressure(Pressure_Bubble)
+        call bubble%setInitialvolume()
+        call bubble%setInitialmol()
 
-    print*, ' '
-    ! print*, 'initialMol = ', bubble%Initialmol
-    ! print*, 'initialMol = ', bubble%Initialmol/bubble%InitialVolume 
-    print*, 'KoN * Pambient = ', PeN * KoN
+        Mol_Bubbleo = bubble%getmol()
+        Mol_Bubble   = Mol_Bubbleo
 
-    print*, ' '
-    ! write(*,"(10X,A15,2X,F16.8)") "velocity_char ="    , velocity_char
-    ! write(*,"(10X,A15,2X,F16.8)") "time_char ="    , time_char
-    ! write(*,"(10X,A15,2X,E12.5)") "P ="    , bubble%InitialPressure* Pchar
-    ! write(*,"(10X,A15,2X,E12.5)") "V ="    , bubble%InitialVolume * length_char**3.d0
-    ! write(*,"(10X,A15,2X,E12.5)") "PV ="    , bubble%InitialPressure* Pchar * bubble%InitialVolume * length_char**3.d0
-    ! write(*,"(10X,A15,2X,E12.5)") "RT ="    , Rgas*Tgas
-    ! write(*,"(10X,A15,2X,E12.5)") "n ="    , bubble%InitialPressure* Pchar * bubble%InitialVolume * length_char**3.d0/(Rgas*Tgas)
-    ! write(*,"(10X,A15,2X,E12.5)") "n_initMol ="    , bubble%Initialmol*cchar*length_char**3.d0
-    ! write(*,"(10X,A15,2X,E12.5)") "n_initMol2 ="    , bubble%InitialPressure* bubble%InitialVolume/IdN*cchar*length_char**3.d0
-    ! print*, 'initialMol = ', Mol_Bubbleo
-    ! print*, 'cchar = ', cchar 
-    ! print*, 'Pressure_Bubble = ', Pressure_Bubble*Pchar
-    ! print*, 'NondimPressure_Bubble = ', Pressure_Bubble
-    ! print*, 'Volume_Bubble = ', bubble%InitialVolume*length_char**3
-    ! print*, 'NondimVolume_Bubble = ', bubble%InitialVolume
-    ! print*, 'NondimPV = ', Pressure_Bubble*bubble%InitialVolume
-    ! print*, 'Mol_Bubble = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas
-    ! print*, 'Mol_Bubble/4pi/3 = ', Pressure_Bubble*Pchar*bubble%InitialVolume*length_char**3/Rgas/Tgas/(4.d0*pi/3.d0)
-    ! print*, '2--Mol_Bubble = ', Cchar*length_char**3
-    ! print*, 'NondimMol_Bubble = ', Pressure_Bubble*bubble%InitialVolume/IdN
-    ! print*, 'NondimMol_Bubble/4pi/3 = ', Pressure_Bubble*bubble%InitialVolume/IdN/4.1889d0
-    ! pause
-    
-    ! do i=1, size(tlo,1)
-    !     write(404,'(f16.8,3x)') (tlo(i,j),j=1,size(tlo,2))
-    ! enddo
-   
-    ! call check_fp_exceptions()
-    
+
+        print*, ' '
+        ! write(*, '(6(f20.12, 2x))') bubble%getVolume(), mol_bubble, mol_bubble/bubble%getVolume()
+        ! write(*, '(6(A16,5x,E14.7))') 'initialMOl=',mol_bubble, 'initialPressure=',Pressure_Bubble
+        write(*, *) 'KoN*Pressure=',KoN*Pressure_Bubble
+        ! write(*, '(6(f20.12, 2x))') mol_bubble/bubble%getVolume(), KoN*bubble%pressure, Pchar/(Cchar*Rgas*Tgas)*bubble%pressure 
+        print*, ' '
+
+        pause
     end subroutine setInitalConditions
 end Module InitialConditions
 

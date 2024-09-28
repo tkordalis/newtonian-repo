@@ -15,6 +15,7 @@ Module ExtraEquations
 
 
 
+
     Private
     Public :: SurfaceIntegration, int_Z_dV, DragForceCalculation, int_n_dot_F, int_n_dot_u_minus_umesh, int_n_dot_gradC, int_n_dot_umesh, int_n_dot_u
 
@@ -132,9 +133,8 @@ term_3_ = 0.d0
         TEMP_RES = 2.d0*pi*TERM_1
         term_2_ = 2.d0*pi*term_2_
         term_3_ = 2.d0*pi*term_3_
-        ! write(*,'(I15, 2x, f27.17)'), nelem, term_2_ 
-        ! write(*,'(I15, 2x, f27.17)'), nelem, term_3_ 
-        ! pause
+
+
     End Function int_n_dot_F
 
 
@@ -618,6 +618,8 @@ term_3_ = 0.d0
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
         TEMP_RES = 2.d0*pi*TERM_1 / 4.d0
+
+
 
     End Function int_Z_dV
 

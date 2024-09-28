@@ -83,8 +83,8 @@ Module AmbientHenryBoundary
         Integer                              :: iel, element, face
 
         
-        vm_ambient = dVtankdt / (pi*Rtank**2)
-        ! vm_ambient = 0.d0
+        ! vm_ambient = dVtankdt / (pi*Rtank**2)
+        vm_ambient = 0.d0
        
         do node_counter = 1, size(this%nodes)
             node = this%nodes(node_counter)
