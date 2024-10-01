@@ -170,11 +170,11 @@ module solveAllExtraConstraints
             
 
 
-            call symmetryaxis%applyBoundaryConditions(FlagNR)
+            call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
             Call bubble%applyBoundaryConditions(FlagNR, .true.)
-            call wall%applyBoundaryConditions(FlagNR)
+            call wall%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
 
-            call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time) )
+            call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .false. )
 
     End Subroutine applyBCs_solveExtraConstraints
     

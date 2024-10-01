@@ -58,7 +58,7 @@ Module SymmetryDiffusionBoundary
     End Subroutine setPosition
 
 
-    Subroutine applyBoundaryConditions(This, FlagNr)
+    Subroutine applyBoundaryConditions(This, FlagNr, naturalBCs)
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
@@ -67,6 +67,8 @@ Module SymmetryDiffusionBoundary
         Implicit None 
         Class(SymmetryDiffusion) , Intent(In)         :: This 
         Character(len=3), Intent(In)         :: FlagNr
+        logical,          Intent(In)         :: naturalBCs
+
 
         Real(8), Dimension(:,:), Allocatable :: TL_
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2
@@ -74,34 +76,40 @@ Module SymmetryDiffusionBoundary
         Integer                              :: element 
         Integer                              :: face
 
-        do iel = 1, this%nelem
-            element =This%elements(iel)
-            face    =This%faces   (iel)
-            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+         if (naturalBCs) then
 
-            select case(this%position)
-            case('X')
-                call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
-                if (FlagNR == "NRP") Then
-                    call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
-                end if
-            case('Y')
-                call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
-                if (FlagNR == "NRP") Then
-                    call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
-                end if
-            case default
-                    Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."
-            End Select
-        end do
-        
 
-        do inode = 1, size(this%nodes)
-            node = this%nodes(inode)
-            call ApplyDirichletAtNode_(node, "Vr", 0.d0      , FlagNr )
-            Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
-            ! Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
-        end do
+        else
+
+            do iel = 1, this%nelem
+                element =This%elements(iel)
+                face    =This%faces   (iel)
+                call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+
+                select case(this%position)
+                case('X')
+                    call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
+                    if (FlagNR == "NRP") Then
+                        call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
+                    end if
+                case('Y')
+                    call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
+                    if (FlagNR == "NRP") Then
+                        call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
+                    end if
+                case default
+                        Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."
+                End Select
+            end do
+            
+
+            do inode = 1, size(this%nodes)
+                node = this%nodes(inode)
+                call ApplyDirichletAtNode_(node, "Vr", 0.d0      , FlagNr )
+                Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
+                ! Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
+            end do
+        endif
 
         If ( Allocated(TL_) ) Deallocate(TL_)
 

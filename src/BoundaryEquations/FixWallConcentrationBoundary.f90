@@ -53,23 +53,28 @@ Module FixWallConcentrationBoundary
 
 
 
-    Subroutine applyBoundaryConditions(This, FlagNr)
+    Subroutine applyBoundaryConditions(This, FlagNr, naturalBCs)
         Use MESH_MODULE,                 only: Xm, Ym
         Implicit None 
         Class(FixWallConcentration)  , Intent(In)         :: This 
         Character(len=3), Intent(In)         :: FlagNr
+        logical,          Intent(In)         :: naturalBCs
+
 
         Integer                              :: inode, node
 
-        do inode = 1, size(this%nodes)
-            node = this%nodes(inode)
-            call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
-            call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
-            call ApplyDirichletAtNode_(node, "Z", Xm(node), FlagNr )
-            call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
+         if (naturalBCs) then
 
-            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr )
-        end do 
+
+        else
+            do inode = 1, size(this%nodes)
+                node = this%nodes(inode)
+                call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
+                call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
+                call ApplyDirichletAtNode_(node, "Z", Xm(node), FlagNr )
+                call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
+            end do
+        endif 
 
     End Subroutine applyBoundaryConditions
 
