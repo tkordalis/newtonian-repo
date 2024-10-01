@@ -38,7 +38,7 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere  = 300
+NumSegmentsOnSphere  = 600
 NumSegmentsOnAmbient = 30
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere

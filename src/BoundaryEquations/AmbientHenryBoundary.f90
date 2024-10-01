@@ -103,6 +103,7 @@ Module AmbientHenryBoundary
         enddo
 
         node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
+        ! node = this%nodes(  minloc( Ym(this%nodes), dim=1 )  )
         call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
         
         

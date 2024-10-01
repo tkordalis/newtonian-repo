@@ -731,14 +731,10 @@ Module Boundary_EquationsDO
             ! to take into account the time variation
             !*********************************************************************
             Ro = 0.d0; Zo = 0.d0 
-            Rb = 0.d0; Zb = 0.d0    
 
             do ii = 1, nbf_2d
                 Ro = Ro + TLo(NM(ii), getVariableId("R")) * bfn(ii,kk)
                 Zo = Zo + TLo(NM(ii), getVariableId("Z")) * bfn(ii,kk)
-
-                Rb = Rb + TLb(NM(ii), getVariableId("R")) * bfn(ii,kk)
-                Zb = Zb + TLb(NM(ii), getVariableId("Z")) * bfn(ii,kk)
             end do
             !*********************************************************************
             ! Calculate the time derivatives of the node
@@ -769,8 +765,8 @@ Module Boundary_EquationsDO
                 SBFN         = BIFN !+ tsupg*(Term_R*tR+Term_Z*tZ)*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
-                TERM_RES(getVariableId("Z")) = SBFN * (  +( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*bmol &
-                                                            - bvolume*( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) )*C  &
+                TERM_RES(getVariableId("Z")) = SBFN * (  +( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*bmol/bvolume &
+                                                            - ( ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) )*C  &
                                                                 + (nR*dCdR + nZ*dCdZ)/PeN )  )* R * dS
 
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
@@ -1762,7 +1758,8 @@ Module Boundary_EquationsDO
     
                 TERM_RES = 0.D0
     
-                TERM_RES(getVariableId("R")) = e_bnd*dQdtheta*DFDL0(IW,KK)
+                ! TERM_RES(getVariableId("R")) = e_bnd*dQdtheta*DFDL0(IW,KK)
+                TERM_RES(getVariableId("R")) = dQdtheta*DFDL0(IW,KK)
     
                 ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)*WET 

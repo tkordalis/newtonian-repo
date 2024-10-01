@@ -807,7 +807,7 @@ Module ExtraEquations
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
             call getNormalVectorAtFace( [dzdc, dzde, drdc, drde], &
             ned, nr, nz, dL,        &
-            normalize = .true.)
+            normalize = .true., forceOnObject = .true.)
             WET = WO_1d(KK)*dL
 
             TEMP_RES = TEMP_RES + (  nr * R  + nz * Z  )*R*WET
@@ -819,7 +819,7 @@ Module ExtraEquations
         ! Dynamics and motion of a gas bubble in a viscoplastic medium under
         ! acoustic excitation, 2019
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        TEMP_RES = - 2.d0* PI * TEMP_RES / 3.d0
+        TEMP_RES = 2.d0* PI * TEMP_RES / 3.d0
 
     End Function SurfaceIntegration
 

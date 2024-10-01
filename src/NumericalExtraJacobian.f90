@@ -273,11 +273,6 @@ Module NumericalBoundaryJacobian
         Use ELEMENTS_MODULE,      Only: NBF_2d, NEQ_f, NUNKNOWNS_f
         Use ENUMERATION_MODULE,   Only: NM_f
         Use CSR_STORAGE,          Only: A_f, IA_f, CSR_f, NZ_f
-        ! Use DirichletBoundaries,         Only: integrateOverAllElementsOfTheBoundary
-        ! Use BOUNDARY_ENUMERATION_MODULE, Only: bnd3_elements, bnd3_faces
-        ! Use ENUMERATION_MODULE,   Only: NM_MESH
-        ! Use GLOBAL_ARRAYS_MODULE, Only: TL
-        ! Use ExtraEquations, only: SurfaceIntegration, int_Z_dV
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         !  ARGUMENTS
@@ -407,7 +402,7 @@ Module NumericalBoundaryJacobian
         if ( gid == 1 ) Then 
 
             gVal = gVal1 
-            eps  = F_DX( gVal1 )
+            eps  = F_DX( gVal )
 
             gVal = gVal + eps 
             call equation( NELEM, NED, TEMP_TL, dTEMP_RES, .FALSE., gVal )

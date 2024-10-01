@@ -99,8 +99,8 @@ Module SymmetryDiffusionBoundary
         do inode = 1, size(this%nodes)
             node = this%nodes(inode)
             call ApplyDirichletAtNode_(node, "Vr", 0.d0      , FlagNr )
-            ! Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
-            Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
+            Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
+            ! Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
         end do
 
         If ( Allocated(TL_) ) Deallocate(TL_)

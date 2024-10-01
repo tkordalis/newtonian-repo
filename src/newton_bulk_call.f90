@@ -143,47 +143,35 @@ module newton_bulk_call
             print*, "% norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f))/RES_NORM, "% norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))/RES_NORM
             print*, "  "
 
-            !   jj=1
-            !   kk=0
-            !   do ii = 1, size(B_f)
-            !      if (jj .gt. NEQ_f) jj=1
-            !      if (jj .eq. 1) then
-            !        kk=kk+1
-            !      endif
-            ! ! !        ! if ( abs(B_f(ii)) .gt. 1.d0) then 
-            !        if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
-            !          print*,'global_node=', kk
-            !          print*, ' ' 
-            !          print '(A9,2x,f10.5,2x,f10.5,2x,f10.5)','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
-            !          print*, ' ' 
-            !          print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
-            !          print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+              ! jj=1
+              ! kk=0
+              ! do ii = 1, size(B_f)
+              !    if (jj .gt. NEQ_f) jj=1
+              !    if (jj .eq. 1) then
+              !      kk=kk+1
+              !    endif
+              !      !! if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
+              !      if ( sqrt(Xm(kk)**2 + Ym(kk)**2) .lt. 1.02d0) then 
+              !        print*,'global_node=', kk
+              !        print*, ' ' 
+              !        print '(A9,3x,3x,3(f10.5,3x))','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
+              !        print*, ' ' 
+              !        !! print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
+              !        write(*,'(a9,3x,3(a8,3x))') 'variable','        ', 'residual' ,'        ',  'relative residual'
+              !        !! print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+              !        write(*,'(a9,3x,3(e14.7,3x))')  getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
 
-            ! !          ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM
-            !          ! print*, ' ' 
-            !          print*, ' ' 
-            !          print*, ' ' 
-            !          print*, ' //////////////////////////////////////////////////////// ' 
-            !          pause
-            !        endif
-            ! !      ! endif
-            !      jj=jj+1
-            !   enddo
-            ! endif
-                     ! write(404,*),  ' '
-                     ! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), 1, Be_f(1), Be_f(1)/ RES_NORM, RES_NORM
-
-            
-
-
-           
-
-
-            ! print *, sqrt(DOT_PRODUCT(B_f,B_f))
-            ! print *, sqrt(DOT_PRODUCT(Be_f,Be_f))
-            ! pause
-
-
+              !        !! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM
+              !        !! print*, ' ' 
+              !        print*, ' ' 
+              !        print*, ' ' 
+              !        print*, ' //////////////////////////////////////////////////////// ' 
+              !        pause
+              !      endif
+              !      !! endif
+              !    jj=jj+1
+              ! enddo
+ 
             
             ! ----------------------------------------------------------------------
             !    LU DECOMPOSITION
@@ -350,12 +338,12 @@ module newton_bulk_call
             mol_bubble      = mol_bubble      - xF*Se_f(2)
             Volume_bubble   = Volume_bubble   - xF*Se_f(3)
             Velocity_bubble = Velocity_bubble - xF*Se_f(4)
-            print*, 'pressure = ', Pressure_bubble,'pressure correction',Se_f(1)/COR_NORM_NEW_f
-            print*, 'mol = ', mol_bubble,'mol correction',Se_f(2)/COR_NORM_NEW_f
+            ! print*, 'pressure = ', Pressure_bubble,'pressure correction',Se_f(1)/COR_NORM_NEW_f
+            ! print*, 'mol = ', mol_bubble,'mol correction',Se_f(2)/COR_NORM_NEW_f
 
             ! call bubble%setPressure(Pressure_bubble)
             ! call bubble%setmol(mol_bubble)
-
+            write(400,'(i3,3x,4(f25.15,3x))') iter_f, Pressure_bubble, mol_bubble, Volume_bubble, Velocity_bubble
 
             filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 
 

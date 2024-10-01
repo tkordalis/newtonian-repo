@@ -182,8 +182,8 @@ Module IO_module
                 tecfile  = Tecplot_File( datapacking = datapack, femtype = "FETRIANGLE")
         
                 title = "" 
-                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *, Remesh_counter = *", "*", &
-                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble), toStr(Remesh_counter) ] )
+                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *, volume_bubble = *, velocity_bubble = *", "*", &
+                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble), toStr(volume_bubble), toStr(velocity_bubble) ] )
                 
         
                 call tecfile%setTitle   (title)
@@ -196,7 +196,7 @@ Module IO_module
                 call tecfile%addVariable("Vr"      , Solution(:, getVariableId("Vr"  )))
                 call tecfile%addVariable("P"      , Solution(:, getVariableId("P"  )))
                 call tecfile%addVariable("C"      , Solution(:, getVariableId("C"  )))
-                call tecfile%addVariable("Canalytic" , CanalyticLandau( Solution(:,:) ) )
+                ! call tecfile%addVariable("Canalytic" , CanalyticLandau( Solution(:,:) ) )
                 
 
                 call tecfile%addElements( elements )

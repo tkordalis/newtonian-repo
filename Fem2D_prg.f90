@@ -144,7 +144,7 @@ PROGRAM FEM2D
         call WriteBubbleFiles(TIME)
 
 
-        if ( (mod(increment,2) .eq. 0) ) then
+        if ( (mod(increment,1) .eq. 0) ) then
             call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
             ! call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt 
         endif

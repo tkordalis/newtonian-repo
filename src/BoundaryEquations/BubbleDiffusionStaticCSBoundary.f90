@@ -123,7 +123,13 @@ Module BubbleDiffusionStaticCSBoundary
         output = this%pressure * this%Volume - IdN*this%mol
 
         Ar_f(this%gidP,:) = 0.d0
-     
+
+        write(*,*) ' '
+        write(*,*) '------------------ PressureVolumeMolConservation ------------------'
+        write(*,'(5(a14,4x))') 'this%pressure' , 'this%Volume' , 'this%mol', 'output'
+        write(*,'(5(e14.7,4x))') this%pressure , this%Volume , this%mol, output
+        write(*,*) ' '
+        pause
     end Function PressureVolumeMolConservation
 
 
@@ -142,7 +148,13 @@ Module BubbleDiffusionStaticCSBoundary
         output = (this%mol - this%mol_o)/dt + totalMolFlux
      
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
-
+        
+        write(*,*) ' '
+        write(*,*) '------------------ molBalance ------------------'
+        write(*,'(5(a14,4x))') 'this%mol', 'this%mol_o' , 'totalMolFlux', 'output'
+        write(*,'(5(e14.7,4x))') this%mol, this%mol_o , totalMolFlux, output
+        write(*,*) ' '
+        pause
     end Function molBalance
 
 
@@ -158,7 +170,14 @@ Module BubbleDiffusionStaticCSBoundary
 
         output = - this%volume + calculatedVolume
 
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gidV, SurfaceIntegration ) 
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidV, SurfaceIntegration )
+
+        write(*,*) ' '
+        write(*,*) '------------------ volumeEquation ------------------'
+        write(*,'(5(a14,4x))') 'this%volume', 'calculatedVolume', 'output'
+        write(*,'(5(e14.7,4x))') this%volume, calculatedVolume, output
+        write(*,*) ' '
+        pause
 
     end Function volumeEquation
 
@@ -177,6 +196,13 @@ Module BubbleDiffusionStaticCSBoundary
         output = - this%velocity*this%volume*dt - this%volume*this%Zcenter_o + calculatedInt_Z_dV
 
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidU, int_Z_dV ) 
+
+        write(*,*) ' '
+        write(*,*) '------------------ velocityEquation ------------------'
+        write(*,'(5(a14,4x))') 'this%velocity', 'calculatedInt_Z_dV', 'output'
+        write(*,'(5(e14.7,4x))') this%velocity, calculatedInt_Z_dV, output
+        write(*,*) ' '
+        pause
 
     end Function velocityEquation
 
@@ -205,8 +231,11 @@ Module BubbleDiffusionStaticCSBoundary
 
         if (present(kinematic_logical) .and. (kinematic_logical)) then
             call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
-            If (FlagNR == "NRP") &
+            call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfResidual)
+            If (FlagNR == "NRP") then
                 call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
+                call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfJacobian)
+            endif
         endif
 
         
@@ -217,8 +246,8 @@ Module BubbleDiffusionStaticCSBoundary
             call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
             if (present(kinematic_logical) .and. (kinematic_logical)) then
                 call Kinematic_mass_gasInterface        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
-            else
                 call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
+            else
                 call Stresses                         (element, face, TL_, RES_stresses, .true., This%pressure )
             endif
 
@@ -226,12 +255,14 @@ Module BubbleDiffusionStaticCSBoundary
             if (FlagNR == "NRP") Then
                 if (present(kinematic_logical) .and. (kinematic_logical)) then
                     call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
+                    
+                    call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
                     !Extra Unknown
                     call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
                     call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
                     call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                    
                 else
-                    call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
                     call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_stresses, This%pressure )
                     !Extra Unknown
                     call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_stresses, 1, This%pressure,   this%gidP)
