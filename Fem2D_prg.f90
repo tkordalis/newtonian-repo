@@ -109,9 +109,9 @@ PROGRAM FEM2D
     call setInitalConditions()
 
     if (ReadSolutionFromFile) then
-        call sol_b%getSolutionVars(timeb, TLb, increment, Pressure_Bubbleo, mol_Bubbleo  )
-        call sol_o%getSolutionVars(timeo, TLo, increment, Pressure_Bubbleo, mol_Bubbleo )
-        call sol  %getSolutionVars(time , TL , increment, Pressure_Bubble, mol_Bubble  )
+        call sol_b%getSolutionVars(timeb, TLb, increment, Pressure_Bubbleo, mol_Bubbleo, volume_bubbleo, velocity_bubbleo )
+        call sol_o%getSolutionVars(timeo, TLo, increment, Pressure_Bubbleo, mol_Bubbleo, volume_bubbleo, velocity_bubbleo )
+        call sol  %getSolutionVars(time , TL , increment, Pressure_Bubble,  mol_Bubble , volume_bubble , velocity_bubble  )
     endif
 
     call WriteBubbleFiles(TIME)

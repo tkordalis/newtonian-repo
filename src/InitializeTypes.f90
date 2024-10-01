@@ -21,16 +21,23 @@ Module BoundaryConditions
         call symmetryaxis%setPosition('X')
 
         bubble          = NewBubbleDiffusionStaticCS (bnd3_elements, bnd3_faces)
-        call bubble%setProperties( gidP=1, gidC=1 )
+        call bubble%setProperties( gidP=1, gidC=2, gidV=3, gidU=4 )
 
         ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)
 
         if (increment .gt. 1) then
-            call bubble%setPressure(Pressure_Bubble)
-            call bubble%setmol(mol_bubble)
-            call bubble%setmol_o(mol_bubbleo)
-            call bubble%setCentroid_o()
+           
+            call bubble%setPressure( Pressure_bubble )
+            call bubble%setmol     ( mol_bubble      )
+            Call bubble%setVolume  ( Volume_bubble   )
+            Call bubble%setVelocity( Velocity_bubble )
+
+            call bubble%setPressure_o( Pressure_bubbleo )
+            call bubble%setmol_o     ( mol_bubbleo      )
+            Call bubble%setVolume_o  ( Volume_bubbleo   )
+            Call bubble%setVelocity_o( Velocity_bubbleo )
+            Call bubble%setZcenter_o()
         endif
        
     End Subroutine DefineTheBoundaries
@@ -70,9 +77,17 @@ Module InitialConditions
         call bubble%setInitialPressure(Pressure_Bubble)
         call bubble%setInitialvolume()
         call bubble%setInitialmol()
+        call bubble%setInitialVelocity()
 
         Mol_Bubbleo = bubble%getmol()
-        Mol_Bubble   = Mol_Bubbleo
+        Mol_Bubble  = Mol_Bubbleo
+
+        volume_bubbleo = bubble%getVolume()
+        volume_bubble  = volume_bubbleo
+
+        velocity_bubbleo = bubble%getVelocity()
+        velocity_bubble  = velocity_bubbleo
+
 
 
         print*, ' '
@@ -96,7 +111,7 @@ module solveAllExtraConstraints
     Implicit None 
     
     contains
-    Subroutine applyBCs_solveExtraConstraints( FlagNR, BubblePressure, BubbleMol )
+    Subroutine applyBCs_solveExtraConstraints( FlagNR, BubblePressure, BubbleMol, BubbleVolume, BubbleVelocity )
         use CSR_STORAGE, only: Ah_f
         use FLOW_ARRAYS_MODULE, only: Be_f
         use Physical_module, only: PeN, IdN
@@ -106,18 +121,47 @@ module solveAllExtraConstraints
         character(*),                    intent(in)  :: FlagNR
         Real(8),                         intent(in)  :: BubblePressure
         Real(8),                         intent(in)  :: BubbleMol
-        Real(8)                                       :: dVtankdt
+        Real(8),                         intent(in)  :: BubbleVolume
+        Real(8),                         intent(in)  :: BubbleVelocity
+        Real(8)                                      :: dVtankdt
 
             Ah_f = 0.d0
             Call bubble%setPressure( BubblePressure )
-            Call bubble%setmol( BubbleMol )
+            Call bubble%setmol     ( BubbleMol      )
+            Call bubble%setVolume  ( BubbleVolume   )
+            Call bubble%setVelocity( BubbleVelocity )
             Call bubble%applyBoundaryConditions(FlagNR)
+            
+
             Be_f(1) = bubble%PressureVolumeMolConservation()
+            
             Ah_f(1,1) = bubble%getVolume()
             Ah_f(1,2) = -IdN
+            Ah_f(1,3) = bubble%getPressure()
+            Ah_f(1,4) = 0.d0
+
 
             Be_f(2) = bubble%molBalance()
+
+            Ah_f(2,1) = 0.d0
             Ah_f(2,2) = 1.d0/dt
+            Ah_f(2,3) = 0.d0
+            Ah_f(2,4) = 0.d0
+
+
+            Be_f(3) = bubble%volumeEquation()
+
+            Ah_f(3,1) = 0.d0
+            Ah_f(3,2) = 0.d0
+            Ah_f(3,3) = -1.d0
+            Ah_f(3,4) = 0.d0
+
+            Be_f(4) = bubble%velocityEquation()
+
+            Ah_f(4,1) = 0.d0
+            Ah_f(4,2) = 0.d0
+            Ah_f(4,3) = -dt*bubble%getVelocity() - bubble%getZcenter_o()
+            Ah_f(4,4) = -dt*bubble%getVolume()
 
             ! Be_f(1) = bubble%volumeConservation()
             ! Ah_f(:,:) = 0.d0
@@ -148,12 +192,12 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(7) :: title_results
+        character(18), dimension(8) :: title_results
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
-        title_results = [ 'time', 'displacement', 'velocity', 'pressure', 'volume', 'ChamberP', 'mol' ]
+        title_results = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'volumeRateOfChange' ,  'ChamberP' ]
         do i=1,size(title_results)
             write(20,'(A17,3x)', advance='no') title_results(i)
         enddo
@@ -168,7 +212,7 @@ Module BubbleOutput
         Implicit none
         Real(8), Intent(In) :: Time
 
-        write(20,'(7(f16.7,3x))') TIME, bubble%getCentroid(), bubble%getVelocity(), Pressure_Bubble, bubble%getVolume(), PressureChamber(time), bubble%getmol()
+        write(20,'(8(f16.7,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%getZcenter(), bubble%getdVtankdt(), PressureChamber(time)
         
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

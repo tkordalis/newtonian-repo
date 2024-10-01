@@ -157,7 +157,7 @@ MODULE PHYSICAL_MODULE
 
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
-    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble, mol_bubbleo, mol_bubble
+    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble, mol_bubbleo, mol_bubble, volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo
     Real(8)                  :: ambient_position_o, ambient_position, vm_ambient
   
     Contains
@@ -228,7 +228,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.02d0
+        Dt_constant = 0.005d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
@@ -260,7 +260,7 @@ Module ELEMENTS_MODULE
 
     !   NUMBER OF EQUATIONS
     Integer, Parameter:: NEQ_f = 6             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
-    Integer, Parameter:: NEX_f = 2 
+    Integer, Parameter:: NEX_f = 4 
 
     !   NUMBER OF ELEMENTS
     Integer :: NEL_1d                 ! TOTAL NUMBER OF 1D ELEMENTS

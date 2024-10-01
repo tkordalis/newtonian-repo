@@ -132,7 +132,7 @@ module newton_bulk_call
            !$OMP END PARALLEL DO
               
             
-            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble )
+            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble, Volume_bubble, Velocity_bubble )
 
 
             ! CALCULATE RESIDUAL NORM
@@ -241,7 +241,7 @@ module newton_bulk_call
 
 
             DO I = 1, SIZE(Bi_f)
-              Bi_f(I) = DOT_PRODUCT(Ar_f(I,:),Sb_f) - Be_f(I)
+                Bi_f(I) = DOT_PRODUCT(Ar_f(I,:),Sb_f) - Be_f(I)
             ENDDO
 
             N_dense = Nex_f
@@ -262,7 +262,7 @@ module newton_bulk_call
             !    CALCULATE WHOLE SOLUTION
             !-------------------------------------------------------------
             DO I = 1, SIZE(Bw_f)
-              Bw_f(I) = B_f(I) - DOT_PRODUCT(Ac_f(I,:),Se_f)
+                Bw_f(I) = B_f(I) - DOT_PRODUCT(Ac_f(I,:),Se_f)
             ENDDO
 
             ! PHASE_f     = 33  ! ONLY SOLUTION
@@ -348,6 +348,8 @@ module newton_bulk_call
 
             Pressure_bubble = Pressure_bubble - xF*Se_f(1)
             mol_bubble      = mol_bubble      - xF*Se_f(2)
+            Volume_bubble   = Volume_bubble   - xF*Se_f(3)
+            Velocity_bubble = Velocity_bubble - xF*Se_f(4)
             print*, 'pressure = ', Pressure_bubble,'pressure correction',Se_f(1)/COR_NORM_NEW_f
             print*, 'mol = ', mol_bubble,'mol correction',Se_f(2)/COR_NORM_NEW_f
 
@@ -366,8 +368,11 @@ module newton_bulk_call
 
         ENDDO LOOP_NEWTON_RAPSHON_f
 
-        call bubble%setPressure(Pressure_bubble)
-        call bubble%setmol(mol_bubble)
+        call bubble%setPressure( Pressure_bubble )
+        call bubble%setmol     ( mol_bubble      )
+        Call bubble%setVolume  ( Volume_bubble   )
+        Call bubble%setVelocity( Velocity_bubble )
+        Call bubble%setZcenter_o()
 
         ! If convergence is achieved, remove iteration_*.plt
         call execute_command_line("rm -f Iteration_*.plt")

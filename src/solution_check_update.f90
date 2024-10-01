@@ -180,8 +180,9 @@ module solution_check_update
         use BoundaryConditions
         USE GLOBAL_ARRAYS_MODULE
         USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb
-        USE physical_module, only: mol_bubble, mol_bubbleo, Pressure_bubble, Pressure_bubbleo, &
-                                    ambient_position_o
+        USE physical_module, only: Pressure_bubble, Pressure_bubbleo, mol_bubble, mol_bubbleo, &
+                                    volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo, &
+                                    ambient_position_o, vm_ambient
 
         IMPLICIT NONE
         ! ARGUMENTS
@@ -190,17 +191,20 @@ module solution_check_update
         ! LOCAL VARIABLES
         REAL(8) :: Lb, Lo, L
 
-        
-        mol_bubbleo          = mol_bubble
-
         Pressure_bubbleo     = Pressure_bubble
+        mol_bubbleo          = mol_bubble
+        volume_bubbleo       = volume_bubble
+        velocity_bubbleo     = velocity_bubble
+        
+
 
         ambient_position_o = ambient_position_o + dt*vm_ambient
         
-        call bubble%setCentroid_o()
-        call bubble%setVolume_o()
-        call bubble%setmol_o(mol_bubble)
         call bubble%setPressure_o(Pressure_bubbleo)
+        call bubble%setmol_o     (mol_bubble      )
+        call bubble%setVolume_o  (volume_bubbleo  )
+        call bubble%setVelocity_o(velocity_bubbleo)
+        call bubble%setZcenter_o ()
 
         if (INCREMENT.GT.2) then 
             CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)

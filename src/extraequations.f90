@@ -72,9 +72,6 @@ Module ExtraEquations
         !---------------------------------------------------------------------
         TEMP_RES = 0.D0
         TERM_1   = 0.D0
-term_2_ = 0.d0
-term_3_ = 0.d0
-
         !---------------------------------------------------------------------
         !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
         !---------------------------------------------------------------------
@@ -117,23 +114,12 @@ term_3_ = 0.d0
             ! TERM_1  = TERM_1 + ( (nR*dCdR + nZ*dCdZ)/PeN - ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C ) * (R*WET)
 
             TERM_1  = TERM_1 + ( ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
-            ! TERM_1  = TERM_1 + ( ( nR*(Vr) + nZ*(Vz) ) * C - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
-            term_2_ = term_2_+ ( ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C                           ) * (R*WET)
-            term_3_ = term_3_+ (                                     - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
-
-            ! if ((time .gt. dt) .and. (KK .eq.1)) then
-            !     print*, Vr, dRdt, (Vr-dRdt)
-            !     print*, Vz, dzdt, (Vz-dzdt)
-            !     pause
-            ! endif
+            
 
         ENDDO LOOP_GAUSS
 
 
         TEMP_RES = 2.d0*pi*TERM_1
-        term_2_ = 2.d0*pi*term_2_
-        term_3_ = 2.d0*pi*term_3_
-
 
     End Function int_n_dot_F
 

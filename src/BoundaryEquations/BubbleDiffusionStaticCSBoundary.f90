@@ -11,7 +11,7 @@ Module BubbleDiffusionStaticCSBoundary
 
     Type BubbleDiffusionStaticCS 
         ! BubbleDiffusionStaticCS Properties
-        Real(8)                            :: Zcenter_o
+        Real(8)                            :: Zcenter, Zcenter_o, InitialZcenter
 
         ! FEM : Prop
         Integer                            :: nelem
@@ -20,44 +20,56 @@ Module BubbleDiffusionStaticCSBoundary
         Integer, Dimension(:), Allocatable :: nodes
 
         ! Global Contrain
-        Integer                            :: gidP, gidC
+        Integer                            :: gidP, gidC, gidV, gidU
         Real(8)                            :: pressure, pressure_o, InitialPressure
-        Real(8)                            ::           volume_o  , InitialVolume
         Real(8)                            :: mol,      mol_o     , Initialmol
-        ! Real(8)                            :: mol  , Initialmol, Initialmol_dim
+        Real(8)                            :: volume,   volume_o  , InitialVolume
+        Real(8)                            :: velocity, velocity_o, Initialvelocity
         contains 
             ! constrains and boundary conditions
-            procedure :: applyBoundaryConditions
-            procedure :: volumeConservation
-            ! procedure :: fixCentroid
-            ! procedure :: PressureVolumeConservation
             procedure :: PressureVolumeMolConservation
             procedure :: molBalance
+            procedure :: volumeEquation
+            procedure :: velocityEquation
+
+            procedure :: applyBoundaryConditions
             
-            procedure :: check_engine
-            ! setters
+            ! ======== setters ========
             procedure :: setProperties
+            ! ---- Initial values ----
             procedure :: setInitialPressure
-            procedure :: setPressure
-            procedure :: setPressure_o
-            procedure :: setInitialVolume
-            procedure :: setCentroid_o
-            procedure :: setVolume_o
             procedure :: setInitialmol
+            procedure :: setInitialVolume
+            procedure :: setInitialVelocity
+            procedure :: setInitialZcenter
+            ! ---- Previous values ----
+            procedure :: setPressure_o
             procedure :: setmol_o
+            procedure :: setVolume_o
+            procedure :: setVelocity_o
+            procedure :: setZcenter_o
+            ! ---- Current values ----
+            procedure :: setPressure
             procedure :: setmol
+            procedure :: setVolume
+            procedure :: setVelocity
 
-            ! getters
+            ! ======== getters ========
+
+            ! ---- Current values ----
             procedure :: getPressure
-            procedure :: getCentroid
-            procedure :: getVelocity
-            procedure :: getDragForce
-            procedure :: getAspectRatio
-            procedure :: getVolume
-            procedure :: getdVtankdt
             procedure :: getmol
+            procedure :: getVolume
+            procedure :: getVelocity
+            procedure :: getZcenter
+            procedure :: calculateZcenter
+
+            procedure :: getZcenter_o
+            
+            procedure :: getdVtankdt
 
 
+            procedure :: check_engine
             final     :: deconstructor
     End Type BubbleDiffusionStaticCS
 
@@ -96,9 +108,433 @@ Module BubbleDiffusionStaticCSBoundary
     End Function NewBubbleDiffusionStaticCS
 
     
-    
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    !                       Extra Equations                     
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    Function PressureVolumeMolConservation(this) Result(output)
+        Use physical_module, only: IdN
+        use CSR_STORAGE, only: Ar_f
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: Volume
+
+        output = this%pressure * this%Volume - IdN*this%mol
+
+        Ar_f(this%gidP,:) = 0.d0
+     
+    end Function PressureVolumeMolConservation
+
+
+
+    Function molBalance(this) Result(output)
+        Use time_integration, only: dt
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: totalMolFlux
+
+        totalMolFlux = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_F )
+        
+        ! In Deen p. 27, eq. 2.2-2, there is the form of the macroscopic balance
+        output = (this%mol - this%mol_o)/dt + totalMolFlux
+     
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
+
+    end Function molBalance
+
+
+
+    Function volumeEquation(this) Result(output)
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: calculatedVolume
+
+        calculatedVolume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
+
+        output = - this%volume + calculatedVolume
+
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidV, SurfaceIntegration ) 
+
+    end Function volumeEquation
+
+
+
+    Function velocityEquation(this) Result(output)
+        use time_integration, only: dt
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: calculatedInt_Z_dV
+
+        calculatedInt_Z_dV = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV )
+
+        output = - this%velocity*this%volume*dt - this%volume*this%Zcenter_o + calculatedInt_Z_dV
+
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidU, int_Z_dV ) 
+
+    end Function velocityEquation
+
+
+   
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    !                    applyBoundaryConditions                     
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    Subroutine applyBoundaryConditions(This, FlagNR, kinematic_logical)
+        Use GLOBAL_ARRAYS_MODULE,        Only: TL
+        Use ENUMERATION_MODULE,          Only: NM_MESH
+        Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
+        Character(len=3), Intent(In)      :: FlagNR 
+        logical, Intent(In), optional     :: kinematic_logical 
+
+        Real(8), Dimension(:,:), Allocatable :: TL_
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_kinematic
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_thetaEquid
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_stresses
+        Integer                              :: iel, element, face
+        Integer                              :: node_counter, node
+        Real(8)                              :: Volume
+
+
+        if (present(kinematic_logical) .and. (kinematic_logical)) then
+            call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
+            If (FlagNR == "NRP") &
+                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
+        endif
+
+        
+        do iel = 1, this%nelem
+            element =This%elements(iel)
+            face    =This%faces   (iel)
+
+            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+            if (present(kinematic_logical) .and. (kinematic_logical)) then
+                call Kinematic_mass_gasInterface        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+            else
+                call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
+                call Stresses                         (element, face, TL_, RES_stresses, .true., This%pressure )
+            endif
 
     
+            if (FlagNR == "NRP") Then
+                if (present(kinematic_logical) .and. (kinematic_logical)) then
+                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
+                    !Extra Unknown
+                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
+                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
+                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                else
+                    call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
+                    call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_stresses, This%pressure )
+                    !Extra Unknown
+                    call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_stresses, 1, This%pressure,   this%gidP)
+                endif
+          end if
+        end do 
+
+        do node_counter = 1, size(this%nodes)
+            node = this%nodes(node_counter)
+            call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
+            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr, this%gidP )
+            ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
+        enddo
+
+        If ( Allocated(TL_) ) Deallocate(TL_)
+    End Subroutine  applyBoundaryConditions
+
+
+
+    ! ====================== setters ====================== 
+    Subroutine setProperties(This, gidP, gidC, gidV, gidU)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)           :: This 
+        Integer, Intent(In)             :: gidP
+        Integer, Intent(In), optional   ::  gidC, gidV, gidU
+
+        this%gidP        = gidP
+        if (present(gidC)) then 
+            this%gidC = gidC
+            this%gidV = gidV
+            this%gidU = gidU
+        endif
+    End Subroutine setProperties
+
+    
+    ! ------------------ Initial values ------------------
+
+    Subroutine setInitialPressure(This, InitialPressure)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: InitialPressure
+
+        This%InitialPressure = InitialPressure
+        This%Pressure_o      = InitialPressure
+        This%Pressure        = InitialPressure
+    End Subroutine setInitialPressure
+
+
+    Subroutine setInitialmol(This)
+        use physical_module, only:IdN, pi4o3
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        ! dimensionless equation is P*V-IdN*n=0
+
+        This%Initialmol = (this%InitialPressure) * (this%InitialVolume) / IdN
+        This%mol_o      = This%Initialmol
+        This%mol        = This%mol_o
+    End Subroutine setInitialmol
+
+    Subroutine setInitialVolume(This)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+
+        This%InitialVolume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
+        This%volume_o      = This%InitialVolume
+        This%volume        = This%InitialVolume
+    End Subroutine setInitialVolume
+
+    Subroutine setInitialVelocity(This)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+
+        This%InitialVelocity = 0.d0
+        This%velocity_o = This%InitialVelocity
+        This%velocity   = This%InitialVelocity
+    End Subroutine setInitialVelocity
+
+    Subroutine setInitialZcenter(This)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+
+        This%InitialZcenter = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV)
+        This%InitialZcenter = This%InitialZcenter/This%InitialVolume
+        This%Zcenter_o      = This%InitialZcenter
+    End Subroutine setInitialZcenter
+
+
+    ! ------------------ Previous values ------------------
+     
+    Subroutine setPressure_o(This, Pressure_o)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Pressure_o
+
+        This%Pressure_o = Pressure_o
+    End Subroutine setPressure_o
+
+    Subroutine setmol_o(This, mol_o)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: mol_o
+
+        This%mol_o = mol_o
+    End Subroutine setmol_o
+
+    Subroutine setVolume_o(this, Volume_o)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8), Intent(In) :: Volume_o
+        
+        This%volume_o   = Volume_o
+    end Subroutine setVolume_o
+
+    Subroutine setVelocity_o(This, Velocity_o)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Velocity_o
+
+        This%Velocity_o = Velocity_o
+    End Subroutine setVelocity_o
+
+    Subroutine setZcenter_o(This)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+
+        This%Zcenter_o = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV)
+        This%Zcenter_o = This%Zcenter_o/This%volume_o
+    End Subroutine setZcenter_o
+
+
+    ! ------------------ Current values ------------------
+
+    Subroutine setPressure(This, Pressure)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Pressure
+
+        This%Pressure = Pressure
+    End Subroutine setPressure
+
+
+    Subroutine setmol(This, mol)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: mol
+
+        This%mol = mol
+    End Subroutine setmol
+
+    Subroutine setVolume(This, Volume)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Volume
+
+        This%Volume = Volume
+    End Subroutine setVolume
+
+    Subroutine setVelocity(This, Velocity)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8), Intent(In) :: Velocity
+
+        This%Velocity = Velocity
+    End Subroutine setVelocity
+
+   
+
+   
+
+
+    ! ********************************************************************
+    ! ====================== getters ====================== 
+
+
+    function getPressure(this)  Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: output
+
+        output = This%pressure 
+
+    end function getPressure
+
+    Function getmol(This)  Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: output
+
+        output = This%mol 
+    End Function getmol
+
+    Function getVolume(This)  Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: output
+
+        output = this%volume
+    End Function getVolume
+
+    Function getVelocity(this) Result(output)
+        use TIME_INTEGRATION, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+        output = this%velocity
+    end Function getVelocity
+
+    Function getZcenter(this) Result(output)
+        use TIME_INTEGRATION, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+        output = this%Zcenter
+    end Function getZcenter
+
+    Function getZcenter_o(this) Result(output)
+        use TIME_INTEGRATION, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+        output = this%Zcenter_o
+    end Function getZcenter_o
+
+    
+    
+
+    Function calculateZcenter(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        Zcenter = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV)
+        Zcenter = Zcenter/This%Volume
+
+        output = Zcenter
+    end Function calculateZcenter
+
+
+    Function getdVtankdt(This)  Result(output)
+        use time_integration, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: volume
+        Real(8)             :: output
+
+
+        output = ( this%volume - this%Volume_o ) / dt
+    End Function getdVtankdt
+
+
+    Function getDragForce(this) Result(output)
+        Implicit none
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: DragForce
+
+        DragForce = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, DragForceCalculation)
+
+        output = DragForce
+    end Function getDragForce
+
+    Function getAspectRatio(this)    Result(AR)
+        Use GLOBAL_ARRAYS_MODULE,      Only: TL
+        Implicit none
+        Class(BubbleDiffusionStaticCS), Intent(In)            :: this
+        Real(8)                              :: output
+
+        Real(8), Dimension(:)  , Allocatable :: Z_coord, R_coord
+        Real(8)                              :: Height, Width, AR
+        
+        call getBoundaryNodes(TL, This%elements, This%faces, "Z", Z_coord)
+        call getBoundaryNodes(TL, This%elements, This%faces, "R", R_coord)
+        
+        Height = maxval(Z_coord) - minval(Z_coord)
+        Width  = maxval(R_coord) ! - minval(R_coord) -> commented out since it is always zero
+
+        AR = Height / (2.d0*Width)
+
+        output = AR
+    End Function getAspectRatio
+
+
+   
+
+
+    subroutine check_engine(this)
+        use check_for_floating_point_exceptions
+        implicit none
+        Class(BubbleDiffusionStaticCS) :: this
+
+        call check_fp_exceptions(this%pressure, "pressure")
+        call check_fp_exceptions(this%InitialPressure, "InitialPressure")
+        call check_fp_exceptions(this%InitialVolume, "InitialVolume")
+        
+        print*, "pressure =", this%pressure
+        print*, "InitialPressure =", this%InitialPressure
+        print*, "InitialVolume =", this%InitialVolume
+
+    end subroutine check_engine
+
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     !                       volumeConservation                       
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -136,325 +572,6 @@ Module BubbleDiffusionStaticCSBoundary
         
     end Function PressureVolumeConservation
 
-    Function PressureVolumeMolConservation(this) Result(output)
-        Use physical_module, only: IdN
-        Implicit None
-        Class(BubbleDiffusionStaticCS) :: this
-        Real(8)       :: output
-
-        Real(8)       :: Volume
-
-        Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-        
-        output = this%pressure * Volume - IdN*this%mol
-     
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gidP, SurfaceIntegration, this%pressure ) 
-        
-    end Function PressureVolumeMolConservation
-
-
-    Function molBalance(this) Result(output)
-        Use physical_module, only: PeN, pi4o3
-        Use time_integration, only: dt
-        use NRAPSHON_MODULE, only:iter_f
-        Implicit None
-        Class(BubbleDiffusionStaticCS) :: this
-        Real(8)       :: output,output1, output2, output3, output4
-
-        Real(8)       :: totalMolFlux
-
-        totalMolFlux = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_F )
-        
-        ! In Deen p. 27, eq. 2.2-2, there is the form of the macroscopic balance
-        output = (this%mol - this%mol_o)/dt + totalMolFlux
-     
-        call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
-
-        output1 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u_minus_umesh )
-        output2 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC )
-        output3 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_u )
-        output4 = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_umesh )
-
-        write(400,'(I15, 2x, E17.10, 2x, E17.10, 2x, E17.10, 2x, E17.10)') iter_f, output1, output2, totalMolFlux, totalMolFlux - output1 - output2
-        
-    end Function molBalance
-
-    subroutine check_engine(this)
-        use check_for_floating_point_exceptions
-        implicit none
-        Class(BubbleDiffusionStaticCS) :: this
-
-        call check_fp_exceptions(this%pressure, "pressure")
-        call check_fp_exceptions(this%InitialPressure, "InitialPressure")
-        call check_fp_exceptions(this%InitialVolume, "InitialVolume")
-        
-        print*, "pressure =", this%pressure
-        print*, "InitialPressure =", this%InitialPressure
-        print*, "InitialVolume =", this%InitialVolume
-
-    end subroutine check_engine
-    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-    !                    applyBoundaryConditions                     
-    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-    Subroutine applyBoundaryConditions(This, FlagNR, kinematic_logical)
-        Use GLOBAL_ARRAYS_MODULE,        Only: TL
-        Use ENUMERATION_MODULE,          Only: NM_MESH
-        Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
-        Character(len=3), Intent(In)      :: FlagNR 
-        logical, Intent(In), optional     :: kinematic_logical 
-
-        Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_2
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_3
-        Integer                              :: iel, element, face
-        Integer                              :: node_counter, node
-        Real(8)                              :: Volume
-
-
-        if (present(kinematic_logical) .and. (kinematic_logical)) then
-            call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
-            If (FlagNR == "NRP") &
-                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
-        endif
-
-        
-        do iel = 1, this%nelem
-            element =This%elements(iel)
-            face    =This%faces   (iel)
-
-            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
-            if (present(kinematic_logical) .and. (kinematic_logical)) then
-                call Kinematic_mass_gasInterface        (element, face, TL_, RES_1, .true., This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o )
-            else
-                call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
-                call Stresses                         (element, face, TL_, RES_3, .true., This%pressure )
-            endif
-
-    
-            if (FlagNR == "NRP") Then
-                if (present(kinematic_logical) .and. (kinematic_logical)) then
-                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_1, This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o)
-                    !Extra Unknown
-                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_1, 1, This%mol, this%getVolume(), This%getcentroid(), this%Zcenter_o,  this%gidC)
-                else
-                    call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
-                    call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_3, This%pressure )
-                    !Extra Unknown
-                    call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_3, 1, This%pressure,   this%gidP)
-                endif
-          end if
-        end do 
-
-        do node_counter = 1, size(this%nodes)
-            node = this%nodes(node_counter)
-            call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
-            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr, this%gidP )
-            ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
-        enddo
-
-        If ( Allocated(TL_) ) Deallocate(TL_)
-    End Subroutine  applyBoundaryConditions
-
-
-    Subroutine setProperties(This, gidP, gidC)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)           :: This 
-        Integer, Intent(In)             :: gidP
-        Integer, Intent(In), optional   ::  gidC
-
-        this%gidP        = gidP
-        if (present(gidC)) this%gidC = gidC
-    End Subroutine setProperties
-
-    Subroutine setInitialPressure(This, InitialPressure)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: InitialPressure
-
-        This%InitialPressure = InitialPressure
-        This%Pressure_o      = InitialPressure
-        This%Pressure        = InitialPressure
-    End Subroutine setInitialPressure
-
-    Subroutine setInitialVolume(This)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-
-        This%InitialVolume = this%getVolume()
-        This%volume_o = This%InitialVolume
-    End Subroutine setInitialVolume
-
-    Subroutine setInitialmol(This)
-        use physical_module, only:IdN, pi4o3
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        ! dimensionless equation is P*V-IdN*n=0
-        ! CAUTION -- the n has 4pi/3 embeded in it (due to the volume)
-
-        This%Initialmol = (this%InitialPressure) * (this%InitialVolume) / IdN
-        This%mol_o      = This%Initialmol
-        This%mol        = This%mol_o
-    End Subroutine setInitialmol
-
-
-    Subroutine setPressure(This, Pressure)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: Pressure
-
-        This%Pressure = Pressure
-    End Subroutine setPressure
-
-    Subroutine setmol(This, mol)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: mol
-
-        This%mol = mol
-    End Subroutine setmol
-
-
-    Subroutine setCentroid_o(this)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)              :: this
-        Real(8)                                     :: Centroid, Volume
-        
-        Volume   = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-        Centroid = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV)
-        Centroid = Centroid/Volume
-
-        this%Zcenter_o = Centroid
-    end Subroutine setCentroid_o
-
-    Subroutine setPressure_o(This, Pressure_o)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: Pressure_o
-
-        This%Pressure_o = Pressure_o
-    End Subroutine setPressure_o
-
-    Subroutine setVolume_o(this)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)              :: this
-        
-        This%volume_o   = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-    end Subroutine setVolume_o
-
-    Subroutine setmol_o(This, mol_o)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8), Intent(In) :: mol_o
-
-        This%mol_o = mol_o
-    End Subroutine setmol_o
-
-
-    ! ********************************************************************
-
-
-    function getPressure(this)  Result(output)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8)             :: output
-
-        output = This%pressure 
-
-    end function getPressure
-
-    Function getmol(This)  Result(output)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8)             :: output
-
-        output = This%mol 
-    End Function getmol
-
-    Function getCentroid(this) Result(output)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
-        Real(8)                                     :: Centroid, Volume
-
-        Volume   = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-        Centroid = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_Z_dV)
-        Centroid = Centroid/Volume
-
-        output = Centroid
-    end Function getCentroid
-
-    Function getVelocity(this) Result(output)
-        use TIME_INTEGRATION, only: dt
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)              :: this
-        Real(8)                                     :: zcenter
-        Real(8)                                     :: output
-        zcenter= this%getCentroid()
-        output = ( zcenter - this%Zcenter_o ) / dt
-    end Function getVelocity
-
-    Function getDragForce(this) Result(output)
-        Implicit none
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
-        Real(8)                                     :: DragForce
-
-        DragForce = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, DragForceCalculation)
-
-        output = DragForce
-    end Function getDragForce
-    Function getAspectRatio(this)    Result(AR)
-        Use GLOBAL_ARRAYS_MODULE,      Only: TL
-        Implicit none
-        Class(BubbleDiffusionStaticCS), Intent(In)            :: this
-        Real(8)                              :: output
-
-        Real(8), Dimension(:)  , Allocatable :: Z_coord, R_coord
-        Real(8)                              :: Height, Width, AR
-        
-        call getBoundaryNodes(TL, This%elements, This%faces, "Z", Z_coord)
-        call getBoundaryNodes(TL, This%elements, This%faces, "R", R_coord)
-        
-        Height = maxval(Z_coord) - minval(Z_coord)
-        Width  = maxval(R_coord) ! - minval(R_coord) -> commented out since it is always zero
-
-        AR = Height / (2.d0*Width)
-
-        output = AR
-    End Function getAspectRatio
-    Function getInitialVolume(This)  Result(output)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8)             :: output
-
-        output = This%InitialVolume 
-    End Function getInitialVolume
-    Function getVolume(This)  Result(output)
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8)             :: output
-
-        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-    End Function getVolume
-
-    Function getdVtankdt(This)  Result(output)
-        use time_integration, only: dt
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)       :: This
-        Real(8)             :: volume
-        Real(8)             :: output
-
-        volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
-
-        output = ( volume - this%Volume_o ) / dt
-    End Function getdVtankdt
-
-
     Subroutine deconstructor(This) 
         Implicit None
         Type(BubbleDiffusionStaticCS) :: This
@@ -464,3 +581,4 @@ Module BubbleDiffusionStaticCSBoundary
     End Subroutine deconstructor
 
 End Module BubbleDiffusionStaticCSBoundary
+  

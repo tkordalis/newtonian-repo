@@ -5,6 +5,8 @@ Module IO_module
         Real(8), Dimension(:,:), Allocatable :: TL
         Real(8)                              :: Pressure_Bubble
         Real(8)                              :: mol_Bubble
+        Real(8)                              :: volume_bubble
+        Real(8)                              :: velocity_bubble
 
         Integer                              :: Increment
 
@@ -15,13 +17,15 @@ Module IO_module
     contains
 
 
-    Subroutine getSolutionVars(this, time, sol, increment, Pressure_Bubble, mol_Bubble)
+    Subroutine getSolutionVars(this, time, sol, increment, Pressure_Bubble, mol_Bubble, volume_bubble, velocity_bubble)
         Implicit None 
         Class(Solution), Intent(In)          :: this
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: sol
         Real(8)                              :: Pressure_Bubble
         Real(8)                              :: mol_Bubble
+        Real(8)                              :: volume_bubble
+        Real(8)                              :: velocity_bubble
         Integer                              :: increment
 
         if ( allocated(sol) ) deallocate(sol) 
@@ -31,6 +35,8 @@ Module IO_module
         increment         = this%increment
         Pressure_Bubble   = this%Pressure_Bubble
         mol_Bubble        = this%mol_Bubble
+        volume_bubble     = this%volume_bubble
+        velocity_bubble   = this%velocity_bubble
 
     End Subroutine getSolutionVars
 
@@ -87,9 +93,10 @@ Module IO_module
         ! print*, toDouble( remove( strGlobal(3), ["Bubble_Pressure_1 ", "="]) )
 
         this%increment         = toInt   ( remove( strGlobal(1), ["Increment        ", "="]) )
-        this%Pressure_Bubble   = toDouble( remove( strGlobal(2), ["Pressure_Bubble", "="]) )
-        this%mol_Bubble        = toDouble( remove( strGlobal(3), ["mol__Bubble", "="]) )
-        
+        this%Pressure_Bubble   = toDouble( remove( strGlobal(2), ["Pressure_Bubble", "="])   )
+        this%mol_Bubble        = toDouble( remove( strGlobal(3), ["mol__Bubble", "="])       )
+        this%volume_bubble     = toDouble( remove( strGlobal(4), ["volume_bubble", "="])     )
+        this%velocity_bubble   = toDouble( remove( strGlobal(5), ["velocity_bubble", "="])   )
 
       
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
