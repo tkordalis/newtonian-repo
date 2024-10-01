@@ -2,7 +2,7 @@ Module SymmetryDiffusionBoundary
     Use Boundary_EquationsDO 
     Use NumericalBoundaryJacobian
     Use ExtraEquations
-    Use DirichletBoundaries,         only: ApplyDirichletAtNode_
+    Use DirichletBoundaries
     use boundary_enumeration_module, only: getBoundaryNodesOfWholeBoundary
     use MESH_MODULE, only: Xm, Ym
 
@@ -76,7 +76,12 @@ Module SymmetryDiffusionBoundary
         Integer                              :: element 
         Integer                              :: face
 
-         if (naturalBCs) then
+
+        call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
+        If (FlagNR == "NRP") &
+                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
+        
+        if (naturalBCs) then
 
 
         else
@@ -91,11 +96,6 @@ Module SymmetryDiffusionBoundary
                     call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
                     if (FlagNR == "NRP") Then
                         call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
-                    end if
-                case('Y')
-                    call Y_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_2, .true.)
-                    if (FlagNR == "NRP") Then
-                        call CalculateJacobianContributionsOf(Y_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_2)
                     end if
                 case default
                         Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."

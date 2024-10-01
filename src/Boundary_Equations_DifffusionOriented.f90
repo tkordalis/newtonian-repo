@@ -1307,7 +1307,8 @@ Module Boundary_EquationsDO
                 DBIKsi  = dbfndx1(iw,kk) * dx1dKsi + dbfndx2(iw,kk) * dx2dKsi
                 
                 TERM_RES = 0.D0 
-                TERM_RES(getVariableId("Z")) = e_bnd*DLOG(QKsi)*DBIKsi * dS
+                ! TERM_RES(getVariableId("Z")) = e_bnd*DLOG(QKsi)*DBIKsi * dS
+                TERM_RES(getVariableId("Z")) = DLOG(QKsi)*DBIKsi * dS
 
             ! FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f) * WO_1d(KK)
