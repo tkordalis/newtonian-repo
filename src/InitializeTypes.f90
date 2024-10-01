@@ -130,7 +130,11 @@ module solveAllExtraConstraints
             Call bubble%setmol     ( BubbleMol      )
             Call bubble%setVolume  ( BubbleVolume   )
             Call bubble%setVelocity( BubbleVelocity )
-            Call bubble%applyBoundaryConditions(FlagNR)
+            
+            Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+            call wall%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+            call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+            call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .true. )
             
 
             Be_f(1) = bubble%PressureVolumeMolConservation()
@@ -170,8 +174,9 @@ module solveAllExtraConstraints
             
 
 
+            Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
             call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
-            Call bubble%applyBoundaryConditions(FlagNR, .true.)
+            Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .false., kinematicBC = .true.)
             call wall%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
 
             call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .false. )

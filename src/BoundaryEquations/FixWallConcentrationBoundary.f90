@@ -63,7 +63,7 @@ Module FixWallConcentrationBoundary
 
         Integer                              :: inode, node
 
-         if (naturalBCs) then
+        if (naturalBCs) then
 
 
         else

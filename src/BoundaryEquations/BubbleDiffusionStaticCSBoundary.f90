@@ -211,14 +211,16 @@ Module BubbleDiffusionStaticCSBoundary
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     !                    applyBoundaryConditions                     
     !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-    Subroutine applyBoundaryConditions(This, FlagNR, kinematic_logical)
+    Subroutine applyBoundaryConditions(This, FlagNR, naturalBCs, kinematicBC)
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Implicit None 
         Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
-        Character(len=3), Intent(In)      :: FlagNR 
-        logical, Intent(In), optional     :: kinematic_logical 
+        Character(len=3), Intent(In)         :: FlagNR 
+        logical,          Intent(In)         :: naturalBCs
+        logical,         Intent(In), optional:: kinematicBC
+
 
         Real(8), Dimension(:,:), Allocatable :: TL_
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_kinematic
@@ -229,54 +231,72 @@ Module BubbleDiffusionStaticCSBoundary
         Real(8)                              :: Volume
 
 
-        if (present(kinematic_logical) .and. (kinematic_logical)) then
-            call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
-            call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfResidual)
-            If (FlagNR == "NRP") then
-                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
-                call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfJacobian)
+        if (naturalBCs) then
+            do iel = 1, this%nelem
+                element =This%elements(iel)
+                face    =This%faces   (iel)
+
+                call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+
+                call Stresses                         (element, face, TL_, RES_stresses, .true., This%pressure )
+
+                if (FlagNR == "NRP") Then
+                    call CalculateJacobianContributionsOf(Stresses      ,element, face, TL_, RES_stresses, This%pressure )
+                    !Extra Unknown
+                    call CalculateExtraJacobianContributionsOf(Stresses ,element, face, TL_, RES_stresses, 1, This%pressure,   this%gidP)
+                endif
+            enddo
+        else
+            if (present(kinematicBC) .and. kinematicBC) then
+                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
+                If (FlagNR == "NRP") then
+                    call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
+                endif
+
+                do iel = 1, this%nelem
+                    element =This%elements(iel)
+                    face    =This%faces   (iel)
+
+                    call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+
+                    call Kinematic_mass_gasInterface        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+                    
+                    If (FlagNR == "NRP") then
+                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
+                        !Extra Unknown
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                    endif
+                enddo
+            else
+                call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfResidual)
+                If (FlagNR == "NRP") then
+                    call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfJacobian)
+                endif
+
+                do iel = 1, this%nelem
+                    element =This%elements(iel)
+                    face    =This%faces   (iel)
+
+                    call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
+
+                    call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
+                    
+                    If (FlagNR == "NRP") then
+                        call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
+                    endif
+                enddo
+
+                do node_counter = 1, size(this%nodes)
+                    node = this%nodes(node_counter)
+                    call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
+                    ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr, this%gidP )
+                    ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
+                enddo
             endif
         endif
-
         
-        do iel = 1, this%nelem
-            element =This%elements(iel)
-            face    =This%faces   (iel)
-
-            call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
-            if (present(kinematic_logical) .and. (kinematic_logical)) then
-                call Kinematic_mass_gasInterface        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
-                call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
-            else
-                call Stresses                         (element, face, TL_, RES_stresses, .true., This%pressure )
-            endif
-
-    
-            if (FlagNR == "NRP") Then
-                if (present(kinematic_logical) .and. (kinematic_logical)) then
-                    call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
-                    
-                    call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
-                    !Extra Unknown
-                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
-                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
-                    call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
-                    
-                else
-                    call CalculateJacobianContributionsOf(Stresses                         ,element, face, TL_, RES_stresses, This%pressure )
-                    !Extra Unknown
-                    call CalculateExtraJacobianContributionsOf(Stresses                    ,element, face, TL_, RES_stresses, 1, This%pressure,   this%gidP)
-                endif
-          end if
-        end do 
-
-        do node_counter = 1, size(this%nodes)
-            node = this%nodes(node_counter)
-            call ApplyDirichletAtNode_(node, "C", KoN*This%pressure, FlagNr, this%gidP )
-            ! call ApplyDirichletAtNode_(node, "C", 1.d0, FlagNr, this%gidP )
-            ! call ApplyDirichletAtNode_(node, "C", KoN*This%pressure_o, FlagNr )
-        enddo
-
         If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
 

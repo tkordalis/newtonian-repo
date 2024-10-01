@@ -2,7 +2,8 @@ Module SymmetryDiffusionBoundary
     Use Boundary_EquationsDO 
     Use NumericalBoundaryJacobian
     Use ExtraEquations
-    Use DirichletBoundaries
+    Use DirichletBoundaries, only : ApplyDirichletAtNode_, updateAllNodesOfTheBoundary, &
+                                    ClearRowsOfResidual, ClearRowsOfJacobian
     use boundary_enumeration_module, only: getBoundaryNodesOfWholeBoundary
     use MESH_MODULE, only: Xm, Ym
 
@@ -77,15 +78,16 @@ Module SymmetryDiffusionBoundary
         Integer                              :: face
 
 
-        call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
-        If (FlagNR == "NRP") &
-                call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
         
         if (naturalBCs) then
 
 
         else
 
+            call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
+            If (FlagNR == "NRP") &
+                    call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
+                    
             do iel = 1, this%nelem
                 element =This%elements(iel)
                 face    =This%faces   (iel)
