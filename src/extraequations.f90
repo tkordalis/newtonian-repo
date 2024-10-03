@@ -109,7 +109,10 @@ Module ExtraEquations
             normalize = .true., forceOnObject = .true.) 
             WET = WO_1d(KK)*dL
 
-            
+            ! if (KK .eq.1) then
+            !     print*, nz, nr
+            !     pause
+            ! endif
 
             ! TERM_1  = TERM_1 + ( (nR*dCdR + nZ*dCdZ)/PeN - ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C ) * (R*WET)
 
@@ -119,7 +122,7 @@ Module ExtraEquations
         ENDDO LOOP_GAUSS
 
 
-        TEMP_RES = 2.d0*pi*TERM_1
+        TEMP_RES = 2.d0*pi*TERM_1*dt
 
     End Function int_n_dot_F
 

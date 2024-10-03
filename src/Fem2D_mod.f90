@@ -103,7 +103,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Dcoef       = 4.55d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
-    Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    Real(8), parameter       :: KHenry      = 1.d0/Rgas/Tgas          ! mol/m3/Pa
     Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
     ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
 
@@ -174,7 +175,7 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  velocity_char*length_char/Dcoef
+        PeN    =  velocity_char*length_char/Dcoef!/1.d+4
         ! PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
 
 
@@ -228,7 +229,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.005d0
+        Dt_constant = 0.05d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
@@ -1905,6 +1906,42 @@ MODULE GAUSS_MODULE
         endif
 
     End Subroutine getNormalVectorAtFace
+
+     Subroutine getTangentVectorAtFace(derivs, face, tr, tz, normalize)
+        Implicit None 
+        Real(8), Dimension(:), Intent(In):: derivs
+        Integer, Intent(In)              :: face
+        Real(8), Intent(InOut)           :: tr
+        Real(8), Intent(InOut)           :: tz
+        Logical, Intent(In)   , Optional :: normalize
+
+
+        Real(8)                          :: ds_
+        Real(8)                          :: dzdc
+        Real(8)                          :: dzde
+        Real(8)                          :: drdc
+        Real(8)                          :: drde
+
+        dzdc = derivs(1) ; dzde = derivs(2)
+        drdc = derivs(3) ; drde = derivs(4) 
+
+        Select Case(face)
+        Case(1); tr = - dzdc        ; tz =   drdc
+        Case(2); tr =  (dzdc-dzde)  ; tz = -(drdc-drde)
+        Case(3); tr =   dzde        ; tz = - drde
+        Case Default
+        Print*, "[Error] : getTangentVectorAtFace. Wrong Value of face. Possible values 1,2,3."
+        End Select
+
+        ds_ = sqrt(tr*tr+tz*tz)
+
+        if ( present(normalize) .and. normalize ) then
+            tr = tr/ds_
+            tz = tz/ds_  
+        end if 
+
+    End Subroutine getTangentVectorAtFace
+
 
 
     SUBROUTINE GAUSS_EVALUATION 

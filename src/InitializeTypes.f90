@@ -88,16 +88,6 @@ Module InitialConditions
         velocity_bubbleo = bubble%getVelocity()
         velocity_bubble  = velocity_bubbleo
 
-
-
-        print*, ' '
-        ! write(*, '(6(f20.12, 2x))') bubble%getVolume(), mol_bubble, mol_bubble/bubble%getVolume()
-        ! write(*, '(6(A16,5x,E14.7))') 'initialMOl=',mol_bubble, 'initialPressure=',Pressure_Bubble
-        write(*, *) 'KoN*Pressure=',KoN*Pressure_Bubble
-        ! write(*, '(6(f20.12, 2x))') mol_bubble/bubble%getVolume(), KoN*bubble%pressure, Pchar/(Cchar*Rgas*Tgas)*bubble%pressure 
-        print*, ' '
-
-        pause
     end subroutine setInitalConditions
 end Module InitialConditions
 
@@ -132,8 +122,11 @@ module solveAllExtraConstraints
             Call bubble%setVelocity( BubbleVelocity )
             
             Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+
             call wall%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+
             call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+
             call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .true. )
             
 
@@ -148,7 +141,8 @@ module solveAllExtraConstraints
             Be_f(2) = bubble%molBalance()
 
             Ah_f(2,1) = 0.d0
-            Ah_f(2,2) = 1.d0/dt
+            ! since i multiply the whole equation with dt, the dt goes inside the integral and nb is multiplied with 1
+            Ah_f(2,2) = 1.d0
             Ah_f(2,3) = 0.d0
             Ah_f(2,4) = 0.d0
 
@@ -217,7 +211,7 @@ Module BubbleOutput
         Implicit none
         Real(8), Intent(In) :: Time
 
-        write(20,'(8(f16.7,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%getZcenter(), bubble%getdVtankdt(), PressureChamber(time)
+        write(20,'(8(f16.7,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%calculateZcenter(), bubble%getdVtankdt(), PressureChamber(time)
         
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

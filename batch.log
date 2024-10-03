@@ -24,7 +24,7 @@ ACTION: LOADADDON
 ACTION: LOADADDON
 ACTION: LOADADDON
 ACTION: LOADADDON
-ACTION: READDATASET: ".new.plt" ".old.plt"
-ACTION: REDRAWALL
-ACTION: KRIG
-ACTION: WRITEDATASET: solution_b.plt
+Err: Filename Error: File does not exist.
+FileName: .new.plt
+Err: Failed to execute macro file
+/home/tkordalis/Desktop/newtonian/newtonian-repo/.inter.mcr

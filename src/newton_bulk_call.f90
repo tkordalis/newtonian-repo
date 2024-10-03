@@ -138,10 +138,10 @@ module newton_bulk_call
             ! CALCULATE RESIDUAL NORM
             RES_NORM = DOT_PRODUCT(B_f,B_f)+DOT_PRODUCT(Be_f,Be_f)
             RES_NORM = sqrt(RES_NORM)
-            print*, "  "
-            print*, "norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f)), "norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))
-            print*, "% norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f))/RES_NORM, "% norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))/RES_NORM
-            print*, "  "
+            ! print*, "  "
+            ! print*, "norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f)), "norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))
+            ! print*, "% norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f))/RES_NORM, "% norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))/RES_NORM
+            ! print*, "  "
 
               ! jj=1
               ! kk=0

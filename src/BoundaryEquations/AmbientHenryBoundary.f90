@@ -119,7 +119,6 @@ Module AmbientHenryBoundary
                 call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
                 
                 call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
-
             enddo
             
         endif

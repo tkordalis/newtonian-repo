@@ -163,6 +163,9 @@ for p in read_datfile.readBoundaryNodes("Ambient.dat"):
 result_B1 = sortCoordinatesOfBoundary(Bubble1PointCoordinates)
 Bubble1PointCoordinatesSorted = result_B1[0]
 
+result_Amb = sortCoordinatesOfBoundary(AmbientPointCoordinates)
+AmbientPointCoordinatesSorted = result_Amb[0]
+
 
 Bubble1Points = [geompy.MakeVertex(*p, 0) for p in Bubble1PointCoordinatesSorted]
 

@@ -125,11 +125,11 @@ Module BubbleDiffusionStaticCSBoundary
         Ar_f(this%gidP,:) = 0.d0
 
         write(*,*) ' '
-        write(*,*) '------------------ PressureVolumeMolConservation ------------------'
-        write(*,'(5(a14,4x))') 'this%pressure' , 'this%Volume' , 'this%mol', 'output'
-        write(*,'(5(e14.7,4x))') this%pressure , this%Volume , this%mol, output
-        write(*,*) ' '
-        pause
+        ! write(*,*) '------------------ PressureVolumeMolConservation ------------------'
+        ! write(*,'(5(a14,4x))') 'this%pressure' , 'this%Volume' , 'this%mol', 'output'
+        ! write(*,'(5(e14.7,4x))') this%pressure , this%Volume , this%mol, output
+        ! write(*,*) ' '
+        ! pause
     end Function PressureVolumeMolConservation
 
 
@@ -145,16 +145,18 @@ Module BubbleDiffusionStaticCSBoundary
         totalMolFlux = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_F )
         
         ! In Deen p. 27, eq. 2.2-2, there is the form of the macroscopic balance
-        output = (this%mol - this%mol_o)/dt + totalMolFlux
+        ! output = (this%mol - this%mol_o)/dt + totalMolFlux
+        ! Now I multiply with dt inside int_n_dot_F to avoid dividing with a small term
+        output = (this%mol - this%mol_o) + totalMolFlux
      
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
         
-        write(*,*) ' '
-        write(*,*) '------------------ molBalance ------------------'
-        write(*,'(5(a14,4x))') 'this%mol', 'this%mol_o' , 'totalMolFlux', 'output'
-        write(*,'(5(e14.7,4x))') this%mol, this%mol_o , totalMolFlux, output
-        write(*,*) ' '
-        pause
+        ! write(*,*) ' '
+        ! write(*,*) '------------------ molBalance ------------------'
+        ! write(*,'(5(a14,4x))') 'this%mol', 'this%mol_o' , 'totalMolFlux', 'output'
+        ! write(*,'(5(e14.7,4x))') this%mol, this%mol_o , totalMolFlux, output
+        ! write(*,*) ' '
+        ! pause
     end Function molBalance
 
 
@@ -172,12 +174,12 @@ Module BubbleDiffusionStaticCSBoundary
 
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidV, SurfaceIntegration )
 
-        write(*,*) ' '
-        write(*,*) '------------------ volumeEquation ------------------'
-        write(*,'(5(a14,4x))') 'this%volume', 'calculatedVolume', 'output'
-        write(*,'(5(e14.7,4x))') this%volume, calculatedVolume, output
-        write(*,*) ' '
-        pause
+        ! write(*,*) ' '
+        ! write(*,*) '------------------ volumeEquation ------------------'
+        ! write(*,'(5(a14,4x))') 'this%volume', 'calculatedVolume', 'output'
+        ! write(*,'(5(e14.7,4x))') this%volume, calculatedVolume, output
+        ! write(*,*) ' '
+        ! pause
 
     end Function volumeEquation
 
@@ -197,12 +199,12 @@ Module BubbleDiffusionStaticCSBoundary
 
         call loopOverElements(this%nelem, this%elements, this%faces, this%gidU, int_Z_dV ) 
 
-        write(*,*) ' '
-        write(*,*) '------------------ velocityEquation ------------------'
-        write(*,'(5(a14,4x))') 'this%velocity', 'calculatedInt_Z_dV', 'output'
-        write(*,'(5(e14.7,4x))') this%velocity, calculatedInt_Z_dV, output
-        write(*,*) ' '
-        pause
+        ! write(*,*) ' '
+        ! write(*,*) '------------------ velocityEquation ------------------'
+        ! write(*,'(5(a14,4x))') 'this%velocity', 'calculatedInt_Z_dV', 'output'
+        ! write(*,'(5(e14.7,4x))') this%velocity, calculatedInt_Z_dV, output
+        ! write(*,*) ' '
+        ! pause
 
     end Function velocityEquation
 
@@ -259,14 +261,14 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                    call Kinematic_mass_gasInterface        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+                    call Kinematic_mass_gasInterfaceSUPG        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
                     
                     If (FlagNR == "NRP") then
-                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterface        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
+                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
                         !Extra Unknown
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterface   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
                     endif
                 enddo
             else

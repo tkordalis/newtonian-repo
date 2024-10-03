@@ -38,7 +38,7 @@ Sphere_position = 0.
 
 
 # NumSegmentsOnSphere = 200
-NumSegmentsOnSphere  = 600
+NumSegmentsOnSphere  = 1200
 NumSegmentsOnAmbient = 30
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
@@ -88,9 +88,10 @@ check_drRef1_compatibility = int(dR_ref1/Element_size_on_Sphere)
 
 # Fine Mesh parameters
 Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])
+# Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
 
-Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
 Netgen_Params.append([ 8*Element_size_on_Sphere,  8*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 24*Element_size_on_Sphere,  24*Element_size_on_Sphere, 0.1])
 
 # # --------------------------- End of Geometry --------------------------- #
 
