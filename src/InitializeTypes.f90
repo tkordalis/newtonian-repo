@@ -79,6 +79,7 @@ Module InitialConditions
         call bubble%setInitialmol()
         call bubble%setInitialVelocity()
 
+
         Mol_Bubbleo = bubble%getmol()
         Mol_Bubble  = Mol_Bubbleo
 
@@ -113,7 +114,6 @@ module solveAllExtraConstraints
         Real(8),                         intent(in)  :: BubbleMol
         Real(8),                         intent(in)  :: BubbleVolume
         Real(8),                         intent(in)  :: BubbleVelocity
-        Real(8)                                      :: dVtankdt
 
             Ah_f = 0.d0
             Call bubble%setPressure( BubblePressure )
@@ -127,7 +127,7 @@ module solveAllExtraConstraints
 
             call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
 
-            call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .true. )
+            call ambientinterf%applyBoundaryConditions( FlagNR, PressureChamber(time), naturalBCs = .true. )
             
 
             Be_f(1) = bubble%PressureVolumeMolConservation()
@@ -161,19 +161,13 @@ module solveAllExtraConstraints
             Ah_f(4,3) = -dt*bubble%getVelocity() - bubble%getZcenter_o()
             Ah_f(4,4) = -dt*bubble%getVolume()
 
-            ! Be_f(1) = bubble%volumeConservation()
-            ! Ah_f(:,:) = 0.d0
-
-            dVtankdt = bubble%getdVtankdt()
-            
-
 
             Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
             call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
             Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .false., kinematicBC = .true.)
             call wall%applyBoundaryConditions(FlagNR, naturalBCs = .false.)
 
-            call ambientinterf%applyBoundaryConditions( FlagNR, dVtankdt, PressureChamber(time), naturalBCs = .false. )
+            call ambientinterf%applyBoundaryConditions( FlagNR, PressureChamber(time), naturalBCs = .false. )
 
     End Subroutine applyBCs_solveExtraConstraints
     
@@ -191,12 +185,13 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(8) :: title_results
+        character(18), dimension(10) :: title_results
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
-        title_results = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'volumeRateOfChange' ,  'ChamberP' ]
+        ! title_results = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'volumeRateOfChange' ,  'ChamberP', 'int_ndotF','int_uminusumesh', 'int_ndotgradC', 'int_ndotUbubblemUmesh', 'ndotumumesh_z', 'ndotumumesh_r' ]
+        title_results = [ 'time', 'mol','volume','velocity', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbubblemUmesh_z','int_ndotUbubblemUmesh_r', 'ndotumumesh_z', 'ndotumumesh_r' ]
         do i=1,size(title_results)
             write(20,'(A17,3x)', advance='no') title_results(i)
         enddo
@@ -210,8 +205,15 @@ Module BubbleOutput
         Use Formats
         Implicit none
         Real(8), Intent(In) :: Time
+        Real(8) :: dummy
 
-        write(20,'(8(f16.7,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%calculateZcenter(), bubble%getdVtankdt(), PressureChamber(time)
-        
+        ! write(20,'(14(f25.12,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), &
+        !                             bubble%calculateZcenter(), bubble%getdVtankdt(), PressureChamber(time), bubble%calculatendotF(), bubble%calculatendotUminusUmesh(), &
+        !                             bubble%calculatendotgradC(), bubble%calculatendotUbubbleMinusUmesh(), &
+        !                             bubble%calculatendotUmUmesh_z(), bubble%calculatendotUmUmesh_r(), bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUbubblemUmesh_z()
+
+        write(20,'(10(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%calculatendotF(), bubble%calculatendotgradC_r()+bubble%calculatendotgradC_z(),&
+                                    bubble%calculatendotUbubblemUmesh_z(), bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z(), bubble%calculatendotUmUmesh_r()
+dummy = bubble%printEachContributionOfKinematicBC()
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

@@ -60,7 +60,7 @@ Module AmbientHenryBoundary
 
     End Function NewAmbientHenry
 
-    Subroutine applyBoundaryConditions(This, FlagNr, dVtankdt, Pressure_bc, naturalBCs)
+    Subroutine applyBoundaryConditions(This, FlagNr, Pressure_bc, naturalBCs)
         Use physical_module,             only: ambient_position_o, vm_ambient, Rtank, pi, KoN
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
@@ -74,7 +74,6 @@ Module AmbientHenryBoundary
         Implicit None 
         Class(AmbientHenry)  , Intent(In)         :: This
         Character(len=3), Intent(In)         :: FlagNr
-        Real(8),          Intent(In)         :: dVtankdt
         Real(8),          Intent(In)         :: Pressure_bc
         logical,          Intent(In)         :: naturalBCs
 
@@ -123,7 +122,7 @@ Module AmbientHenryBoundary
             
         endif
 
-        ! If ( Allocated(TL_) ) Deallocate(TL_)
+        If ( Allocated(TL_) ) Deallocate(TL_)
     End Subroutine  applyBoundaryConditions
 
 
@@ -147,42 +146,4 @@ Module AmbientHenryBoundary
     End Subroutine deconstructor
 
 End Module AmbientHenryBoundary
-
-! ! vm_ambient = dVtankdt / (pi*Rtank**2)
-            ! vm_ambient = 0.d0
-           
-            ! do node_counter = 1, size(this%nodes)
-            !     node = this%nodes(node_counter)
-            !     call ApplyDirichletAtNode_(node, "Z", ambient_position_o + dt*vm_ambient, FlagNr )
-            !     call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
-            !     call ApplyDirichletAtNode_(node, "Vz", vm_ambient, FlagNr )
-                
-            !     ! call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
-
-
-            !     ! CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION multiplication by hand
-            !     ! call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc*0.773d0, FlagNr )
-            !     ! CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION CAUTION multiplication by hand
-            !     call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
-
-            ! enddo
-
-            ! node = this%nodes(  maxloc( Ym(this%nodes), dim=1 )  )
-            ! ! node = this%nodes(  minloc( Ym(this%nodes), dim=1 )  )
-            ! call ApplyDirichletAtNode_(node, "P", Pressure_bc, FlagNr )
-            ! weak imposition of henry's law
-            ! call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfResidual)
-            ! If (FlagNR == "NRP") &
-            !     call updateAllNodesOfTheBoundary('C',This%elements, This%faces, ClearRowsOfJacobian)
-
-            ! do iel = 1, this%nelem
-            !     element =This%elements(iel)
-            !     face    =This%faces   (iel)
-
-            !     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
-            !     call Henry                        (element, face, TL_, RES_1, .true., Pressure_bc)
-            !     if (FlagNR == "NRP") &
-            !             call CalculateJacobianContributionsOf(Henry  ,element, face, TL_, RES_1, Pressure_bc)
-            !             ! call CalculateJacobianContributionsOf(Henry  ,element, face, TL_, RES_1, Pressure_bc, .true.)
-            ! enddo
 

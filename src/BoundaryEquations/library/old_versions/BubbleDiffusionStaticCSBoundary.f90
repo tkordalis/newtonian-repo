@@ -62,18 +62,21 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: getVolume
             procedure :: getVelocity
             procedure :: calculateZcenter
-           
+            procedure :: calculatendotUminusUmesh
+            procedure :: calculatendotgradC
             procedure :: calculatendotF
-            procedure :: calculatendotUbubblemUmesh_z
-            procedure :: calculatendotUbubblemUmesh_r
+            procedure :: calculatendotUbubbleMinusUmesh
             procedure :: calculatendotUmUmesh_z
             procedure :: calculatendotUmUmesh_r
-            procedure :: calculatendotgradC_z
-            procedure :: calculatendotgradC_r
+            procedure :: calculatendotUbubblemUmesh_r
+            procedure :: calculatendotUbubblemUmesh_z
             procedure :: printEachContributionOfKinematicBC
 
             procedure :: getZcenter_o
             
+            procedure :: getdVtankdt
+
+
             procedure :: check_engine
             final     :: deconstructor
     End Type BubbleDiffusionStaticCS
@@ -518,6 +521,39 @@ Module BubbleDiffusionStaticCSBoundary
     !                       Auxiliary functions
     ! =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+    Function calculatendotUminusUmesh(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UmUmesh)
+
+    end Function calculatendotUminusUmesh
+
+    Function calculatendotgradC(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC)
+
+    end Function calculatendotgradC
+
+    Function calculatendotUbubbleMinusUmesh(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UbubblemUmesh)
+
+    end Function calculatendotUbubbleMinusUmesh
+    
     Function calculatendotF(this) Result(output)
         use time_integration, only:dt
         Implicit None 
@@ -529,28 +565,6 @@ Module BubbleDiffusionStaticCSBoundary
         output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_F)
         output = output/dt
     end Function calculatendotF
-
-    Function calculatendotUbubblemUmesh_z(this) Result(output)
-        use time_integration, only:dt
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
-        Real(8)                                     :: Zcenter
-
-        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UbubblemUmesh_z)
-    end Function calculatendotUbubblemUmesh_z
-
-    Function calculatendotUbubblemUmesh_r(this) Result(output)
-        use time_integration, only:dt
-        Implicit None 
-        Class(BubbleDiffusionStaticCS)                               :: this
-        Real(8)                                     :: output
-
-        Real(8)                                     :: Zcenter
-
-        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UbubblemUmesh_r)
-    end Function calculatendotUbubblemUmesh_r
 
     Function calculatendotUmUmesh_z(this) Result(output)
         use time_integration, only:dt
@@ -573,28 +587,29 @@ Module BubbleDiffusionStaticCSBoundary
 
         output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UmUmesh_r)
     end Function calculatendotUmUmesh_r
-   
-    Function calculatendotgradC_z(this) Result(output)
+
+    Function calculatendotUbubblemUmesh_r(this) Result(output)
+        use time_integration, only:dt
         Implicit None 
         Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: Zcenter
 
-        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_z)
+        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UbubblemUmesh_r)
+    end Function calculatendotUbubblemUmesh_r
 
-    end Function calculatendotgradC_z
-
-    Function calculatendotgradC_r(this) Result(output)
+    Function calculatendotUbubblemUmesh_z(this) Result(output)
+        use time_integration, only:dt
         Implicit None 
         Class(BubbleDiffusionStaticCS)                               :: this
         Real(8)                                     :: output
 
         Real(8)                                     :: Zcenter
 
-        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_r)
+        output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_UbubblemUmesh_z)
+    end Function calculatendotUbubblemUmesh_z
 
-    end Function calculatendotgradC_r
 
     Function printEachContributionOfKinematicBC(this) Result(output)
         use time_integration, only:dt
@@ -606,9 +621,57 @@ Module BubbleDiffusionStaticCSBoundary
         output = integrateOverAllElementsOfTheBoundaryAndPrintEachContribution (this%elements, this%faces, int_n_dot_UbubblemUmesh_r, 301)
         output = integrateOverAllElementsOfTheBoundaryAndPrintEachContribution (this%elements, this%faces, int_n_dot_UmUmesh_z, 302)
         output = integrateOverAllElementsOfTheBoundaryAndPrintEachContribution (this%elements, this%faces, int_n_dot_UmUmesh_r, 303)
-        output = integrateOverAllElementsOfTheBoundaryAndPrintEachContribution (this%elements, this%faces, int_n_dot_gradC_z, 304)
-        output = integrateOverAllElementsOfTheBoundaryAndPrintEachContribution (this%elements, this%faces, int_n_dot_gradC_r, 305)
     end Function printEachContributionOfKinematicBC
+
+
+
+    Function getdVtankdt(This)  Result(output)
+        use time_integration, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)       :: This
+        Real(8)             :: volume
+        Real(8)             :: output
+
+
+        output = ( this%volume - this%Volume_o ) / dt
+    End Function getdVtankdt
+
+
+    Function getDragForce(this) Result(output)
+        Implicit none
+        Class(BubbleDiffusionStaticCS)                               :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: DragForce
+
+        DragForce = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, DragForceCalculation)
+
+        output = DragForce
+    end Function getDragForce
+
+    Function getAspectRatio(this)    Result(AR)
+        Use GLOBAL_ARRAYS_MODULE,      Only: TL
+        Implicit none
+        Class(BubbleDiffusionStaticCS), Intent(In)            :: this
+        Real(8)                              :: output
+
+        Real(8), Dimension(:)  , Allocatable :: Z_coord, R_coord
+        Real(8)                              :: Height, Width, AR
+        
+        call getBoundaryNodes(TL, This%elements, This%faces, "Z", Z_coord)
+        call getBoundaryNodes(TL, This%elements, This%faces, "R", R_coord)
+        
+        Height = maxval(Z_coord) - minval(Z_coord)
+        Width  = maxval(R_coord) ! - minval(R_coord) -> commented out since it is always zero
+
+        AR = Height / (2.d0*Width)
+
+        output = AR
+    End Function getAspectRatio
+
+
+   
+
 
     subroutine check_engine(this)
         use check_for_floating_point_exceptions
@@ -624,6 +687,43 @@ Module BubbleDiffusionStaticCSBoundary
         print*, "InitialVolume =", this%InitialVolume
 
     end subroutine check_engine
+
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    !                       volumeConservation                       
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    Function volumeConservation(this) Result(output)
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: Volume
+        
+        Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
+        
+        output = Volume - this%InitialVolume
+        
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidP, SurfaceIntegration   ) ! first  constrain
+    end Function volumeConservation
+
+
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    !                   PressureVolumeConservation                   
+    !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+    Function PressureVolumeConservation(this) Result(output)
+        Implicit None
+        Class(BubbleDiffusionStaticCS) :: this
+        Real(8)       :: output
+
+        Real(8)       :: Volume
+        
+
+        Volume = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, SurfaceIntegration )
+        
+        output = this%pressure * Volume - this%InitialPressure * this%InitialVolume
+     
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidP, SurfaceIntegration, this%pressure ) 
+        
+    end Function PressureVolumeConservation
 
     Subroutine deconstructor(This) 
         Implicit None

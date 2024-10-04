@@ -1,41 +1,7 @@
-
-Module BulkEquations
-    use storage, only: MATRIX_STORAGE_RESIDUAL, MATRIX_STORAGE_JACOBIAN
-
-    interface FEMinterpolation
-        Module Procedure FEMinterpolationA1
-        Module Procedure FEMinterpolationA2
-    end interface FEMinterpolation
-
-    Contains
-
-
-    Subroutine FEMinterpolationA1(nodes, bfn, var)
-        Implicit None 
-        Real(8), Dimension(:), Intent(In) :: nodes
-        Real(8), Dimension(:), Intent(In) :: bfn
-        Real(8), Intent(Out)            :: var
-        ! var = 0.d0
-        var = dot_product(nodes, bfn)
-    End Subroutine FEMinterpolationA1
-
-    Subroutine FEMinterpolationA2(nodes, bfn, var)
-        Implicit None 
-        Real(8), Dimension(:,:), Intent(In)     :: nodes
-        Real(8), Dimension(:),   Intent(In)     :: bfn
-        Real(8), Dimension(:),   Intent(Out)  :: var
-        integer :: i
-            
-        ! var = 0.d0
-        do i=1,size(var)
-            var(i) = dot_product(nodes(i,:), bfn)
-        enddo
-    End Subroutine FEMinterpolationA2
-
-
-
-
-    Subroutine DOMI_RESIDUAL_IntByPartsConvection( NELEM, TEMP_TL, TEMP_RES, STORE )
+    !---------------------------------------------------------------------
+    !                  SUBROUTINE   DOMI_RESIDUAL_fluid
+    !---------------------------------------------------------------------
+    Subroutine DOMI_RESIDUAL_fluid( NELEM, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
         Use basis_calculations
         Use PHYSICAL_MODULE
@@ -45,9 +11,8 @@ Module BulkEquations
         Use GLOBAL_ARRAYS_MODULE,    Only: TLo
         Use FLOW_ARRAYS_MODULE,      Only: B_f
         Use MESH_MODULE,             Only: Xm, Ym
-        Use TIME_INTEGRATION,        Only: Dt, increment
+        Use TIME_INTEGRATION,        Only: Dt
         use geometry,                only: distance, trace, secondInvariant
-
         Implicit None
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
         !  ARGUMENTS
@@ -104,8 +69,7 @@ Module BulkEquations
 
         X0_n(1,:) = Xm( NM_MESH(NELEM,:) )
         X0_n(2,:) = Ym( NM_MESH(NELEM,:) )
-        
-        
+
         Uelem = 0.d0
         ! Uelem = sum( [ (distance( U_n(:,ii), dXdt_n(:,ii) )/dble(NBF_2d) , ii=1, NBF_2d) ] )
         Uelem = sum( [ ( sqrt( (U_n(1,ii)- dXdt_n(1,ii))**2.d0 + (U_n(2,ii)- dXdt_n(2,ii))**2.d0 ), ii=1,NBF_2d ) ] )
@@ -133,18 +97,13 @@ Module BulkEquations
 
 
             BFN = BFN_2d(:,KK)
-            
+
             call basis_spatial_derivs( KK  , X_n, dBFNdX_, Jac )
-            
 
             call basis_interp_scalar ( P_n  , KK, X_n , Pgp , dPgpdX )
-            
             call basis_interp_scalar ( C_n  , KK, X_n , Cgp , dCgpdX )
-            
             call basis_interp_vector ( U_n  , KK, X_n , Ugp , gradUgp)
-            
             call basis_interp_vector ( X_n  , KK, X0_n, Xgp , dXdX0gp)
-            
             call basis_interp_vector ( X0_n , KK, X_n , X0gp, dX0dXgp)
 
             call FEMinterpolation(Xo_n, BFN(:), Xogp )  ;  call FEMinterpolation(Uo_n, BFN(:), Uogp )
@@ -184,6 +143,7 @@ Module BulkEquations
 
             dCdM = dCdt + dot_product( (Ugp-dXdt) , dCgpdX )
 
+            dCdM = PeN*dCdM 
             ! --------------------------------------------------
             ! --------------------------------------------------
 
@@ -206,7 +166,7 @@ Module BulkEquations
             tlsic   = helem**2/tlsme
 
             ! tlsmt   = hugn/(Uelem+1.d-8)
-            tlsmt   = sqrt((2.d0/dt)**2 + (Uelem)/(hugn+1.d-8)**2)
+            tlsmt   = sqrt((PeN/dt)**2 + (PeN*Uelem)/(hugn+1.d-8)**2)
             tlsmt = 1.d0/tlsmt
             ! print*, hugn, tlsmt, uelem
             ! pause
@@ -234,17 +194,26 @@ Module BulkEquations
                 ! ------------------------------
                 continuity_equation = ( trace(gradU)*BIFN + tlsme*dot_product(gradq,MomStr) ) * Xgp(2)
                 ! ------------------------------
-                ! elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
-                mtml = matmul(gradk, dX0dXgp)
+                elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
+                ! mtml = matmul(gradk, dX0dXgp)
 
-                elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
-                elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
+                ! elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
+                ! elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
                 ! ------------------------------
-                mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
-                ! mass_transfer       = ( PeN * ( dCdt*BIFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                ! mass_transfer       = ( dCdM*BIFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
+                mass_transfer       = ( dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2)
                 ! ------------------------------
 
-                
+                ! if ((kk==1) .and. (Iw==1))  then
+                !     write(*,*)dCdM, dot_product(gradm,dCgpdX)
+                !     pause
+                ! endif
+
+                ! print*, BIFN, SBFN
+                ! print*, 's=',S(1), S(2)
+                ! print*, 'sum=',( eo*S + (1.d0-eo) )
+                ! pause
+
                 ! =====================================================================================
                 TERM_RES                        = 0.d0
                 TERM_RES(getVariableId("Vz" ))  = momentum_equation(1)
@@ -263,8 +232,6 @@ Module BulkEquations
             ENDDO LOOP_RESIDUALS_f
 
         ENDDO LOOP_GAUSS
-        
-
         !---------------------------------------------------------------------
         !  STORE THE ELEMENT RESIDUAL VECTOR IN THE GLOBAL VECTOR B
         !---------------------------------------------------------------------
@@ -274,43 +241,5 @@ Module BulkEquations
             CALL MATRIX_STORAGE_RESIDUAL&
             ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
         ENDIF
-    END SUBROUTINE DOMI_RESIDUAL_IntByPartsConvection
-
-
-
-    !------------------------------------------------
-    !                  extra jacobian
-    !------------------------------------------------
-
-
-
-    Subroutine StoreToExtraJacobian(id, nm, temp_jac)
-        Use CSR_STORAGE, Only: Ac_f
-        Implicit None
-        Integer,                 Intent(In) :: id
-        Integer, Dimension(:)  , Intent(In) :: nm 
-        Real(8), Dimension(:,:), Intent(In) :: temp_jac
-
-        Integer                             :: NBF_2d
-        Integer                             :: NEQ_f 
-        Integer                             :: iw 
-        Integer                             :: jw 
-        Integer                             :: ieq 
-
-        NBF_2d = size(temp_jac,1)
-        NEQ_f  = size(temp_jac,2)
-
-        do iw = 1, NBF_2d
-            do ieq = 1, NEQ_f 
-                jw = nm(iw) + ieq - 1
-                Ac_f(jw,id) = Ac_f(jw,id) + temp_jac(iw,ieq)
-            end do 
-        end do 
-
-
-    End Subroutine StoreToExtraJacobian
-
-
-End Module BulkEquations
-
+    END SUBROUTINE DOMI_RESIDUAL_fluid
 

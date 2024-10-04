@@ -44,7 +44,7 @@ rm -f nohup.out
 		            ./src/Boundary_Equations_DifffusionOriented.f90     	 \
 								./src/BoundaryEquations/FixWallConcentrationBoundary.f90 \
 								./src/BoundaryEquations/SymmetryDiffusionBoundary.f90 \
-								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary.f90 \
+								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary_vectorialKinematic.f90 \
 								./src/BoundaryEquations/AmbientHenryBoundary.f90 \
 							./src/InitializeTypes.f90\
 								./src/FieldFunctions.f90\

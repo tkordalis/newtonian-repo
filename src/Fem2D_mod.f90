@@ -104,7 +104,7 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
     ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
-    Real(8), parameter       :: KHenry      = 1.d0/Rgas/Tgas          ! mol/m3/Pa
+    Real(8), parameter       :: KHenry      = 0.95d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
     Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
     ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
 
@@ -229,7 +229,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.05d0
+        Dt_constant = 0.1d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
@@ -485,10 +485,10 @@ END MODULE GLOBAL_ARRAYS_MODULE
 MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 50
-    REAL(8), PARAMETER :: ERROR_NR  = 5.d-7
+    REAL(8), PARAMETER :: ERROR_NR  = 1.d-7
     
 
-    REAL(8), PARAMETER :: EP_RES   = 1.0D-7
+    REAL(8), PARAMETER :: EP_RES   = 5.0D-8
 
 
     INTEGER            :: ITER_f
@@ -1645,6 +1645,36 @@ Module DirichletBoundaries
         end do 
 
     End Function integrateOverAllElementsOfTheBoundary
+
+    Function integrateOverAllElementsOfTheBoundaryAndPrintEachContribution(bnd_elements, bnd_faces, procedure_, unit) Result(output)
+        use time_integration, only:time
+        Implicit None 
+        Interface
+            Function procedure_ (bnd_elements, bnd_faces) Result(out)
+                Implicit None 
+                Real(8)             :: out 
+                Integer, Intent(In) :: bnd_elements
+                Integer, Intent(In) :: bnd_faces 
+            End Function procedure_
+        End Interface
+
+        Integer, Dimension(:), Intent(In) :: bnd_elements
+        Integer, Dimension(:), Intent(In) :: bnd_faces 
+        Integer,               Intent(In) :: unit 
+        Real(8)                           :: output 
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+        ! Local Variables
+        !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><> 
+        Integer :: iel 
+
+        output = 0.d0 
+        do iel = 1, size(bnd_elements) 
+            output = procedure_(bnd_elements(iel), bnd_faces(iel))
+            write(unit, '(f16.8,3x,i6,3x,f25.17)') time, bnd_elements(iel), output
+        end do 
+            write(unit, *) ' '
+
+    End Function integrateOverAllElementsOfTheBoundaryAndPrintEachContribution
 
 
     Subroutine ApplyDirichletAtNode_(node, FemValueName, value, FlagNr, gid )

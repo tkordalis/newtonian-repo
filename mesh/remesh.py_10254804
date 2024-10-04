@@ -5,7 +5,7 @@
 ###
 
 import sys
-import salome 
+import salome
 import read_datfile
 
 
@@ -60,9 +60,9 @@ def sortCoordinatesOfBoundary(CoordOfBoundary, VariableToSort):
 
 
     firstval = maxZ_point_coords
-    
 
-    
+
+
     nextval = firstval
     returnList = []
     CoordOfBoundary_temp  = []
@@ -75,7 +75,7 @@ def sortCoordinatesOfBoundary(CoordOfBoundary, VariableToSort):
         CoordOfBoundarySorted.append(nextval)
         index_next_point = min_distance_index_value(nextval, CoordOfBoundary_temp)[0]
         dS = min_distance_index_value(nextval, CoordOfBoundary_temp)[1]
-        
+
         ArcLength = ArcLength + dS
         nextval = CoordOfBoundary_temp[index_next_point]
 
@@ -156,12 +156,12 @@ OZ = geompy.MakeVectorDXDYDZ(0, 0, 7)
 
 
 Bubble1PointCoordinates = []
-for p in read_datfile.readBoundaryNodes("Bubble1.dat"):
+for p in read_datfile.readBoundaryNodes("Bubble1.dat_10254804"):
     Bubble1PointCoordinates.append(p)
 
 
 AmbientPointCoordinates = []
-for p in read_datfile.readBoundaryNodes("Ambient.dat"):
+for p in read_datfile.readBoundaryNodes("Ambient.dat_10254804"):
     AmbientPointCoordinates.append(p)
 
 
@@ -238,7 +238,7 @@ ellipse_Minor_Radius_mod = (Bubble1PointCoordinatesSorted[len(Bubble1PointCoordi
 if ellipse_Major_Radius_mod < ellipse_Minor_Radius_mod:
     ellipse_Major_Radius_mod = ellipse_Minor_Radius_mod + 0.1
 
-outer_ellipse_Major_Radius_mod = ellipse_Major_Radius_mod + 1 
+outer_ellipse_Major_Radius_mod = ellipse_Major_Radius_mod + 1
 outer_ellipse_Minor_Radius_mod = ellipse_Minor_Radius_mod + 1
 
 Ellipse_1     = geompy.MakeEllipse(Centroid, None, ellipse_Major_Radius_mod, ellipse_Minor_Radius_mod)
@@ -299,12 +299,12 @@ def getgroupFace( mainGroup, refZone, gid, obj, union, mesh_obj):
 idtankWall = []
 tankWall       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 idtankWall.append(returnIDofShape(0, [ 0, Radius_tank ], [0, 0], "EDGE"))
-idtankWall.append( returnIDofShape(0, [ -0.5*Height_tank, +h_s ], [0, 0], "EDGE") ) 
+idtankWall.append( returnIDofShape(0, [ -0.5*Height_tank, +h_s ], [0, 0], "EDGE") )
 idtankWall.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,Radius_tank ], [0, 0], "EDGE" ) )
 tankWall_union = geompy.UnionIDs(tankWall , idtankWall  )
 
 
-idrightPlane = [] 
+idrightPlane = []
 rightPlane   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 idrightPlane.append( returnIDofShape(0, [ (AmbientPointCoordinates[0])[0], +h_s ], [0, 0], "EDGE") )
 rightPlane_union = geompy.UnionIDs( rightPlane , idrightPlane )
@@ -393,7 +393,7 @@ for i in range(len(Symmetry_groups)):
             origin_of_axes = Centroid_coords
             x_tilt =  [outer_ellipse_Major_Radius_mod+h_s,0]
 
-            
+
     # if Symmetry_groups[i]["leftOrRight"] == "left":
     #     theta_degrees = 180
     # elif Symmetry_groups[i]["leftOrRight"] == "right":
@@ -504,7 +504,7 @@ from salome.smesh import smeshBuilder
 smesh = smeshBuilder.New()
 
 
-def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: float): 
+def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: float):
 
     params = Properties.Parameters()
     params.SetMaxSize            (  maxsize  )
@@ -535,7 +535,7 @@ MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.1)
 
 Params = []
 
-Groups_faces[0]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[0]["obj"]) 
+Groups_faces[0]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[0]["obj"])
 j=0
 for i in range(1,len(Groups_faces)):
     # print(str(i))
@@ -573,7 +573,7 @@ isDone = Mesh_1.SplitQuadObject( Mesh_1, 1 )
 
 
 try:
-  Mesh_1.ExportUNV( r'./Bounded.unv' )
+  Mesh_1.ExportUNV("remesh_50.0000.unv")
   pass
 except:
   print('ExportUNV() failed. Invalid file name?')
