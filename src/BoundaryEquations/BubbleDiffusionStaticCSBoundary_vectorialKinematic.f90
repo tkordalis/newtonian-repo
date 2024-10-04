@@ -153,9 +153,9 @@ Module BubbleDiffusionStaticCSBoundary
         ! output = (this%mol - this%mol_o)/dt + totalMolFlux
         ! Now I multiply with dt inside int_n_dot_F to avoid dividing with a small term
         ! output = (this%mol - this%mol_o) + totalMolFlux
-        output = (this%mol - this%mol_o) !+ totalMolFlux
+        output = (this%mol - this%mol_o) + totalMolFlux
      
-        ! call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
         
         ! write(*,*) ' '
         ! write(*,*) '------------------ molBalance ------------------'
@@ -229,7 +229,7 @@ Module BubbleDiffusionStaticCSBoundary
 
 
         Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_kinematic
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_kinematic_z, RES_kinematic_r
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_thetaEquid
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_stresses
         Integer                              :: iel, element, face
@@ -265,14 +265,14 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                    call Kinematic_mass_gasInterfaceSUPG        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+                    call Kinematic_mass_gasInterf_z        (element, face, TL_, RES_kinematic_z, .true., This%mol, this%volume, This%velocity )
                     
                     If (FlagNR == "NRP") then
-                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
+                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterf_z        ,element, face, TL_, RES_kinematic_z, This%mol, this%Volume, This%velocity )
                         !Extra Unknown
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_z   ,element, face, TL_, RES_kinematic_z, 1, This%mol, this%Volume, This%velocity, this%gidC)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_z   ,element, face, TL_, RES_kinematic_z, 2, This%mol, this%Volume, This%velocity, this%gidV)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_z   ,element, face, TL_, RES_kinematic_z, 3, This%mol, this%Volume, This%velocity, this%gidU)
                     endif
                 enddo
             else
@@ -287,10 +287,14 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                    call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
+                    call Kinematic_mass_gasInterf_r        (element, face, TL_, RES_kinematic_r, .true., This%mol, this%volume, This%velocity )
                     
                     If (FlagNR == "NRP") then
-                        call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
+                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterf_r        ,element, face, TL_, RES_kinematic_r, This%mol, this%Volume, This%velocity )
+                        !Extra Unknown
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_r   ,element, face, TL_, RES_kinematic_r, 1, This%mol, this%Volume, This%velocity, this%gidC)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_r   ,element, face, TL_, RES_kinematic_r, 2, This%mol, this%Volume, This%velocity, this%gidV)
+                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterf_r   ,element, face, TL_, RES_kinematic_r, 3, This%mol, this%Volume, This%velocity, this%gidU)
                     endif
                 enddo
 
