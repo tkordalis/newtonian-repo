@@ -105,8 +105,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
     Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
     ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
-    Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-    ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
+    ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
+    Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
 
     Real(8), parameter       :: rho           = 873.d0         ! kg/m3: density of fluid
     Real(8), parameter       :: MrWater       = 0.41d0          ! kg/mol
@@ -485,10 +485,10 @@ END MODULE GLOBAL_ARRAYS_MODULE
 MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 50
-    REAL(8), PARAMETER :: ERROR_NR  = 1.d-7
+    REAL(8), PARAMETER :: ERROR_NR  = 2.d-7
     
 
-    REAL(8), PARAMETER :: EP_RES   = 5.0D-8
+    REAL(8), PARAMETER :: EP_RES   = 1.0D-8
 
 
     INTEGER            :: ITER_f

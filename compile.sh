@@ -42,10 +42,10 @@ rm -f nohup.out
 							  ./src/extraequations.f90       \
 								./src/NumericalExtraJacobian.f90\
 		            ./src/Boundary_Equations_DifffusionOriented.f90     	 \
-								./src/BoundaryEquations/FixWallConcentrationBoundary.f90 \
-								./src/BoundaryEquations/SymmetryDiffusionBoundary.f90 \
-								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary_simpleKinematic.f90 \
-								./src/BoundaryEquations/AmbientHenryBoundary.f90 \
+								./src/BoundaryEquations/FixWallConcentrationBoundary_mrf.f90 \
+								./src/BoundaryEquations/SymmetryDiffusionBoundary_mrf.f90 \
+								./src/BoundaryEquations/BubbleDiffusionStaticCSBoundary_simpleKinematic_mrf.f90 \
+								./src/BoundaryEquations/AmbientHenryBoundary_mrf.f90 \
 							./src/InitializeTypes.f90\
 								./src/FieldFunctions.f90\
 								./src/io_module.f90\

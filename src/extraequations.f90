@@ -101,8 +101,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -352,8 +352,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -452,8 +452,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -553,8 +553,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -566,7 +566,7 @@ Module ExtraEquations
             TERM_1  = TERM_1 + ( (  + nZ*(Vz-dZdt) ) * C ) * (R*WET)
             
 
-        ENDDO LOOP_GAUSS
+        ENDDO LOOP_GAUSS 
 
 
         TEMP_RES = 2.d0*pi*TERM_1
@@ -652,8 +652,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -751,8 +751,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -850,8 +850,8 @@ Module ExtraEquations
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
-            dRdt = (Z-Zo) / dt
-            dZdt = (R-Ro) / dt
+            dZdt = (Z-Zo) / dt
+            dRdt = (R-Ro) / dt
 
             !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
