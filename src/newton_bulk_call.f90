@@ -143,22 +143,33 @@ module newton_bulk_call
             ! print*, "% norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f))/RES_NORM, "% norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))/RES_NORM
             ! print*, "  "
 
-              ! jj=1
-              ! kk=0
-              ! do ii = 1, size(B_f)
-              !    if (jj .gt. NEQ_f) jj=1
-              !    if (jj .eq. 1) then
-              !      kk=kk+1
-              !    endif
+              jj=1
+              kk=0
+              do ii = 1, size(B_f)
+                 if (jj .gt. NEQ_f) jj=1
+                 if (jj .eq. 1) then
+                   kk=kk+1
+                 endif
               !      !! if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
-              !      if ( sqrt(Xm(kk)**2 + Ym(kk)**2) .lt. 1.02d0) then 
-              !        print*,'global_node=', kk
-              !        print*, ' ' 
-              !        print '(A9,3x,3x,3(f10.5,3x))','(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2)
-              !        print*, ' ' 
-              !        !! print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
-              !        write(*,'(a9,3x,3(a8,3x))') 'variable','        ', 'residual' ,'        ',  'relative residual'
-              !        !! print '(A9,2x,f25.19,2x,f25.19)', getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+                    if ( getVariableName(jj) == "Z") then 
+                        if ( sqrt(Xm(kk)**2 + Ym(kk)**2) .lt. 1.01d0) then 
+                            if (iter_f .gt. 16) then
+                     ! print*,'global_node=', kk
+                                ! write(404,*)'global_node=', kk
+                                ! write(404,*) ' ' 
+                                write(404,'(i5,3x,5(e15.8,3x))'), ii, Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+                                ! write(404,*) ' '
+                                ! write(404,*) ' '
+                            endif
+                        endif
+                    endif
+                 jj=jj+1
+
+              enddo
+
+                     ! print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
+                     ! write(404,'(a9,3x,3(a8,3x))') 'variable','        ', 'residual' ,'        ',  'relative residual'
+                     ! write(404,'(A9,2x,f25.19,2x,f25.19)')  getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
               !        write(*,'(a9,3x,3(e14.7,3x))')  getVariableName(jj), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
 
               !        !! write(404,'(i10,2x,f25.19,2x,f25.19,2x,f25.19)'), ii, (B_f(ii)), RES_NORM, (B_f(ii))/ RES_NORM

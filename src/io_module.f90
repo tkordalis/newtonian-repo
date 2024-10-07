@@ -160,6 +160,8 @@ Module IO_module
         Use RemeshVariables
         Use FieldFunctions
         Use VariableMapping
+        use time_integration, only:dt
+        use GLOBAL_ARRAYS_MODULE, only:TLo
         Use MESH_MODULE, only: Xm, Ym
         Implicit None 
         Real(8), Dimension(:,:), Intent(In) :: Solution
@@ -196,6 +198,7 @@ Module IO_module
                 call tecfile%addVariable("Vr"      , Solution(:, getVariableId("Vr"  )))
                 call tecfile%addVariable("P"      , Solution(:, getVariableId("P"  )))
                 call tecfile%addVariable("C"      , Solution(:, getVariableId("C"  )))
+                call tecfile%addVariable("dRdt"   , ( (Solution(:, getVariableId("R")) - TLo(:, getVariableId("R")) )/dt ))
                 ! call tecfile%addVariable("Canalytic" , CanalyticLandau( Solution(:,:) ) )
                 
 

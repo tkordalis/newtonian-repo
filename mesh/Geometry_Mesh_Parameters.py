@@ -37,8 +37,8 @@ Height_tank 	= 200
 Sphere_position = 0.
 
 
-# NumSegmentsOnSphere = 200
-NumSegmentsOnSphere  = 1200
+NumSegmentsOnSphere = 300
+# NumSegmentsOnSphere  = 1200
 NumSegmentsOnAmbient = 30
 
 Element_size_on_Sphere = 3.1415926535/NumSegmentsOnSphere
@@ -51,6 +51,11 @@ dR_ref1 = 4*Element_size_on_Sphere
 dR_ref2 = 3*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
+
+dR_ref3 = R_refinement2_Sphere1 + 1
+dR_ref4 = dR_ref3 + 1
+R_refinement3_Sphere1 = RSphere1 + dR_ref3
+R_refinement4_Sphere1 = RSphere1 + dR_ref4
 
 dZ_refAmb = 3.0*Element_size_on_Ambient_cb
 dZ_refAmb = 0.5*Height_tank - dZ_refAmb

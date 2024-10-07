@@ -35,7 +35,7 @@ from salome.geom import geomtools
 # ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 # Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere
 
-from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, R_refinement1_Sphere1, R_refinement2_Sphere1, \
+from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, dR_ref3, dR_ref4, R_refinement1_Sphere1, R_refinement2_Sphere1,R_refinement3_Sphere1, R_refinement4_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
 dZ_refAmb, Element_size_on_Ambient_cb
@@ -76,18 +76,24 @@ Disk_refinement1_Sphere1_minusSpherePosition = geompy.MakeTranslation(Disk_refin
 [Wire_2] = geompy.ExtractShapes(Disk_refinement2_Sphere1, geompy.ShapeType["WIRE"], True)
 
 
-vertex_ellipse_position  = geompy.MakeVertex(ellipse_position, 0, 0)
+Disk_refinement3_Sphere1 = geompy.MakeDiskR(R_refinement3_Sphere1,1)
+Disk_refinement4_Sphere1 = geompy.MakeDiskR(R_refinement4_Sphere1,1)
+[Wire_3] = geompy.ExtractShapes(Disk_refinement3_Sphere1, geompy.ShapeType["WIRE"], True)
+[Wire_4] = geompy.ExtractShapes(Disk_refinement4_Sphere1, geompy.ShapeType["WIRE"], True)
 
-Ellipse_1     = geompy.MakeEllipse(vertex_ellipse_position, None, ellipse_Major_Radius, ellipse_Minor_Radius)
-Ellipse_outer = geompy.MakeEllipse(vertex_ellipse_position, None, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius)
+
+# vertex_ellipse_position  = geompy.MakeVertex(ellipse_position, 0, 0)
+
+# Ellipse_1     = geompy.MakeEllipse(vertex_ellipse_position, None, ellipse_Major_Radius, ellipse_Minor_Radius)
+# Ellipse_outer = geompy.MakeEllipse(vertex_ellipse_position, None, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius)
 
 
 
-ellipse_position_left  = ellipse_Major_Radius - ellipse_position
-ellipse_position_right = ellipse_Major_Radius + ellipse_position
+# ellipse_position_left  = ellipse_Major_Radius - ellipse_position
+# ellipse_position_right = ellipse_Major_Radius + ellipse_position
 
-outer_ellipse_position_left  = ellipse_position_left	+ 1.0
-outer_ellipse_position_right = ellipse_position_right	+ 1.0
+# outer_ellipse_position_left  = ellipse_position_left	+ 1.0
+# outer_ellipse_position_right = ellipse_position_right	+ 1.0
 
 
 vertex_dZ_amb1  = geompy.MakeVertex(dZ_refAmb, 0, 0)
@@ -99,7 +105,7 @@ line_dZ_amb 	= geompy.MakeLineTwoPnt(vertex_dZ_amb1, vertex_dZ_amb2)
 
 
 # PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer], True, True)
-PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer, line_dZ_amb], True, True)
+PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Wire_3, Wire_4, line_dZ_amb], True, True)
 
 Partition_1   = geompy.MakePartition([Domain_cut], [PartitionTool], [], [], geompy.ShapeType["FACE"], 0, [], 0)
 
@@ -223,10 +229,10 @@ for i in range(len(Symmetry_groups)):
 			x_tilt = [R_refinement2_Sphere1+h_s, 0]
 
 		elif Symmetry_groups[i]["refZone"] == "ellipse2":
-			x_tilt = [ellipse_position_left-0+h_s, 0] 
+			x_tilt = [R_refinement3_Sphere1-0+h_s, 0] 
 
 		elif Symmetry_groups[i]["refZone"] == "out":
-			x_tilt = [outer_ellipse_position_left-0+h_s, 0] 
+			x_tilt = [R_refinement4_Sphere1-0+h_s, 0] 
 
 	
 
@@ -302,9 +308,9 @@ for i in range(len(Groups_faces)):
 			x_tilt = [0,R_refinement1_Sphere1 + h_s]
 	elif Groups_faces[i]["mainGroup"] == "ellipse":
 		if Groups_faces[i]["refZone"] == "1":
-			x_tilt = [0,ellipse_Minor_Radius - 2*h_s]
+			x_tilt = [0,R_refinement3_Sphere1 - 2*h_s]
 		elif Groups_faces[i]["refZone"] == "2":
-			x_tilt = [0,ellipse_Minor_Radius + 2*h_s]
+			x_tilt = [0,R_refinement3_Sphere1 + 2*h_s]
 	elif Groups_faces[i]["mainGroup"] == "Ambient":
 		x_tilt = [ 0.5*Height_tank-h_s, h_s ]
 

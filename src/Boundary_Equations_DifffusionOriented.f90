@@ -228,7 +228,7 @@ Module Boundary_EquationsDO
         !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
         !---------------------------------------------------------------------
         TEMP_RES = 0.D0
-        bconcentration = bmol/bvolume
+        bconcentration = 0.d0!bmol/bvolume
         !---------------------------------------------------------------------
         !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
         !---------------------------------------------------------------------
@@ -341,7 +341,7 @@ Module Boundary_EquationsDO
                 DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                 DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
             
-                SBFN         = BIFN !+ tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
+                SBFN         = BIFN + tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
                 ! SBFN         = BIFN + tsupg*( (- dRdt )*tR + (bvelocity - dZdt )*tZ )*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
@@ -447,7 +447,7 @@ Module Boundary_EquationsDO
         !  BEFORE FORMING ELEMENTAL JACOBIAN AND RHS VECTOR
         !---------------------------------------------------------------------
         TEMP_RES = 0.D0
-        bconcentration = bmol/bvolume
+        bconcentration = 0.d0!bmol/bvolume
         !---------------------------------------------------------------------
         !  ITERATE OVER EACH GAUSS POINT IN AN ELEMENT
         !---------------------------------------------------------------------
@@ -560,7 +560,8 @@ Module Boundary_EquationsDO
                 DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                 DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
             
-                SBFN         = BIFN !+ tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
+                SBFN         = BIFN + tsupg*( (Vr-dRdt)*tZ + (Vz-dZdt)*tR )*DFDL(IW,KK)
+                ! SBFN         = BIFN + tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
                 ! SBFN         = BIFN + tsupg*( (- dRdt )*tR + (bvelocity - dZdt )*tZ )*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             

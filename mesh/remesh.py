@@ -25,7 +25,7 @@ from numpy import *
 import SALOMEDS
 from salome.geom import geomtools
 
-from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, R_refinement1_Sphere1, R_refinement2_Sphere1, \
+from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2,  dR_ref3, dR_ref4, R_refinement1_Sphere1, R_refinement2_Sphere1, R_refinement3_Sphere1, R_refinement4_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
 dZ_refAmb, Element_size_on_Ambient_cb
@@ -173,6 +173,11 @@ AmbientPointCoordinatesSorted = result_Amb[0]
 
 
 Bubble1Points = [geompy.MakeVertex(*p, 0) for p in Bubble1PointCoordinatesSorted]
+i=-1
+for item in Bubble1Points:
+    i+=1
+    geompy.addToStudy(item,str(i))
+
 
 B1_leftPoint  = Bubble1Points[-1]
 B1_rightPoint = Bubble1Points[0]
@@ -224,28 +229,30 @@ Scaled_Curve_Bubble1_Ref2_coords = CurveCoordinatesScaling(Bubble1PointCoordinat
 Scaled_Curve_Bubble1_Ref2_points = [geompy.MakeVertex(*p, 0) for p in Scaled_Curve_Bubble1_Ref2_coords]
 Scaled_Curve_Bubble1_Ref2 = geompy.MakeInterpol(Scaled_Curve_Bubble1_Ref2_points, False)
 
+Scaled_Curve_Bubble1_Ref3_coords = []
+Scaled_Curve_Bubble1_Ref3_points = []
+Scaled_Curve_Bubble1_Ref3_coords = CurveCoordinatesScaling(Bubble1PointCoordinatesSorted, -dR_ref3)
+Scaled_Curve_Bubble1_Ref3_points = [geompy.MakeVertex(*p, 0) for p in Scaled_Curve_Bubble1_Ref3_coords]
+Scaled_Curve_Bubble1_Ref3 = geompy.MakeInterpol(Scaled_Curve_Bubble1_Ref3_points, False)
+
+Scaled_Curve_Bubble1_Ref4_coords = []
+Scaled_Curve_Bubble1_Ref4_points = []
+Scaled_Curve_Bubble1_Ref4_coords = CurveCoordinatesScaling(Bubble1PointCoordinatesSorted, -dR_ref4)
+Scaled_Curve_Bubble1_Ref4_points = [geompy.MakeVertex(*p, 0) for p in Scaled_Curve_Bubble1_Ref4_coords]
+Scaled_Curve_Bubble1_Ref4 = geompy.MakeInterpol(Scaled_Curve_Bubble1_Ref4_points, False)
+
 geompy.addToStudy(Scaled_Curve_Bubble1_Ref1,'Scaled_Curve_Bubble1_Ref1')
 geompy.addToStudy(Scaled_Curve_Bubble1_Ref2,'Scaled_Curve_Bubble1_Ref2')
+geompy.addToStudy(Scaled_Curve_Bubble1_Ref3,'Scaled_Curve_Bubble1_Ref3')
+geompy.addToStudy(Scaled_Curve_Bubble1_Ref4,'Scaled_Curve_Bubble1_Ref4')
 
 
 Centroid        = geompy.MakeVertexOnCurve(B1_line, 0.5, True)
 Centroid_coords = geompy.PointCoordinates(Centroid)
 
-# ellipse_Major_Radius_mod = (Bubble1PointCoordinatesSorted[0])[0] + (ellipse_Major_Radius - RSphere1)+0.2
-ellipse_Major_Radius_mod = (Bubble1PointCoordinatesSorted[0])[0] + (ellipse_Major_Radius)+0.2
-ellipse_Minor_Radius_mod = (Bubble1PointCoordinatesSorted[len(Bubble1PointCoordinatesSorted) // 2])[1] + (ellipse_Minor_Radius - RSphere1)
-
-if ellipse_Major_Radius_mod < ellipse_Minor_Radius_mod:
-    ellipse_Major_Radius_mod = ellipse_Minor_Radius_mod + 0.1
-
-outer_ellipse_Major_Radius_mod = ellipse_Major_Radius_mod + 1 
-outer_ellipse_Minor_Radius_mod = ellipse_Minor_Radius_mod + 1
-
-Ellipse_1     = geompy.MakeEllipse(Centroid, None, ellipse_Major_Radius_mod, ellipse_Minor_Radius_mod)
-Ellipse_outer = geompy.MakeEllipse(Centroid, None, outer_ellipse_Major_Radius_mod, outer_ellipse_Minor_Radius_mod)
 
 
-partition_line_list = [ Scaled_Curve_Bubble1_Ref1, Scaled_Curve_Bubble1_Ref2, Ellipse_1, Ellipse_outer ]
+partition_line_list = [ Scaled_Curve_Bubble1_Ref1, Scaled_Curve_Bubble1_Ref2, Scaled_Curve_Bubble1_Ref3, Scaled_Curve_Bubble1_Ref4 ]
 
 partition_tool = geompy.MakeFuseList( partition_line_list, True, True)
 
@@ -309,6 +316,12 @@ rightPlane   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 idrightPlane.append( returnIDofShape(0, [ (AmbientPointCoordinates[0])[0], +h_s ], [0, 0], "EDGE") )
 rightPlane_union = geompy.UnionIDs( rightPlane , idrightPlane )
 
+idSphere1     = []
+idSphere1.append(returnIDofShape( 0, [(geompy.PointCoordinates(Bubble1Points[5]))[0], (geompy.PointCoordinates(Bubble1Points[5]))[1]], [0,0], "EDGE" ))
+Sphere1       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+Sphere1_union = geompy.UnionIDs( Sphere1 , idSphere1 )
+print(idSphere1)
+# print(Bubble1PointCoordinatesSorted[10])
 
 idSymmetry = []
 
@@ -378,20 +391,24 @@ for i in range(len(Symmetry_groups)):
 
 
         elif Symmetry_groups[i]["refZone"] == "ellipse2" and Symmetry_groups[i]["leftOrRight"] == "left":
-            origin_of_axes = Centroid_coords
-            x_tilt =  [-ellipse_Major_Radius_mod-h_s,0]
+            x_tilt_dumy =  Scaled_Curve_Bubble1_Ref3_coords[-1]
+            x_tilt[0] =  x_tilt_dumy[0]-h_s
+            x_tilt[1] = x_tilt_dumy[1]
 
         elif Symmetry_groups[i]["refZone"] == "ellipse2" and Symmetry_groups[i]["leftOrRight"] == "right":
-            origin_of_axes = Centroid_coords
-            x_tilt =  [ellipse_Major_Radius_mod+h_s,0]
+            x_tilt_dumy =  Scaled_Curve_Bubble1_Ref3_coords[0]
+            x_tilt[0] =  x_tilt_dumy[0]+h_s
+            x_tilt[1] = x_tilt_dumy[1]
 
         elif Symmetry_groups[i]["refZone"] == "out" and Symmetry_groups[i]["leftOrRight"] == "left":
-            origin_of_axes = Centroid_coords
-            x_tilt =  [-outer_ellipse_Major_Radius_mod-h_s,0]
+            x_tilt_dumy =  Scaled_Curve_Bubble1_Ref4_coords[-1]
+            x_tilt[0] =  x_tilt_dumy[0]-h_s
+            x_tilt[1] = x_tilt_dumy[1]
 
         elif Symmetry_groups[i]["refZone"] == "out" and Symmetry_groups[i]["leftOrRight"] == "right":
-            origin_of_axes = Centroid_coords
-            x_tilt =  [outer_ellipse_Major_Radius_mod+h_s,0]
+            x_tilt_dumy =  Scaled_Curve_Bubble1_Ref4_coords[0]
+            x_tilt[0] =  x_tilt_dumy[0]+h_s
+            x_tilt[1] = x_tilt_dumy[1]
 
             
     # if Symmetry_groups[i]["leftOrRight"] == "left":
@@ -426,15 +443,14 @@ horizontalsSphere1_union = geompy.UnionIDs( horizontalsSphere1, idhorizontalsSph
 
 geompy.addToStudyInFather(Partition_1, Symmetry, "Symmetry")
 
-idSphere1     = [returnIDofShape( 1, Bubble1PointCoordinatesSorted[5], [0,0], "EDGE" )]
-Sphere1       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
-Sphere1_union = geompy.UnionIDs( Sphere1 , idSphere1 )
 
 
-idSphere1Ref1     = [returnIDofShape( 1, Scaled_Curve_Bubble1_Ref1_coords[5], [0,0], "EDGE" )]
+
+idSphere1Ref1     = [returnIDofShape( 0, Scaled_Curve_Bubble1_Ref1_coords[5], [0,0], "EDGE" )]
 Sphere1Ref1         = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Sphere1_unionRef1 = geompy.UnionIDs( Sphere1Ref1 , idSphere1Ref1 )
 
+geompy.addToStudyInFather(Partition_1,Sphere1,"Sphere1")
 geompy.addToStudyInFather(Partition_1,Sphere1Ref1,"Sphere1Ref1")
 
 
@@ -455,6 +471,8 @@ for i in range(len(Groups_faces)):
             x_tilt_dumy = Bubble1PointCoordinatesSorted[5]
             x_tilt[0] = x_tilt_dumy[0]+h_s
             x_tilt[1] = x_tilt_dumy[1]+h_s
+            # print(x_tilt_dumy)
+            # print(x_tilt)
         elif Groups_faces[i]["refZone"] == "Ref_2":
             x_tilt_dumy = Scaled_Curve_Bubble1_Ref1_coords[5]
             x_tilt[0] = x_tilt_dumy[0]+h_s
@@ -465,8 +483,9 @@ for i in range(len(Groups_faces)):
             x_tilt[0] = x_tilt_dumy[0]+h_s
             x_tilt[1] = x_tilt_dumy[1]+h_s
         elif Groups_faces[i]["refZone"] == "2":
-            origin_of_axes = Centroid_coords
-            x_tilt = [0,ellipse_Minor_Radius + 2*h_s]
+            x_tilt_dumy = Scaled_Curve_Bubble1_Ref3_coords[5]
+            x_tilt[0] = x_tilt_dumy[0]+h_s
+            x_tilt[1] = x_tilt_dumy[1]+h_s
     # elif Groups_faces[i]["mainGroup"] == "Ambient":
     #     x_tilt = [ 0.5*Height_tank-h_s, h_s ]
 
@@ -475,21 +494,22 @@ for i in range(len(Groups_faces)):
 
     Groups_faces[i]["id"] = returnIDofShape( theta_degrees, x_tilt, origin_of_axes, "FACE")
 
-i=0
+i=-1
 for item in Groups_faces:
     i = i+1
     item["obj"] = geompy.CreateGroup(Partition_1, geompy.ShapeType["FACE"])
     item["union"] = geompy.UnionIDs(item["obj"] , [ item["id" ]] )
     # print(item["mainGroup"], item["refZone"])
     geompy.addToStudyInFather(Partition_1, item["obj"], str(i))
+    # print(Groups_faces[i]["id"])
 
 
-print(Bubble1PointCoordinatesSorted[0])
-print(Bubble1PointCoordinatesSorted[-1])
-print(Scaled_Curve_Bubble1_Ref1_coords[0])
-print(Scaled_Curve_Bubble1_Ref1_coords[-1])
-print(Scaled_Curve_Bubble1_Ref2_coords[0])
-print(Scaled_Curve_Bubble1_Ref2_coords[-1])
+# print(Bubble1PointCoordinatesSorted[0])
+# print(Bubble1PointCoordinatesSorted[-1])
+# print(Scaled_Curve_Bubble1_Ref1_coords[0])
+# print(Scaled_Curve_Bubble1_Ref1_coords[-1])
+# print(Scaled_Curve_Bubble1_Ref2_coords[0])
+# print(Scaled_Curve_Bubble1_Ref2_coords[-1])
 
 
 # # # --------------------------- End of Geometry --------------------------- #
@@ -551,7 +571,7 @@ Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxS
 
 tankWall_1      =  Mesh_1.GroupOnGeom( tankWall     ,'tankWall'   ,SMESH.EDGE )
 Symmetry_1      =  Mesh_1.GroupOnGeom( Symmetry     ,'Symmetry'   ,SMESH.EDGE )
-Sphere1_1           =  Mesh_1.GroupOnGeom( Sphere1      ,'Bubble1'    ,SMESH.EDGE )
+Sphere1_1       =  Mesh_1.GroupOnGeom( Sphere1      ,'Bubble1'    ,SMESH.EDGE )
 rightPlane_1    =  Mesh_1.GroupOnGeom( rightPlane ,'Ambient'        ,SMESH.EDGE )
 
 

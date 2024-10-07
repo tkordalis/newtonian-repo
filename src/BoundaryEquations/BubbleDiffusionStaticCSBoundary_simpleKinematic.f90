@@ -265,14 +265,11 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                    call Kinematic_mass_gasInterfaceSUPG        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+                    ! call Kinematic_mass_gasInterfaceSUPG        (element, face, TL_, RES_kinematic, .true., This%mol, this%volume, This%velocity )
+                    call Kinematic        (element, face, TL_, RES_kinematic, .true. )
                     
                     If (FlagNR == "NRP") then
-                        call CalculateJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG        ,element, face, TL_, RES_kinematic, This%mol, this%Volume, This%velocity )
-                        !Extra Unknown
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 1, This%mol, this%Volume, This%velocity, this%gidC)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 2, This%mol, this%Volume, This%velocity, this%gidV)
-                        call CalculateExtraJacobianContributionsOf(Kinematic_mass_gasInterfaceSUPG   ,element, face, TL_, RES_kinematic, 3, This%mol, this%Volume, This%velocity, this%gidU)
+                        call CalculateJacobianContributionsOf(Kinematic     ,element, face, TL_, RES_kinematic )
                     endif
                 enddo
             else
