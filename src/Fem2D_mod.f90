@@ -103,7 +103,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: Dcoef       = 4.55d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
-    Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    Real(8), parameter       :: KHenry      = 1.246d-4          ! mol/m3/Pa
     ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
     ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
     Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3

@@ -111,8 +111,7 @@ Module ExtraEquations
             normalize = .true., forceOnObject = .true.) 
             WET = WO_1d(KK)*dL
 
-            ! TERM_1  = TERM_1 + ( ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
-            TERM_1  = TERM_1 + ( 0.d0*( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
+            TERM_1  = TERM_1 + ( ( nR*(Vr-dRdt) + nZ*(Vz-dZdt) ) * C - (nR*dCdR + nZ*dCdZ)/PeN ) * (R*WET)
             
 
         ENDDO LOOP_GAUSS

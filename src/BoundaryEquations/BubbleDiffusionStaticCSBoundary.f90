@@ -155,7 +155,7 @@ Module BubbleDiffusionStaticCSBoundary
         ! output = (this%mol - this%mol_o) + totalMolFlux
         output = (this%mol - this%mol_o) + totalMolFlux
      
-        ! call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
+        call loopOverElements(this%nelem, this%elements, this%faces, this%gidC, int_n_dot_F ) 
         
         ! write(*,*) ' '
         ! write(*,*) '------------------ molBalance ------------------'

@@ -185,17 +185,18 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(10) :: title_results
+        character(18), dimension(7) :: title_results
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
         ! title_results = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'volumeRateOfChange' ,  'ChamberP', 'int_ndotF','int_uminusumesh', 'int_ndotgradC', 'int_ndotUbubblemUmesh', 'ndotumumesh_z', 'ndotumumesh_r' ]
-        title_results = [ 'time', 'mol','volume','velocity', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbubblemUmesh_z','int_ndotUbubblemUmesh_r', 'ndotumumesh_z', 'ndotumumesh_r' ]
+        ! title_results = [ 'time', 'mol','volume','velocity', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbubblemUmesh_z','int_ndotUbubblemUmesh_r', 'ndotumumesh_z', 'ndotumumesh_r' ]
+        title_results = [ 'time', 'mol','volume','int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh','int_ndotUmUmesh' ]
         do i=1,size(title_results)
-            write(20,'(A17,3x)', advance='no') title_results(i)
+            write(20,'(A25,3x)', advance='no') title_results(i)
         enddo
-        write(20,*) " " 
+        write(20,*)
     end Subroutine openBubbleFiles
 
     Subroutine WriteBubbleFiles(TIME)
@@ -212,8 +213,8 @@ Module BubbleOutput
         !                             bubble%calculatendotgradC(), bubble%calculatendotUbubbleMinusUmesh(), &
         !                             bubble%calculatendotUmUmesh_z(), bubble%calculatendotUmUmesh_r(), bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUbubblemUmesh_z()
 
-        write(20,'(10(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), bubble%calculatendotF(), bubble%calculatendotgradC_r()+bubble%calculatendotgradC_z(),&
-                                    bubble%calculatendotUbubblemUmesh_z(), bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z(), bubble%calculatendotUmUmesh_r()
+        write(20,'(7(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(),&
+                                    bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r()
 dummy = bubble%printEachContributionOfKinematicBC()
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput
