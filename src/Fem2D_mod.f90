@@ -121,7 +121,32 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: length_char   =  0.36d-3          ! m
     Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
     
- 
+    
+    ! !_______________________________________________________________________________
+    ! ! These numbers are for O2 in silicon oil - S3 - Jia et al.
+    ! !-------------------------------------------------------------------------------
+    ! Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
+    ! Real(8), parameter       :: Pinitial    = 31300.d0       ! Pa
+    ! Real(8), parameter       :: Dcoef       = 2.2d-9          ! m2/s
+    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    ! Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
+    ! ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    ! Real(8), parameter       :: KHenry      = 1.246d-4          ! mol/m3/Pa
+    ! ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
+    ! ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
+    ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
+
+    ! Real(8), parameter       :: rho           = 950.d0         ! kg/m3: density of fluid
+    ! Real(8), parameter       :: MrWater       = 2.d0          ! kg/mol
+    ! Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
+    
+    ! Real(8), parameter       :: surface_tension = 0.0206d0
+    
+    ! Real(8), parameter       :: viscosity = 0.0183d0
+    ! !_______________________________________________________________________________
+    
+    ! Real(8), parameter       :: length_char   =  0.52d-3          ! m
+    ! Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
 
   
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
@@ -1883,8 +1908,10 @@ MODULE GAUSS_MODULE
         Case(1); bfn(:,:) = bfn_e(:,:,1); dfdc = dfdc_e(:,:,1); dfde = dfde_e(:,:,1)
 
         Case(2); bfn(:,:) = bfn_e(:,:,3); dfdc = dfdc_e(:,:,3); dfde = dfde_e(:,:,3)
+        ! Case(3); bfn(:,:) = bfn_e(:,:,3); dfdc = dfdc_e(:,:,3); dfde = dfde_e(:,:,3)
 
         Case(3); bfn(:,:) = bfn_e(:,:,2); dfdc = dfdc_e(:,:,2); dfde = dfde_e(:,:,2)
+        ! Case(2); bfn(:,:) = bfn_e(:,:,2); dfdc = dfdc_e(:,:,2); dfde = dfde_e(:,:,2)
 
         Case Default
         Print*, 'Wrong value of face. Possible values 1,2,3'
@@ -1938,7 +1965,7 @@ MODULE GAUSS_MODULE
 
     End Subroutine getNormalVectorAtFace
 
-     Subroutine getTangentVectorAtFace(derivs, face, tr, tz, normalize)
+    Subroutine getTangentVectorAtFace(derivs, face, tr, tz, normalize)
         Implicit None 
         Real(8), Dimension(:), Intent(In):: derivs
         Integer, Intent(In)              :: face
@@ -2369,7 +2396,6 @@ module basis_calculations
             DFDX(I) = (DFDC_2d(I,IG)*DYDE-DFDE_2d(I,IG)*DYDC)/CJAC
             DFDY(I) = (DFDE_2d(I,IG)*DXDC-DFDC_2d(I,IG)*DXDE)/CJAC
         ENDDO
-
     END SUBROUTINE BASIS_2d
 
 end module basis_calculations

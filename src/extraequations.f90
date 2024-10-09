@@ -746,7 +746,8 @@ Module ExtraEquations
                     Vr    =  Vr    + Vr_loc(ii) *  bfn   (ii,kk)
 
                     C    =  C    + C_loc(ii) *  bfn   (ii,kk)
-                    dCdZ = dCdZ  + C_loc(ii) *  DFDZ(ii)
+                    ! dCdZ = dCdZ  + C_loc(ii) *  DFDZ(ii)
+                    dCdZ = dCdZ  + 1.d0 *  DFDZ(ii)
                     dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
             end do
 
@@ -760,7 +761,8 @@ Module ExtraEquations
             normalize = .true., forceOnObject = .true.) 
             WET = WO_1d(KK)*dL
 
-            TERM_1  = TERM_1 + ( (nZ*dCdZ)/PeN ) * (R*WET)
+            ! TERM_1  = TERM_1 + ( (nZ*dCdZ)/PeN ) * (R*WET)
+            TERM_1  = TERM_1 + ( (dCdZ) ) !* (R*WET)
             
 
         ENDDO LOOP_GAUSS
@@ -846,7 +848,8 @@ Module ExtraEquations
 
                     C    =  C    + C_loc(ii) *  bfn   (ii,kk)
                     dCdZ = dCdZ  + C_loc(ii) *  DFDZ(ii)
-                    dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
+                    ! dCdR = dCdR  + C_loc(ii) *  DFDR(ii) 
+                    dCdR = dCdR  + 1.d0 *  DFDR(ii) 
             end do
 
             dZdt = (Z-Zo) / dt
@@ -859,7 +862,11 @@ Module ExtraEquations
             normalize = .true., forceOnObject = .true.) 
             WET = WO_1d(KK)*dL
 
-            TERM_1  = TERM_1 + ( (nR*dCdR )/PeN ) * (R*WET)
+            ! TERM_1  = TERM_1 + ( (nR*dCdR )/PeN ) * (R*WET)
+            ! TERM_1  = TERM_1 + ( (dCdR )/PeN ) * (R*WET)
+            TERM_1  = TERM_1 + ( (dCdR ) )! * (R*WET)
+            ! write(*,*) DFDC
+            ! pause
             
 
         ENDDO LOOP_GAUSS

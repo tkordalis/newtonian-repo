@@ -187,6 +187,7 @@ Module UNV
         ! Read Boundary Faces
         bnd = pathJoin( this%foldername, replace("bnd_*_*_faces.dat","*", [toStr(this%getBoundaryId(name)), name] ) )
         call readBoundaryFile(bnd, faces)   
+        ! pause
     End Subroutine getBoundary
 
     Subroutine executePythonScript (this)

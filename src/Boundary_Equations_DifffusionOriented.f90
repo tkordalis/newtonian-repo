@@ -792,9 +792,9 @@ Module Boundary_EquationsDO
                 ! TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*max(0,increment-2)*bmol/bvolume &
                 ! TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*(1.d0 -exp(-time))*bmol/bvolume &
                 TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*bmol/bvolume &
-                                                + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*Cwater/Cchar ) &
+                                                + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*C ) &
                                             - BIFN*(nR*dCdR + nZ*dCdZ)/PeN )* R * dS
-                                                ! + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*C ) &
+                                                ! + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*(Cwater/Cchar+C) ) &
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)
             end do loop_residuals_f
