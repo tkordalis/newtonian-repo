@@ -59,7 +59,7 @@
             !---------------------------------------------------------------------
             CALL BASIS_2d&
             ( KK, Z_loc, R_loc, BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-            CJAC, AJAC, DFDR, DFDZ, NGAUSS_1d )
+            CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
             
             Ro = 0.d0 ; Zo = 0.d0 ; Vz = 0.d0 ; Vr = 0.d0 ; C = 0.d0 ; dCdZ = 0.d0 ; dCdR = 0.d0
             do ii = 1, nbf_2d
@@ -159,7 +159,7 @@
             !---------------------------------------------------------------------
             CALL BASIS_2d&
             ( KK, Z_loc, R_loc, BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-            CJAC, AJAC, DFDR, DFDZ, NGAUSS_1d )
+            CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
             
             Ro = 0.d0 ; Zo = 0.d0 ; Vz = 0.d0 ; Vr = 0.d0 ; C = 0.d0 ; dCdZ = 0.d0 ; dCdR = 0.d0
             do ii = 1, nbf_2d
@@ -258,7 +258,7 @@
             !---------------------------------------------------------------------
             CALL BASIS_2d&
             ( KK, Z_loc, R_loc, BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-            CJAC, AJAC, DFDR, DFDZ, NGAUSS_1d )
+            CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
             
             Ro = 0.d0 ; Zo = 0.d0 ; Vz = 0.d0 ; Vr = 0.d0 ; C = 0.d0 ; dCdZ = 0.d0 ; dCdR = 0.d0
             do ii = 1, nbf_2d
@@ -415,7 +415,7 @@
 
         !     CALL BASIS_2d&
         !     ( KK, Z_loc, R_loc, BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-        !     CJAC, AJAC, DFDR, DFDZ, NGAUSS_1d )
+        !     CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
 
         !     !    DEFINE DIFFERENTIAL ARCLENGTH dL & OUTWARD POINTING NORMAL VECTOR n
 
@@ -484,7 +484,7 @@
 
             CALL BASIS_2d&
             ( KK, Z_loc, R_loc, BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
-            CJAC, AJAC, DFDR, DFDZ, NGAUSS_1d )
+            CJAC, AJAC, DFDZ, DFDR, NGAUSS_1d )
 
             do ii = 1, nbf_2d
 
