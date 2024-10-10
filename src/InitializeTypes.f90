@@ -1,14 +1,14 @@
 Module BoundaryConditions
-  Use BOUNDARY_ENUMERATION_MODULE
-  Use BubbleDiffusionStaticCSBoundary
-  Use FixWallConcentrationBoundary
-  Use SymmetryDiffusionBoundary 
-  Use AmbientHenryBoundary
+    Use BOUNDARY_ENUMERATION_MODULE
+    Use BubbleDiffusionStaticCSBoundary
+    Use FixWallConcentrationBoundary
+    Use SymmetryDiffusionBoundary 
+    Use AmbientHenryBoundary
 
-  Type(FixWallConcentration)         :: wall
-  Type(SymmetryDiffusion)            :: symmetryaxis
-  Type(AmbientHenry)                 :: ambientinterf
-  Type(BubbleDiffusionStaticCS)      :: bubble
+    Type(FixWallConcentration)         :: wall
+    Type(SymmetryDiffusion)            :: symmetryaxis
+    Type(AmbientHenry)                 :: ambientinterf
+    Type(BubbleDiffusionStaticCS)      :: bubble
 
     contains
     Subroutine DefineTheBoundaries()
@@ -25,6 +25,7 @@ Module BoundaryConditions
 
         ambientinterf   = NewAmbientHenry            (bnd4_elements, bnd4_faces)
         call ambientinterf%setDatumPressure(Pambient_o_Pchar)
+        call ambientinterf%setConcentrationPressure(Pinitial/Pchar)
 
         if (increment .gt. 1) then
            
@@ -216,5 +217,6 @@ Module BubbleOutput
         write(20,'(7(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(),&
                                     bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r()
 dummy = bubble%printEachContributionOfKinematicBC()
+pause
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

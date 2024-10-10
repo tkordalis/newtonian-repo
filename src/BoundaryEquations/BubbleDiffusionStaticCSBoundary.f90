@@ -287,6 +287,7 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
+                    ! call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
                     call Theta_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_thetaEquid, .true.)
                     
                     If (FlagNR == "NRP") then

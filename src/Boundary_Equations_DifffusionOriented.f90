@@ -781,7 +781,7 @@ Module Boundary_EquationsDO
                 DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                 DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
             
-                SBFN         = BIFN + tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
+                SBFN         = BIFN !+ tsupg*( (Vr-dRdt)*tR + (Vz-dZdt)*tZ )*DFDL(IW,KK)
                 ! SBFN         = BIFN + tsupg*( (- dRdt )*tR + (bvelocity - dZdt )*tZ )*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
@@ -791,9 +791,11 @@ Module Boundary_EquationsDO
 
                 ! TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*max(0,increment-2)*bmol/bvolume &
                 ! TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*(1.d0 -exp(-time))*bmol/bvolume &
+
+                ! TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*bmol/bvolume &
                 TERM_RES(getVariableId("Z")) = ( SBFN *( -( nZ * (bvelocity - dZdt ) + nR * (- dRdt ) )*bmol/bvolume &
-                                                + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*C ) &
-                                            - BIFN*(nR*dCdR + nZ*dCdZ)/PeN )* R * dS
+                                                - ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*C ) &
+                                            + BIFN*(nR*dCdR + nZ*dCdZ)/PeN )* R * dS
                                                 ! + ( nZ * (Vz-dZdt) + nR * (Vr-dRdt) )*(Cwater/Cchar+C) ) &
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)

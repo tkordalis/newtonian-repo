@@ -22,11 +22,12 @@ Module AmbientHenryBoundary
         Real(8)                            :: minimumZcoord
 
 
-        Real(8) :: datumPressure
+        Real(8) :: datumPressure, concentrationPressure
 
         contains 
             procedure :: applyBoundaryConditions
             procedure :: setDatumPressure
+            procedure :: setConcentrationPressure
             final     :: deconstructor
     End Type AmbientHenry    
 
@@ -117,7 +118,7 @@ Module AmbientHenryBoundary
                 node = this%nodes(node_counter)
                 call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
                 
-                call ApplyDirichletAtNode_(node, "C", KoN*Pressure_bc, FlagNr )
+                call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
             enddo
             
         endif
@@ -133,6 +134,15 @@ Module AmbientHenryBoundary
 
         This%datumPressure = datumPressure
     End Subroutine setDatumPressure
+
+    Subroutine setConcentrationPressure(This, ConcentrationPressure)
+        Implicit None 
+        Class(AmbientHenry)       :: This
+        Real(8), Intent(In) :: ConcentrationPressure
+
+        This%ConcentrationPressure = ConcentrationPressure
+    End Subroutine setConcentrationPressure
+
 
 
 

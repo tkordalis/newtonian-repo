@@ -97,37 +97,10 @@ MODULE PHYSICAL_MODULE
     !_______________________________________________________________________________
     ! These numbers are for O2 in silicon oil - S1 - Jia et al.
     !-------------------------------------------------------------------------------
-    ! Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
-    ! Real(8), parameter       :: Pinitial    = 78000.d0       ! Pa
-    ! ! Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
-    ! Real(8), parameter       :: Dcoef       = 4.55d-9          ! m2/s
-    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
-    ! Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
-    ! ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
-    ! Real(8), parameter       :: KHenry      = 1.246d-4          ! mol/m3/Pa
-    ! ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
-    ! ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-    ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
-
-    ! Real(8), parameter       :: rho           = 873.d0         ! kg/m3: density of fluid
-    ! Real(8), parameter       :: MrWater       = 0.41d0          ! kg/mol
-    ! Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
-    
-    ! Real(8), parameter       :: surface_tension = 0.0183d0
-    
-    ! Real(8), parameter       :: viscosity = 0.002d0
-    ! !_______________________________________________________________________________
-    
-    ! Real(8), parameter       :: length_char   =  0.36d-3          ! m
-    ! Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
-    
-    
-    !_______________________________________________________________________________
-    ! These numbers are for O2 in silicon oil - S3 - Jia et al.
-    !-------------------------------------------------------------------------------
     Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
-    Real(8), parameter       :: Pinitial    = 31300.d0       ! Pa
-    Real(8), parameter       :: Dcoef       = 2.2d-9          ! m2/s
+    Real(8), parameter       :: Pinitial    = 78000.d0       ! Pa
+    ! Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
+    Real(8), parameter       :: Dcoef       = 4.55d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
     ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
@@ -136,17 +109,44 @@ MODULE PHYSICAL_MODULE
     ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
     Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
 
-    Real(8), parameter       :: rho           = 950.d0         ! kg/m3: density of fluid
-    Real(8), parameter       :: MrWater       = 2.d0          ! kg/mol
+    Real(8), parameter       :: rho           = 873.d0         ! kg/m3: density of fluid
+    Real(8), parameter       :: MrWater       = 0.41d0          ! kg/mol
     Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
     
-    Real(8), parameter       :: surface_tension = 0.0206d0
+    Real(8), parameter       :: surface_tension = 0.0183d0
     
-    Real(8), parameter       :: viscosity = 0.0183d0
+    Real(8), parameter       :: viscosity = 0.002d0
     !_______________________________________________________________________________
     
-    Real(8), parameter       :: length_char   =  0.52d-3          ! m
+    Real(8), parameter       :: length_char   =  0.36d-3          ! m
     Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
+    
+    
+    !_______________________________________________________________________________
+    ! These numbers are for O2 in silicon oil - S3 - Jia et al.
+    !-------------------------------------------------------------------------------
+    ! Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
+    ! Real(8), parameter       :: Pinitial    = 31300.d0       ! Pa
+    ! Real(8), parameter       :: Dcoef       = 2.2d-9          ! m2/s
+    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    ! Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
+    ! ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    ! Real(8), parameter       :: KHenry      = 1.246d-4          ! mol/m3/Pa
+    ! ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
+    ! ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
+    ! Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
+
+    ! Real(8), parameter       :: rho           = 950.d0         ! kg/m3: density of fluid
+    ! Real(8), parameter       :: MrWater       = 2.d0          ! kg/mol
+    ! Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
+    
+    ! Real(8), parameter       :: surface_tension = 0.0206d0
+    
+    ! Real(8), parameter       :: viscosity = 0.0183d0
+    ! !_______________________________________________________________________________
+    
+    ! Real(8), parameter       :: length_char   =  0.52d-3          ! m
+    ! Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
 
   
     Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
@@ -511,10 +511,10 @@ END MODULE GLOBAL_ARRAYS_MODULE
 MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 50
-    REAL(8), PARAMETER :: ERROR_NR  = 2.d-7
+    REAL(8), PARAMETER :: ERROR_NR  = 8.d-8
     
 
-    REAL(8), PARAMETER :: EP_RES   = 1.0D-8
+    REAL(8), PARAMETER :: EP_RES   = 1.0D-9
 
 
     INTEGER            :: ITER_f

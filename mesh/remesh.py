@@ -588,7 +588,7 @@ isDone = Mesh_1.SetMeshOrder( [Priority_list] )
 isDone = Mesh_1.Compute()
 
 # isDone = Mesh_1.QuadTo4Tri( )
-isDone = Mesh_1.SplitQuadObject( Mesh_1, 1 )
+isDone = Mesh_1.SplitQuadObject( Mesh_1, 0 )
 
 
 
