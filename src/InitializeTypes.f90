@@ -216,7 +216,8 @@ Module BubbleOutput
 
         write(20,'(7(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(),&
                                     bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r()
-dummy = bubble%printEachContributionOfKinematicBC()
-pause
+        
+        dummy = bubble%printEachContributionOfKinematicBC()
+
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

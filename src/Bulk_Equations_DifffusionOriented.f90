@@ -240,8 +240,8 @@ Module BulkEquations
                 elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
                 elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
                 ! ------------------------------
-                mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
-                ! mass_transfer       = ( PeN * ( dCdt*BIFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                ! mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                mass_transfer       = ( PeN * ( dCdt*BIFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
                 ! ------------------------------
 
                 

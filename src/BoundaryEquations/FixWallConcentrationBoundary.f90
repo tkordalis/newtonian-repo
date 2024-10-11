@@ -54,21 +54,36 @@ Module FixWallConcentrationBoundary
 
 
     Subroutine applyBoundaryConditions(This, FlagNr, naturalBCs)
+        Use GLOBAL_ARRAYS_MODULE,        Only: TL
+        Use ENUMERATION_MODULE,          Only: NM_MESH
+        Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
         Use MESH_MODULE,                 only: Xm, Ym
         Implicit None 
         Class(FixWallConcentration)  , Intent(In)         :: This 
         Character(len=3), Intent(In)         :: FlagNr
         logical,          Intent(In)         :: naturalBCs
 
+        Real(8), Dimension(:,:), Allocatable :: TL_
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_concentration
+        Integer                              :: node_counter, node
+        Integer                              :: iel, element, face
 
-        Integer                              :: inode, node
 
         if (naturalBCs) then
+            do iel = 1, this%nelem
+                element =This%elements(iel)
+                face    =This%faces   (iel)
 
+                call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
+                call zeroConcentrationFlux  ( element, face, TL_, RES_concentration, .true. )
+
+                if (FlagNR == "NRP") &
+                    call CalculateJacobianContributionsOf( zeroConcentrationFlux  ,element, face, TL_, RES_concentration )
+            enddo
         else
-            do inode = 1, size(this%nodes)
-                node = this%nodes(inode)
+            do node_counter = 1, size(this%nodes)
+                node = this%nodes(node_counter)
                 call ApplyDirichletAtNode_(node, "Vz", 0.d0, FlagNr )
                 call ApplyDirichletAtNode_(node, "Vr", 0.d0, FlagNr )
                 call ApplyDirichletAtNode_(node, "Z", Xm(node), FlagNr )

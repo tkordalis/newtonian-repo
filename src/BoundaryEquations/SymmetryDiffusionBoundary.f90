@@ -72,16 +72,23 @@ Module SymmetryDiffusionBoundary
 
 
         Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_1, RES_2
-        Integer                              :: iel, inode, node
-        Integer                              :: element 
-        Integer                              :: face
-
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_Xequid, RES_concentration
+        Integer                              :: inode, node
+        Integer                              :: iel, element, face
 
         
         if (naturalBCs) then
+            do iel = 1, this%nelem
+                element =This%elements(iel)
+                face    =This%faces   (iel)
 
+                call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
+                call zeroConcentrationFlux  ( element, face, TL_, RES_concentration, .true. )
+
+                if (FlagNR == "NRP") &
+                    call CalculateJacobianContributionsOf( zeroConcentrationFlux  ,element, face, TL_, RES_concentration )
+            enddo
         else
 
             call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
@@ -95,9 +102,9 @@ Module SymmetryDiffusionBoundary
 
                 select case(this%position)
                 case('X')
-                    call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_1, .true.)
+                    call X_EQUIDISTRIBUTION_RESIDUAL_f(element, face, TL_, RES_Xequid, .true.)
                     if (FlagNR == "NRP") Then
-                        call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_1)
+                        call CalculateJacobianContributionsOf(X_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_Xequid)
                     end if
                 case default
                         Print*, "[Error] : Equid. in symmetryDiffusion type wrong value of position."
@@ -109,7 +116,6 @@ Module SymmetryDiffusionBoundary
                 node = this%nodes(inode)
                 call ApplyDirichletAtNode_(node, "Vr", 0.d0      , FlagNr )
                 Call ApplyDirichletAtNode_(node, 'R'  , 0.d0     , FlagNr )
-                ! Call ApplyDirichletAtNode_(node, 'R'  , Ym(node), FlagNr )
             end do
         endif
 

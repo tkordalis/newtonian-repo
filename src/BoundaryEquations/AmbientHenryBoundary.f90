@@ -79,8 +79,8 @@ Module AmbientHenryBoundary
         logical,          Intent(In)         :: naturalBCs
 
         Real(8), Dimension(:,:), Allocatable :: TL_
-        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_stresses, RES_kinematic
-        Integer                              :: node_counter, node
+        Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_stresses, RES_kinematic, RES_concentration
+        Integer                              :: inode, node
         Integer                              :: iel, element, face
 
         if (naturalBCs) then
@@ -90,10 +90,13 @@ Module AmbientHenryBoundary
 
                 call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                call Stresses                         (element, face, TL_, RES_stresses, .true., Pressure_bc )
+                call Stresses            ( element, face, TL_, RES_stresses, .true., Pressure_bc )
+                call weakHenry           ( element, face, TL_, RES_concentration, .true., this%concentrationPressure )
 
-                if (FlagNR == "NRP") &
+                if (FlagNR == "NRP") then
                     call CalculateJacobianContributionsOf(Stresses      ,element, face, TL_, RES_stresses, Pressure_bc )
+                    call CalculateJacobianContributionsOf(weakHenry     ,element, face, TL_, RES_concentration, this%concentrationPressure )
+                endif
             enddo
 
         else
@@ -114,11 +117,11 @@ Module AmbientHenryBoundary
                     call CalculateJacobianContributionsOf(Kinematic     ,element, face, TL_, RES_kinematic )
             enddo
            
-            do node_counter = 1, size(this%nodes)
-                node = this%nodes(node_counter)
+            do inode = 1, size(this%nodes)
+                node = this%nodes(inode)
                 call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
                 
-                call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
+                ! call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
             enddo
             
         endif

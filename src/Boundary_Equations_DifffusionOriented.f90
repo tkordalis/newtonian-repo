@@ -1526,8 +1526,10 @@ Module Boundary_EquationsDO
             ! in the parent element
             !*********************************************************************
 
-            R = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
-            Z = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
+            R  = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
+            Z  = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
+            Vr = 0.d0; Vz    = 0.d0
+            C  = 0.d0; dCdx1 = 0.d0; dCdx2 = 0.d0
             do ii = 1, nbf_2d
                 R     =  R    + TEMP_TL(ii, getVariableId("R")) *  bfn   (ii,kk)
                 dRdx1 = dRdx1 + TEMP_TL(ii, getVariableId("R")) * dbfndx1(ii,kk)
@@ -1588,7 +1590,7 @@ Module Boundary_EquationsDO
         
         
                     TERM_RES     = 0.D0
-                    TERM_RES(getVariableId("C"))  = ( PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * C ) * R/PeN
+                    TERM_RES(getVariableId("C"))  = ( BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * C ) * R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK)  * dS
@@ -1684,8 +1686,10 @@ Module Boundary_EquationsDO
             ! in the parent element
             !*********************************************************************
 
-            R = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
-            Z = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
+            R  = 0.d0; dRdx1 = 0.d0; dRdx2 = 0.d0
+            Z  = 0.d0; dZdx1 = 0.d0; dZdx2 = 0.d0
+            Vr = 0.d0; Vz    = 0.d0
+            C  = 0.d0; dCdx1 = 0.d0; dCdx2 = 0.d0
             do ii = 1, nbf_2d
                 R     =  R    + TEMP_TL(ii, getVariableId("R")) *  bfn   (ii,kk)
                 dRdx1 = dRdx1 + TEMP_TL(ii, getVariableId("R")) * dbfndx1(ii,kk)
@@ -1746,8 +1750,8 @@ Module Boundary_EquationsDO
         
         
                     TERM_RES     = 0.D0
-                    TERM_RES(getVariableId("C"))  = PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar * R/PeN
-                    ! TERM_RES(getVariableId("C"))  = ( PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - (nR*dCdR + nZ*dCdZ) ) * R/PeN
+                    ! TERM_RES(getVariableId("C"))  = PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar * R/PeN
+                    TERM_RES(getVariableId("C"))  = ( BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - (nR*dCdR + nZ*dCdZ)/PeN ) * R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK)  * dS
