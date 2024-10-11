@@ -328,7 +328,7 @@ Module Boundary_EquationsDO
             ! Uelem = abs( (Vr-dRdt) * tr + (Vz-dZdt) * tz  )
             ! Uelem = abs( (-dRdt) * tr + (-dZdt) * tz  )
             ! Uelem = abs( bvelocity + 1.d-8 )
-            tsupg = dS/(Uelem + dS/dt)*bmol/bvolume
+            tsupg = dS/(Uelem + dS/dt)
 
             !*********************************************************************
             !    ITERATE OVER WEIGHTING FUNCTIONS
@@ -1459,7 +1459,8 @@ Module Boundary_EquationsDO
         Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
         Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, &
                                             getBasisFunctionsAtFace, &
-                                            getNormalVectorAtFace
+                                                        getNormalVectorAtFace, &
+                                                        getTangentVectorAtFace
         Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
         Use FLOW_ARRAYS_MODULE,      Only: B_f
         Use GLOBAL_ARRAYS_MODULE,    Only: TLo
@@ -1482,9 +1483,7 @@ Module Boundary_EquationsDO
         Real(8)                              :: R, dRdx1, dRdx2 
         Real(8)                              :: Z, dZdx1, dZdx2     
         ! Basis Functions and their derivatives
-        Real(8), Dimension(:,:), Allocatable ::  bfn 
-        Real(8), Dimension(:,:), Allocatable :: dbfndx1
-        Real(8), Dimension(:,:), Allocatable :: dbfndx2 
+        Real(8), Dimension(:,:), Allocatable ::  bfn, dbfndx1, dbfndx2, DFDC, DFDE 
         ! Jacobian of Transformation and the reverse derivatives
         Real(8)                              :: JacT
         Real(8)                              :: dx1dR
@@ -1492,8 +1491,8 @@ Module Boundary_EquationsDO
         Real(8)                              :: dx1dZ
         Real(8)                              :: dx2dZ
         ! Normal Vector Components
-        Real(8)                              :: nr 
-        Real(8)                              :: nz 
+        Real(8)                              :: nr , tr
+        Real(8)                              :: nz , tz
         Real(8)                              :: dS, Ro, Zo, dRdt, dZdt, Vr, Vz
 
         Integer, Dimension(NBF_2d)           :: NM 
@@ -1501,6 +1500,15 @@ Module Boundary_EquationsDO
         ! Basis Function 
         Real(8)                              :: BIFN, DBIR, DBIZ
         Real(8)                              :: C , dCdx1 , dCdx2, dCdZ, dCdR
+        Real(8), Dimension(NBF_2d)            :: DFDR,  DFDZ
+        Real(8)                    :: dRdC, dRdE
+        Real(8)                    :: dZdC, dZdE, CJAC, AJAC, dL
+        Real(8), Dimension(NBF_2d,NGAUSS_1d)           ::  DFDL
+        Real(8)                                        :: Uelem, tsupg, SBFN
+
+
+
+
 
         Integer :: KK, II, IW 
 
@@ -1509,6 +1517,7 @@ Module Boundary_EquationsDO
         !*********************************************************************
         NM = NM_MESH(NELEM,:)
         call getBasisFunctionsAtFace(ned, bfn, dbfndx1, dbfndx2)
+        call getBasisFunctionsAtFace(ned, bfn, DFDC, DFDE)
 
         !*********************************************************************
         !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
@@ -1547,6 +1556,9 @@ Module Boundary_EquationsDO
                 dCdx2= dCdx2 + TEMP_TL(ii, getVariableId("C")) * dbfndx2(ii,kk) 
             end do
 
+            CALL BASIS_2d&
+            ( KK, TEMP_TL(:, getVariableId("Z")), TEMP_TL(:, getVariableId("R")), BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
+            CJAC, AJAC, DFDZ, DFDR,  NGAUSS_1d )
             !*********************************************************************
             ! Calculate the Jacobian of Transformation
             !*********************************************************************
@@ -1564,6 +1576,21 @@ Module Boundary_EquationsDO
             call getNormalVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
                                          ned, nr, nz, dS, normalize = .true.)
             
+            call getTangentVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
+                                         ned, tr, tz, normalize = .true.)
+
+
+            SELECT CASE(NED)
+                CASE(1)
+                    dL           =   sqrt(DZDC**2+DRDC**2)
+                    DFDL         =   DFDC/dL
+                CASE(3)
+                    dL           =    sqrt(DZDE**2+DRDE**2)
+                    DFDL         =    DFDE/dL
+                CASE(2)
+                    dL           =   sqrt((DZDC-DZDE)**2+(DRDC-DRDE)**2)
+                    DFDL         =   (DFDC-DFDE)/dL
+            END SELECT
 
             Ro = 0.d0; Zo = 0.d0 
 
@@ -1578,6 +1605,9 @@ Module Boundary_EquationsDO
             dCdZ = dCdx1 * dx1dZ + dCdx2 * dx2dZ
             dCdR = dCdx1 * dx1dR + dCdx2 * dx2dR
 
+            Uelem = abs( Vr * tr + Vz * tz  )
+
+            tsupg = dS/(Uelem + dS/dt)
             !---------------------------------------------------------------------
             !    ITERATE OVER WEIGHTING FUNCTIONS
             !---------------------------------------------------------------------
@@ -1587,10 +1617,12 @@ Module Boundary_EquationsDO
                     BIFN =  bfn   (iw,kk)
                     DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                     DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
-        
+                    
+                    SBFN         = BIFN + tsupg*( (Vr)*tR + (Vz)*tZ )*DFDL(IW,KK)
+                    
         
                     TERM_RES     = 0.D0
-                    TERM_RES(getVariableId("C"))  = ( BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * C ) * R
+                    TERM_RES(getVariableId("C"))  = ( SBFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * C ) * R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK)  * dS
@@ -1618,7 +1650,8 @@ Module Boundary_EquationsDO
         Use ELEMENTS_MODULE,         Only: NBF_2d,  NEQ_f, NUNKNOWNS_f
         Use GAUSS_MODULE,            Only: WO_1d, NGAUSS_1d, &
                                             getBasisFunctionsAtFace, &
-                                            getNormalVectorAtFace
+                                                        getNormalVectorAtFace, &
+                                                        getTangentVectorAtFace
         Use ENUMERATION_MODULE,      Only: NM_MESH, NM_f
         Use FLOW_ARRAYS_MODULE,      Only: B_f
         Use GLOBAL_ARRAYS_MODULE,    Only: TLo
@@ -1641,10 +1674,9 @@ Module Boundary_EquationsDO
         ! FEM variables and their derivatives
         Real(8)                              :: R, dRdx1, dRdx2 
         Real(8)                              :: Z, dZdx1, dZdx2     
-        ! Basis Functions and their derivatives
-        Real(8), Dimension(:,:), Allocatable ::  bfn 
-        Real(8), Dimension(:,:), Allocatable :: dbfndx1
-        Real(8), Dimension(:,:), Allocatable :: dbfndx2 
+        Real(8), Dimension(:,:), Allocatable ::  bfn, dbfndx1, dbfndx2, DFDC, DFDE 
+
+       
         ! Jacobian of Transformation and the reverse derivatives
         Real(8)                              :: JacT
         Real(8)                              :: dx1dR
@@ -1652,8 +1684,8 @@ Module Boundary_EquationsDO
         Real(8)                              :: dx1dZ
         Real(8)                              :: dx2dZ
         ! Normal Vector Components
-        Real(8)                              :: nr 
-        Real(8)                              :: nz 
+        Real(8)                              :: nr , tr
+        Real(8)                              :: nz , tz
         Real(8)                              :: dS, Ro, Zo, dRdt, dZdt, Vr, Vz
 
         Integer, Dimension(NBF_2d)           :: NM 
@@ -1661,6 +1693,11 @@ Module Boundary_EquationsDO
         ! Basis Function 
         Real(8)                              :: BIFN, DBIR, DBIZ
         Real(8)                              :: C , dCdx1 , dCdx2, dCdZ, dCdR
+        Real(8), Dimension(NBF_2d)            :: DFDR,  DFDZ
+        Real(8)                    :: dRdC, dRdE
+        Real(8)                    :: dZdC, dZdE, CJAC, AJAC, dL
+        Real(8), Dimension(NBF_2d,NGAUSS_1d)           ::  DFDL
+        Real(8)                                        :: Uelem, tsupg, SBFN
 
         Integer :: KK, II, IW 
 
@@ -1669,6 +1706,8 @@ Module Boundary_EquationsDO
         !*********************************************************************
         NM = NM_MESH(NELEM,:)
         call getBasisFunctionsAtFace(ned, bfn, dbfndx1, dbfndx2)
+        call getBasisFunctionsAtFace(ned, bfn, DFDC, DFDE)
+
 
         !*********************************************************************
         !  INITIALIZE WORKING (TEMPORARY) AREAS FOR ELEMENT INTEGRATION
@@ -1715,7 +1754,10 @@ Module Boundary_EquationsDO
             dx1dR  = - dZdx2/JacT
             dx2dZ  = - dRdx1/JacT
             dx2dR  =   dZdx1/JacT
-
+            
+            CALL BASIS_2d&
+            ( KK, TEMP_TL(:, getVariableId("Z")), TEMP_TL(:, getVariableId("R")), BFN, DFDC, DFDE, Z, dZdC, dZdE, R, dRdC, dRdE,&
+            CJAC, AJAC, DFDZ, DFDR,  NGAUSS_1d )
             !*********************************************************************
             ! Calculate the normal vectors with respect to the face of the 
             ! triangle
@@ -1724,6 +1766,22 @@ Module Boundary_EquationsDO
             call getNormalVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
                                          ned, nr, nz, dS, normalize = .true.)
             
+            call getTangentVectorAtFace( [dZdx1, dZdx2, dRdx1, dRdx2] , &
+                                         ned, tr, tz, normalize = .true.)
+
+
+            SELECT CASE(NED)
+                CASE(1)
+                    dL           =   sqrt(DZDC**2+DRDC**2)
+                    DFDL         =   DFDC/dL
+                CASE(3)
+                    dL           =    sqrt(DZDE**2+DRDE**2)
+                    DFDL         =    DFDE/dL
+                CASE(2)
+                    dL           =   sqrt((DZDC-DZDE)**2+(DRDC-DRDE)**2)
+                    DFDL         =   (DFDC-DFDE)/dL
+            END SELECT
+           
 
             Ro = 0.d0; Zo = 0.d0 
 
@@ -1737,6 +1795,12 @@ Module Boundary_EquationsDO
 
             dCdZ = dCdx1 * dx1dZ + dCdx2 * dx2dZ
             dCdR = dCdx1 * dx1dR + dCdx2 * dx2dR
+            
+
+            Uelem = abs( Vr * tr + Vz * tz  )
+
+            tsupg = dS/(Uelem + dS/dt)
+
 
             !---------------------------------------------------------------------
             !    ITERATE OVER WEIGHTING FUNCTIONS
@@ -1747,11 +1811,12 @@ Module Boundary_EquationsDO
                     BIFN =  bfn   (iw,kk)
                     DBIR = dbfndx1(iw,kk) * dx1dR + dbfndx2(iw,kk) * dx2dR
                     DBIZ = dbfndx1(iw,kk) * dx1dZ + dbfndx2(iw,kk) * dx2dZ
-        
-        
+
+                    SBFN         = BIFN + tsupg*( (Vr)*tR + (Vz)*tZ )*DFDL(IW,KK)
+
                     TERM_RES     = 0.D0
                     ! TERM_RES(getVariableId("C"))  = PeN * BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar * R/PeN
-                    TERM_RES(getVariableId("C"))  = ( BIFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - (nR*dCdR + nZ*dCdZ)/PeN ) * R
+                    TERM_RES(getVariableId("C"))  = ( SBFN * ( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) * KoN * gVar - BIFN *(nR*dCdR + nZ*dCdZ)/PeN ) * R
         
                     !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,1:NEQ_f) = TEMP_RES(IW,1:NEQ_f) + TERM_RES(1:NEQ_f)* WO_1d(KK)  * dS

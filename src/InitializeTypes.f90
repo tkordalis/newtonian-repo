@@ -122,11 +122,12 @@ module solveAllExtraConstraints
             Call bubble%setVolume  ( BubbleVolume   )
             Call bubble%setVelocity( BubbleVelocity )
             
-            Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
 
             call wall%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
 
             call symmetryaxis%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
+            
+            Call bubble%applyBoundaryConditions(FlagNR, naturalBCs = .true.)
 
             call ambientinterf%applyBoundaryConditions( FlagNR, PressureChamber(time), naturalBCs = .true. )
             

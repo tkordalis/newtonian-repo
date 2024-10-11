@@ -201,11 +201,21 @@ MODULE PHYSICAL_MODULE
         
         IdN    =  IdG_pressure/gravity_stress
         KoN    =  gravity_stress/Solubility_pressure
-        PeN    =  velocity_char*length_char/Dcoef!/1.d+4
+        PeN    =  velocity_char*length_char/Dcoef
         ! PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
 
 
-        write(*,"(10X,A6,2X,F16.8)") "Ro ="    , length_char
+        write(*,*)
+        write(*,"(A50)") "--------------------------------------------------"
+        write(*,"(10X,A25)") "Characteristic quantities"
+        write(*,"(A50)") "--------------------------------------------------"
+        write(*,"(10X,A15,2X,E11.4)") "Ro ="    , length_char
+        write(*,"(10X,A15,2X,E11.4)") "time char ="    , time_char
+        write(*,"(10X,A15,2X,E11.4)") "velocity char ="    , velocity_char
+        write(*,*)
+        write(*,"(A50)") "--------------------------------------------------"
+        write(*,"(10X,A25)") "Dimensionless numbers"
+        write(*,"(A50)") "--------------------------------------------------"
         write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
         write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
         write(*,"(10X,A6,2X,F16.8)") "BoN  ="    , BoN
@@ -255,7 +265,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.1d0
+        Dt_constant = 0.2d0
 
         ! Dt_max = 1.5d0*Dt_constant
 
