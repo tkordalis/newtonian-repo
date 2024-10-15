@@ -33,9 +33,10 @@ Module BulkEquations
     End Subroutine FEMinterpolationA2
 
 
+! *****************************************************************
 
 
-    Subroutine DOMI_RESIDUAL_IntByPartsConvection( NELEM, TEMP_TL, TEMP_RES, STORE )
+    Subroutine DOMI_RESIDUAL_flowNgastransport( NELEM, TEMP_TL, TEMP_RES, STORE )
         Use VariableMapping
         Use basis_calculations
         Use PHYSICAL_MODULE
@@ -71,7 +72,7 @@ Module BulkEquations
         Real(8), Dimension(NCD)      :: Ugp, Uogp, dPgpdX, Xgp, Xogp, X0gp,  dCgpdX
         Real(8), dimension(NCD)      :: Q, S, dXdt, dUdt, dUdM, MomStr, tr_Ptot_d_gradW
 
-        Real(8), Dimension(NCD)      :: gradq, gradk, gradm, momentum_equation, elliptic_grid, mtml
+        Real(8), Dimension(NCD)      :: gradq, gradk, gradm, momentum_equation, elliptic_grid, elliptic_grid_dummy, mtml
 
         Real(8), Dimension(NBF_2d)             :: P_n, C_n, Co_n
         Real(8), Dimension(NCD,NBF_2d)         :: X_n, Xo_n, dXdt_n, X0_n, U_n, Uo_n
@@ -92,7 +93,6 @@ Module BulkEquations
 
         P_n = TEMP_TL(:,getVariableId("P"))
         C_n = TEMP_TL(:,getVariableId("C"))       ;  Co_n = TLo_loc(:,getVariableId("C"))  
-        ! C_n = 0.d0       ;  Co_n = 0.d0  
 
         U_n(1,:) = TEMP_TL(:,getVariableId("Vz")) ;  Uo_n(1,:) = TLo_loc(:,getVariableId("Vz"))
         U_n(2,:) = TEMP_TL(:,getVariableId("Vr")) ;  Uo_n(2,:) = TLo_loc(:,getVariableId("Vr"))
@@ -205,11 +205,8 @@ Module BulkEquations
 
             tlsic   = helem**2/tlsme
 
-            ! tlsmt   = hugn/(Uelem+1.d-8)
             tlsmt   = sqrt((2.d0/dt)**2 + (Uelem)/(hugn+1.d-8)**2)
             tlsmt = 1.d0/tlsmt
-            ! print*, hugn, tlsmt, uelem
-            ! pause
             ! --------------------------------------------------
             ! --------------------------------------------------
 
@@ -220,7 +217,7 @@ Module BulkEquations
 
                 BIFN = BFN   (IW) ; gradW = gradW_(:,:,iw) ; gradq = gradq_(:,iw) ; gradk = gradk_(:,iw) ; gradm = gradm_(:,iw)
 
-                SBFN = BIFN+tlsmt*dot_product((Ugp-dXdt),gradm)
+                SBFN = BIFN!+tlsmt*dot_product((Ugp-dXdt),gradm)
 
                 Ptot_d_gradW       = matmul(Ptot,gradW)
 
@@ -228,23 +225,15 @@ Module BulkEquations
 
                 ! Calculation of the bulk equations
                 ! =====================================================================================
-                ! momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN + tlsic*[gradW(1,1),gradW(2,2)+gradW(3,3)]*trace(gradU) ) * Xgp(2)
-                ! momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN  ) * Xgp(2)
                 momentum_equation   = ( dUdM*BIFN + tr_Ptot_d_gradW - [1,0]*Gravity_Term*BIFN + tlsic*[gradW(1,1),gradW(2,2)+gradW(3,3)]*trace(gradU) ) * Xgp(2)
                 ! ------------------------------
                 continuity_equation = ( trace(gradU)*BIFN + tlsme*dot_product(gradq,MomStr) ) * Xgp(2)
                 ! ------------------------------
-                ! elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
-                mtml = matmul(gradk, dX0dXgp)
-
-                elliptic_grid(1) = ( eo(1)*S(1) + (1.d0-eo(1)) )*mtml(1)
-                elliptic_grid(2) = ( eo(2)*S(2) + (1.d0-eo(2)) )*mtml(2)
+                elliptic_grid       = ( eo*S + (1.d0-eo) )*matmul(gradk, dX0dXgp)
                 ! ------------------------------
-                ! mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
-                mass_transfer       = ( PeN * ( dCdt*SBFN - Cgp*dot_product((Ugp-dXdt),gradm) )  +  dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
+                mass_transfer       = ( PeN*dCdM*SBFN + dot_product(gradm,dCgpdX) ) * Xgp(2) /PeN
                 ! ------------------------------
 
-                
                 ! =====================================================================================
                 TERM_RES                        = 0.d0
                 TERM_RES(getVariableId("Vz" ))  = momentum_equation(1)
@@ -274,16 +263,14 @@ Module BulkEquations
             CALL MATRIX_STORAGE_RESIDUAL&
             ( TEMP_RES, NM, NBF_2d, NEQ_f, B_f, NUNKNOWNS_f )
         ENDIF
-    END SUBROUTINE DOMI_RESIDUAL_IntByPartsConvection
+    END SUBROUTINE DOMI_RESIDUAL_flowNgastransport
 
 
+! *****************************************************************
 
     !------------------------------------------------
     !                  extra jacobian
     !------------------------------------------------
-
-
-
     Subroutine StoreToExtraJacobian(id, nm, temp_jac)
         Use CSR_STORAGE, Only: Ac_f
         Implicit None
@@ -306,8 +293,6 @@ Module BulkEquations
                 Ac_f(jw,id) = Ac_f(jw,id) + temp_jac(iw,ieq)
             end do 
         end do 
-
-
     End Subroutine StoreToExtraJacobian
 
 

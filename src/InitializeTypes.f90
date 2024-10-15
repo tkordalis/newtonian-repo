@@ -69,7 +69,7 @@ Module InitialConditions
         Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
         Pressure_Bubble  = Pressure_Bubbleo
 
-        TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
+        ! TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
         TLb = TLo
         TL  = TLo
         TLp = TL
@@ -187,18 +187,23 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(7) :: title_results
+        character(18), dimension(12) :: title_results20
+        character(18), dimension(10) :: title_results21
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
-        ! title_results = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'volumeRateOfChange' ,  'ChamberP', 'int_ndotF','int_uminusumesh', 'int_ndotgradC', 'int_ndotUbubblemUmesh', 'ndotumumesh_z', 'ndotumumesh_r' ]
-        ! title_results = [ 'time', 'mol','volume','velocity', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbubblemUmesh_z','int_ndotUbubblemUmesh_r', 'ndotumumesh_z', 'ndotumumesh_r' ]
-        title_results = [ 'time', 'mol','volume','int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh','int_ndotUmUmesh' ]
-        do i=1,size(title_results)
-            write(20,'(A25,3x)', advance='no') title_results(i)
+        Open(21,File=fileplace//'results_dimensional.dat')
+        title_results20 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh', 'int_ndotUmUmesh', 'ChamberP', 'concentration' ]
+        title_results21 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'ChamberP', 'Radius', 'concentration' ]
+        do i=1,size(title_results20)
+            write(20,'(A25,3x)', advance='no') title_results20(i)
         enddo
         write(20,*)
+        do i=1,size(title_results21)
+            write(21,'(A25,3x)', advance='no') title_results21(i)
+        enddo
+        write(21,*)
     end Subroutine openBubbleFiles
 
     Subroutine WriteBubbleFiles(TIME)
@@ -210,15 +215,15 @@ Module BubbleOutput
         Real(8), Intent(In) :: Time
         Real(8) :: dummy
 
-        ! write(20,'(14(f25.12,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), &
-        !                             bubble%calculateZcenter(), bubble%getdVtankdt(), PressureChamber(time), bubble%calculatendotF(), bubble%calculatendotUminusUmesh(), &
-        !                             bubble%calculatendotgradC(), bubble%calculatendotUbubbleMinusUmesh(), &
-        !                             bubble%calculatendotUmUmesh_z(), bubble%calculatendotUmUmesh_r(), bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUbubblemUmesh_z()
+        write(20,'(12(f26.16,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), &
+                                    bubble%calculateZcenter(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(), &
+                                    bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r(), &
+                                    PressureChamber(time), bubble%getmol()/bubble%getVolume()
 
-        write(20,'(7(f25.12,3x))') TIME, bubble%getmol(), bubble%getVolume(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(),&
-                                    bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r()
-        
-        dummy = bubble%printEachContributionOfKinematicBC()
+        write(21,'(10(f26.16,3x))') TIME*time_char, Pchar*bubble%getPressure(), nchar*bubble%getmol(), length_char**3.d0*bubble%getVolume(), velocity_char*bubble%getVelocity(), &
+                                    length_char*bubble%calculateZcenter(), nchar/time_char*bubble%calculatendotF(), Pchar*PressureChamber(time), length_char*(3.d0*bubble%getVolume()/4.d0/pi)**0.333333d0, &
+                                    Cchar*bubble%getmol()/bubble%getVolume()
 
+dummy = bubble%printEachContributionOfKinematicBC()
     End Subroutine WriteBubbleFiles
 end Module BubbleOutput

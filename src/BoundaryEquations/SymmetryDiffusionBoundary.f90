@@ -84,17 +84,9 @@ Module SymmetryDiffusionBoundary
 
                 call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                call zeroConcentrationFlux  ( element, face, TL_, RES_concentration, .true. )
-
-                if (FlagNR == "NRP") &
-                    call CalculateJacobianContributionsOf( zeroConcentrationFlux  ,element, face, TL_, RES_concentration )
-            enddo
+            enddo 
         else
 
-            call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfResidual)
-            If (FlagNR == "NRP") &
-                    call updateAllNodesOfTheBoundary('Z',This%elements, This%faces, ClearRowsOfJacobian)
-                    
             do iel = 1, this%nelem
                 element =This%elements(iel)
                 face    =This%faces   (iel)

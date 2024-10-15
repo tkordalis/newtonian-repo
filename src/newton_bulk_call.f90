@@ -143,29 +143,35 @@ module newton_bulk_call
             ! print*, "% norm B_f=", sqrt(DOT_PRODUCT(B_f,B_f))/RES_NORM, "% norm Be_f=",  sqrt(DOT_PRODUCT(Be_f,Be_f))/RES_NORM
             ! print*, "  "
 
-              jj=1
-              kk=0
-              do ii = 1, size(B_f)
-                 if (jj .gt. NEQ_f) jj=1
-                 if (jj .eq. 1) then
-                   kk=kk+1
-                 endif
-              !      !! if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 1.d-1) then 
-                    if ( getVariableName(jj) == "Z") then 
-                        if ( sqrt(Xm(kk)**2 + Ym(kk)**2) .lt. 1.01d0) then 
-                            if (iter_f .gt. 16) then
-                     ! print*,'global_node=', kk
-                                ! write(404,*)'global_node=', kk
-                                ! write(404,*) ' ' 
-                                write(404,'(i5,3x,5(e15.8,3x))'), ii, Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
-                                ! write(404,*) ' '
-                                ! write(404,*) ' '
-                            endif
-                        endif
-                    endif
-                 jj=jj+1
+              ! jj=1
+              ! kk=0
+              ! do ii = 1, size(B_f)
+              !    if (jj .gt. NEQ_f) jj=1
+              !    if (jj .eq. 1) then
+              !      kk=kk+1
+              !    endif
+              !      if ( abs(B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))) .gt. 0.05d0) then 
+              !       ! if ( getVariableName(jj) == "Z") then 
+              !           ! if ( sqrt(Xm(kk)**2 + Ym(kk)**2) .lt. 1.01d0) then 
+              !           !     if (iter_f .gt. 16) then
+              !        print*,'global_node=', kk
+              !                   ! write(404,*)'global_node=', kk
+              !                   ! write(404,*) ' ' 
+              !                   ! write(*,'(i5,3x,5(e15.8,3x))'), ii, Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+              !         print '(a7, 3x, f10.5, 3x, f10.5, 3x, f10.5)', '(X,Y,R) =', Xm(kk), Ym(kk), sqrt(Xm(kk)**2+Ym(kk)**2)
 
-              enddo
+              !         print '(a9, 3x,a2, 3x, a11, e20.10)', "variable=", getVariableName(jj), "residual=",  B_f(ii)
+
+              !                   ! write(*,'(i5,3x,5(e15.8,3x))'), ii, Xm(kk), Ym(kk), sqrt(Xm(kk)**2 + Ym(kk)**2), B_f(ii), B_f(ii)/ sqrt(DOT_PRODUCT(B_f,B_f))
+              !                   ! write(404,*) ' '
+              !                   ! write(404,*) ' '
+              !               ! endif
+              !           ! endif
+              !           ! pause
+              !       endif
+              !    jj=jj+1
+
+              ! enddo
 
                      ! print*, 'variable','        ', 'residual' ,'        ',  'relative residual'
                      ! write(404,'(a9,3x,3(a8,3x))') 'variable','        ', 'residual' ,'        ',  'relative residual'
@@ -327,7 +333,7 @@ module newton_bulk_call
                     K = K + 1
                     TL(I,J) = TL(I,J) - xF*S_f(K)
        !   if (xm(i) .gt. 97.d0) then
-       !   if ( S_f(K)/sqrt(DOT_PRODUCT(S_f,S_f)) .gt.0.1d0 ) then
+       !   if ( abs(S_f(K))/sqrt(DOT_PRODUCT(S_f,S_f)) .gt.0.05d0 ) then
        !   print*, ' '
        !   print*, '------------------------------------ '
        !   print*, ' '
@@ -338,7 +344,7 @@ module newton_bulk_call
        !   print '(a9, 3x,a2, 3x, a11, e20.10)', "variable=", getVariableName(J), "correction=", s_f(k)
        !   print*, ' '
        !   print*, ' '
-       !   ! pause 
+         ! pause 
        ! endif
 
                 ENDDO
@@ -418,8 +424,8 @@ module newton_bulk_call
        ! CALL DOMI_RESIDUAL_fluid( IEL, TEMP_TL, TEMP_RES, .TRUE. )
        ! IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_fluid  ,IEL, TEMP_TL, TEMP_RES)
 
-       CALL DOMI_RESIDUAL_IntByPartsConvection( IEL, TEMP_TL, TEMP_RES, .TRUE. )
-       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_IntByPartsConvection  ,IEL, TEMP_TL, TEMP_RES)
+       CALL DOMI_RESIDUAL_flowNgastransport( IEL, TEMP_TL, TEMP_RES, .TRUE. )
+       IF (FLAG_NR=='NRP') call NumJacBulk(  DOMI_RESIDUAL_flowNgastransport  ,IEL, TEMP_TL, TEMP_RES)
         
        
     END SUBROUTINE FLOW_EQUATIONS

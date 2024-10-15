@@ -52,7 +52,6 @@ Module AmbientHenryBoundary
 
         call getBoundaryNodesOfWholeBoundary( This%nelem, This%elements, This%faces, This%nodes )
 
-        ! this%minimumZcoord = Xm(   this%nodes(  minloc( Xm(this%nodes), dim=1 )  )   )
         this%minimumZcoord = minval(  Xm( this%nodes )  )
 
         initial_position   = this%minimumZcoord  ;  position_o = initial_position 
@@ -91,11 +90,9 @@ Module AmbientHenryBoundary
                 call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
                 call Stresses            ( element, face, TL_, RES_stresses, .true., Pressure_bc )
-                call weakHenry           ( element, face, TL_, RES_concentration, .true., this%concentrationPressure )
 
                 if (FlagNR == "NRP") then
                     call CalculateJacobianContributionsOf(Stresses      ,element, face, TL_, RES_stresses, Pressure_bc )
-                    call CalculateJacobianContributionsOf(weakHenry     ,element, face, TL_, RES_concentration, this%concentrationPressure )
                 endif
             enddo
 
@@ -121,7 +118,7 @@ Module AmbientHenryBoundary
                 node = this%nodes(inode)
                 call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
                 
-                ! call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
+                call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
             enddo
             
         endif

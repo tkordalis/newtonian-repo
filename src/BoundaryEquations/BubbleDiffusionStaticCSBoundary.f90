@@ -220,6 +220,7 @@ Module BubbleDiffusionStaticCSBoundary
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
+        use physical_module, only: Pinitial, Pchar
         Implicit None 
         Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
         Character(len=3), Intent(In)         :: FlagNR 
@@ -230,7 +231,7 @@ Module BubbleDiffusionStaticCSBoundary
         Real(8), Dimension(:,:), Allocatable :: TL_
         Real(8), Dimension(NBF_2d,NEQ_f)     :: RES_kinematic, RES_thetaEquid, RES_stresses, RES_concentration
         Integer                              :: iel, element, face
-        Integer                              :: node_counter, node
+        Integer                              :: inode, node
         Real(8)                              :: Volume
 
 
@@ -242,14 +243,12 @@ Module BubbleDiffusionStaticCSBoundary
                 call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
                 call Stresses            ( element, face, TL_, RES_stresses, .true., This%pressure )
-                call weakHenry           ( element, face, TL_, RES_concentration, .true., This%pressure )
 
                 if (FlagNR == "NRP") Then
                     call CalculateJacobianContributionsOf  ( Stresses  ,element, face, TL_, RES_stresses, This%pressure )
-                    call CalculateJacobianContributionsOf  ( weakHenry  ,element, face, TL_, RES_concentration, This%pressure )
+                    
                     !Extra Unknown
                     call CalculateExtraJacobianContributionsOf  ( Stresses ,element, face, TL_, RES_stresses, 1, This%pressure,   this%gidP )
-                    call CalculateExtraJacobianContributionsOf  ( weakHenry ,element, face, TL_, RES_concentration, 1, This%pressure,   this%gidP )
                 endif
             enddo
         else
@@ -265,18 +264,13 @@ Module BubbleDiffusionStaticCSBoundary
 
                     call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                    call Kinematic        (element, face, TL_, RES_kinematic, .true. )
+                    call Kinematic_mass        (element, face, TL_, RES_kinematic, .true. )
 
                     If (FlagNR == "NRP") then
-                        call CalculateJacobianContributionsOf(Kinematic     ,element, face, TL_, RES_kinematic )
+                        call CalculateJacobianContributionsOf(Kinematic_mass     ,element, face, TL_, RES_kinematic )
                     endif
                 enddo
             else
-                call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfResidual)
-                If (FlagNR == "NRP") then
-                    call updateAllNodesOfTheBoundary('R',This%elements, This%faces, ClearRowsOfJacobian)
-                endif
-
                 do iel = 1, this%nelem
                     element =This%elements(iel)
                     face    =This%faces   (iel)
@@ -289,7 +283,11 @@ Module BubbleDiffusionStaticCSBoundary
                         call CalculateJacobianContributionsOf(Theta_EQUIDISTRIBUTION_RESIDUAL_f,element, face, TL_, RES_thetaEquid)
                     endif
                 enddo
-
+                
+                do inode = 1, size(this%nodes)
+                    node = this%nodes(inode)
+                    call ApplyDirichletAtNode_(node, "C", KoN*this%Pressure, FlagNr, this%gidP )
+                enddo
             endif
         endif
         

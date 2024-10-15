@@ -76,10 +76,6 @@ Module FixWallConcentrationBoundary
 
                 call copyArrayToLocalValues(TL, nm_mesh(element,:), 1, TL_)
 
-                call zeroConcentrationFlux  ( element, face, TL_, RES_concentration, .true. )
-
-                if (FlagNR == "NRP") &
-                    call CalculateJacobianContributionsOf( zeroConcentrationFlux  ,element, face, TL_, RES_concentration )
             enddo
         else
             do node_counter = 1, size(this%nodes)

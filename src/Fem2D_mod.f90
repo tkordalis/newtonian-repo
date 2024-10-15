@@ -74,6 +74,8 @@ MODULE PHYSICAL_MODULE
     Real(8), PARAMETER       :: pi4o3         = 4.d0*pi/3.d0
     Real(8), parameter       :: g_grav        =  9.81d0           ! m/s2:  gravitational acceleration
     
+    Real(8), parameter       :: MrBubble      = 0.032d0          ! kg/mol
+    
     ! ! !_______________________________________________________________________________
     ! ! ! These numbers are for AIR in water
     ! ! !-------------------------------------------------------------------------------
@@ -230,7 +232,7 @@ MODULE PHYSICAL_MODULE
         ! pause
         eo = [0.1d0, 0.d0]
         ! eo = [0.d0, 0.1d0]
-        e_bnd = - 1.0D+4
+        e_bnd = - 1.0D+5
         
 
     END SUBROUTINE DIMENSIONLESS_NUMBERS
@@ -265,7 +267,7 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.2d0
+        Dt_constant = 0.1d0
 
         ! Dt_max = 1.5d0*Dt_constant
 

@@ -473,8 +473,6 @@ Module ExtraEquations
 
 ! ********************************************************************
 
-
-
     Function int_n_dot_UmUmesh_z( NELEM, NED ) Result(TEMP_RES)
         use time_integration, only:dt, time
         Implicit None
