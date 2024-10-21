@@ -33,7 +33,7 @@ PROGRAM FEM2D
     Use RemeshProcedure
     Implicit None
     external :: fdate
-    character(25)                        :: dateNtime
+    character(25)                        :: dateNtime 
 
     Type(unvFileReader)                  :: unvf
     Type(Solution)                       :: sol
