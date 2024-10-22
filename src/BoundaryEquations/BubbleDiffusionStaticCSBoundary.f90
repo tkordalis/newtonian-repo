@@ -70,6 +70,9 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: calculatendotUmUmesh_r
             procedure :: calculatendotgradC_z
             procedure :: calculatendotgradC_r
+            procedure :: calculateSherwood
+            procedure :: calculateReynolds
+            
             procedure :: printEachContributionOfKinematicBC
 
             procedure :: getZcenter_o
@@ -583,6 +586,30 @@ Module BubbleDiffusionStaticCSBoundary
         output = integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_r)
 
     end Function calculatendotgradC_r
+
+    Function calculateSherwood(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        output = PeN * ( - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_r) &
+                          - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_z) ) * (this%volume/pi4o3)**0.333333d0 &
+                            / (KoN*this%pressure - 1.d0) / integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_dS)
+
+    end Function calculateSherwood
+
+    Function calculateReynolds(this) Result(output)
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: Zcenter
+
+        output = rho * (velocity_char*this%velocity) * (length_char*(this%volume/pi4o3)**0.333333d0) / viscosity
+
+    end Function calculateReynolds
 
     Function printEachContributionOfKinematicBC(this) Result(output)
         use time_integration, only:dt

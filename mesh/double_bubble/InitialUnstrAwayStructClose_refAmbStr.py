@@ -38,7 +38,7 @@ from salome.geom import geomtools
 from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, dR_ref3, dR_ref4, R_refinement1_Sphere1, R_refinement2_Sphere1,R_refinement3_Sphere1, R_refinement4_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
-dZ_refAmb, Element_size_on_Ambient_cb
+dZ_refAmb, Element_size_on_Ambient_cb, distance, RSphere2
 
 
 
@@ -58,7 +58,7 @@ OZ = geompy.MakeVectorDXDYDZ(0, 0, 7)
 
 
 Domain_cut = geompy.MakeCutList( geompy.MakeFaceHW(Height_tank, 2*Radius_tank, 1), \
-								[ geompy.MakeTranslation( geompy.MakeDiskR(RSphere1, 1), 0, 0, 0 ), \
+								[ geompy.MakeTranslation( geompy.MakeDiskR(RSphere1, 1), 0.5*distance, 0, 0 ), geompy.MakeTranslation( geompy.MakeDiskR(RSphere2, 1), -0.5*distance, 0, 0 ),\
 								geompy.MakeTranslation( geompy.MakeFaceHW(Height_tank, 2*Radius_tank, 1), 0, -Radius_tank, 0 )], True )
 
 
@@ -68,13 +68,19 @@ Domain_cut = geompy.MakeCutList( geompy.MakeFaceHW(Height_tank, 2*Radius_tank, 1
 
 
 
-Disk_refinement1_Sphere1 = geompy.MakeDiskR(R_refinement1_Sphere1,1)
-Disk_refinement2_Sphere1 = geompy.MakeDiskR(R_refinement2_Sphere1,1)
+Disk_refinement1_Sphere1 = geompy.MakeTranslation( geompy.MakeDiskR(R_refinement1_Sphere1,1), 0.5*distance, 0, 0 )
+Disk_refinement2_Sphere1 = geompy.MakeTranslation( geompy.MakeDiskR(R_refinement2_Sphere1,1), 0.5*distance, 0, 0 )
 
-Disk_refinement1_Sphere1_minusSpherePosition = geompy.MakeTranslation(Disk_refinement1_Sphere1, 0, 0, 0)
-[Wire_1] = geompy.ExtractShapes(Disk_refinement1_Sphere1_minusSpherePosition, geompy.ShapeType["WIRE"], True)
+Disk_refinement1_Sphere2 = geompy.MakeTranslation( geompy.MakeDiskR(R_refinement1_Sphere1,1), -0.5*distance, 0, 0 )
+Disk_refinement2_Sphere2 = geompy.MakeTranslation( geompy.MakeDiskR(R_refinement2_Sphere1,1), -0.5*distance, 0, 0 )
+
+# Disk_refinement1_Sphere1_minusSpherePosition = geompy.MakeTranslation(Disk_refinement1_Sphere1, 0, 0, 0)
+[Wire_1] = geompy.ExtractShapes(Disk_refinement1_Sphere1, geompy.ShapeType["WIRE"], True)
 [Wire_2] = geompy.ExtractShapes(Disk_refinement2_Sphere1, geompy.ShapeType["WIRE"], True)
 
+
+[Wire_5] = geompy.ExtractShapes(Disk_refinement1_Sphere2, geompy.ShapeType["WIRE"], True)
+[Wire_6] = geompy.ExtractShapes(Disk_refinement2_Sphere2, geompy.ShapeType["WIRE"], True)
 
 Disk_refinement3_Sphere1 = geompy.MakeDiskR(R_refinement3_Sphere1,1)
 Disk_refinement4_Sphere1 = geompy.MakeDiskR(R_refinement4_Sphere1,1)
@@ -105,7 +111,7 @@ line_dZ_amb 	= geompy.MakeLineTwoPnt(vertex_dZ_amb1, vertex_dZ_amb2)
 
 
 # PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Ellipse_1, Ellipse_outer], True, True)
-PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Wire_3, Wire_4, line_dZ_amb], True, True)
+PartitionTool = geompy.MakeFuseList([Wire_1, Wire_2, Wire_3, Wire_4, Wire_5, Wire_6, line_dZ_amb], True, True)
 
 Partition_1   = geompy.MakePartition([Domain_cut], [PartitionTool], [], [], geompy.ShapeType["FACE"], 0, [], 0)
 
@@ -194,18 +200,23 @@ idSymmetry = []
 
 Symmetry_groups = []
 
+Symmetry_groups.append( getgroupSymmetry( 'middle', None     , None , None) )
 
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'cb1'     , 'left' , None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'cb1'     , 'right', None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'cb2'     , 'left' , None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'cb2'     , 'right', None) )
-Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'ellipse1', 'left' , None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'ellipse1', 'right' , None) )
-Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'ellipse2', 'left' , None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'ellipse2', 'right' , None) )
-Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'out'     , 'left' , None) )
 Symmetry_groups.append( getgroupSymmetry( 'Sphere_1_Side', 'out'     , 'right' , None) )
 
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'cb1'     , 'left' , None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'cb1'     , 'right', None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'cb2'     , 'left' , None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'cb2'     , 'right', None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'ellipse1', 'left' , None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'ellipse2', 'left' , None) )
+Symmetry_groups.append( getgroupSymmetry( 'Sphere_2_Side', 'out'     , 'left' , None) )
 
 
 origin_of_axes = []
@@ -214,32 +225,82 @@ theta_degrees  = []
 
 point_list = []
 
-for i in range(len(Symmetry_groups)):
+Symmetry_groups[0]["id"] = returnIDofShape( 0, [0,0] , [0,0], "EDGE" )
+
+for i in range(1,len(Symmetry_groups)):
 
 	if Symmetry_groups[i]["mainGroup"] == "Sphere_1_Side":
-		origin_of_axes = [0,0]
-
-		if Symmetry_groups[i]["refZone"] == "cb1":
-			x_tilt =  [RSphere1+h_s, 0] 
-
-		elif Symmetry_groups[i]["refZone"] == "cb2":
-			x_tilt = [R_refinement1_Sphere1+h_s, 0]
-
-		elif Symmetry_groups[i]["refZone"] == "ellipse1":
-			x_tilt = [R_refinement2_Sphere1+h_s, 0]
-
-		elif Symmetry_groups[i]["refZone"] == "ellipse2":
-			x_tilt = [R_refinement3_Sphere1-0+h_s, 0] 
-
-		elif Symmetry_groups[i]["refZone"] == "out":
-			x_tilt = [R_refinement4_Sphere1-0+h_s, 0] 
-
+		pos_sphere1 = 0.5*distance
+	elif Symmetry_groups[i]["mainGroup"] == "Sphere_2_Side":
+		pos_sphere1 = -0.5*distance
 	
+	origin_of_axes = [pos_sphere1,0]
+
+
+	if Symmetry_groups[i]["refZone"] == "cb1":
+		x_tilt =  [RSphere1+h_s, 0]
+
+	elif Symmetry_groups[i]["refZone"] == "cb2":
+		x_tilt = [R_refinement1_Sphere1+h_s, 0]
+
+	elif Symmetry_groups[i]["refZone"] == "ellipse1":
+		x_tilt = [R_refinement2_Sphere1+h_s, 0]
+
+	elif Symmetry_groups[i]["refZone"] == "ellipse2":
+		x_tilt = [R_refinement3_Sphere1-abs(pos_sphere1)+h_s, 0] 
+
+	elif Symmetry_groups[i]["refZone"] == "out":
+		x_tilt = [R_refinement4_Sphere1-abs(pos_sphere1)+h_s, 0] 
+
 
 	if Symmetry_groups[i]["leftOrRight"] == "left":
 		theta_degrees = 180
 	elif Symmetry_groups[i]["leftOrRight"] == "right":
 		theta_degrees = 0
+
+	# if Symmetry_groups[i]["mainGroup"] == "Sphere_1_Side":
+	# 	pos_sphere1 = 0.5*distance
+	# 	origin_of_axes = [pos_sphere1,0]
+
+	# 	if Symmetry_groups[i]["refZone"] == "cb1":
+	# 		x_tilt =  [RSphere1+h_s, 0]
+
+	# 	elif Symmetry_groups[i]["refZone"] == "cb2":
+	# 		x_tilt = [R_refinement1_Sphere1+h_s, 0]
+
+	# 	elif Symmetry_groups[i]["refZone"] == "ellipse1":
+	# 		x_tilt = [R_refinement2_Sphere1+h_s, 0]
+
+	# 	elif Symmetry_groups[i]["refZone"] == "ellipse2":
+	# 		x_tilt = [R_refinement3_Sphere1-pos_sphere1+h_s, 0] 
+
+	# 	elif Symmetry_groups[i]["refZone"] == "out":
+	# 		x_tilt = [R_refinement4_Sphere1-pos_sphere1+h_s, 0] 
+
+	# elif Symmetry_groups[i]["mainGroup"] == "Sphere_2_Side":
+	# 	pos_sphere1 = 0.5*distance
+	# 	origin_of_axes = [-pos_sphere1,0]
+
+	# 	if Symmetry_groups[i]["refZone"] == "cb1":
+	# 		x_tilt =  [RSphere1+h_s, 0] 
+
+	# 	elif Symmetry_groups[i]["refZone"] == "cb2":
+	# 		x_tilt = [R_refinement1_Sphere1+h_s, 0]
+
+	# 	elif Symmetry_groups[i]["refZone"] == "ellipse1":
+	# 		x_tilt = [R_refinement2_Sphere1+h_s, 0]
+
+	# 	elif Symmetry_groups[i]["refZone"] == "ellipse2":
+	# 		x_tilt = [R_refinement3_Sphere1-pos_sphere1+h_s, 0] 
+
+	# 	elif Symmetry_groups[i]["refZone"] == "out":
+	# 		x_tilt = [R_refinement4_Sphere1-pos_sphere1+h_s, 0] 
+	
+
+	# if Symmetry_groups[i]["leftOrRight"] == "left":
+	# 	theta_degrees = 180
+	# elif Symmetry_groups[i]["leftOrRight"] == "right":
+	# 	theta_degrees = 0
 
 	Symmetry_groups[i]["id"] = returnIDofShape( theta_degrees, x_tilt, origin_of_axes, "EDGE" )
 	idSymmetry.append( Symmetry_groups[i]["id"] )
@@ -274,45 +335,80 @@ horizontalsSphere1_union = geompy.UnionIDs( horizontalsSphere1, idhorizontalsSph
 
 geompy.addToStudyInFather(Partition_1, horizontalsSphere1, "horizontalsSphere1")
 
-idSphere1 	  = [returnIDofShape( 1, [RSphere1, 0], [-0,0], "EDGE" )]
+idSphere1 	  = [returnIDofShape( 1, [RSphere1, 0], [0.5*distance,0], "EDGE" )]
 Sphere1 	  = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Sphere1_union = geompy.UnionIDs( Sphere1 , idSphere1 )
+
+
+idSphere2 	  = [returnIDofShape( 1, [RSphere2, 0], [-0.5*distance,0], "EDGE" )]
+Sphere2 	  = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+Sphere2_union = geompy.UnionIDs( Sphere2 , idSphere2 )
 
 # print(idSphere1)
 
 
 
-idSphere1Ref1     = [returnIDofShape( 1, [RSphere1+dR_ref1, 0], [-0,0], "EDGE" )]
-Sphere1Ref1 	    = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+idSphere1Ref1     = [returnIDofShape( 1, [RSphere1+dR_ref1, 0], [0.5*distance,0], "EDGE" )]
+Sphere1Ref1 	  = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Sphere1_unionRef1 = geompy.UnionIDs( Sphere1Ref1 , idSphere1Ref1 )
 
+idSphere2Ref1     = [returnIDofShape( 1, [RSphere2+dR_ref1, 0], [-0.5*distance,0], "EDGE" )]
+Sphere2Ref1 	  = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+Sphere2_unionRef1 = geompy.UnionIDs( Sphere2Ref1 , idSphere2Ref1 )
+
 geompy.addToStudyInFather(Partition_1,Sphere1Ref1,"Sphere1Ref1")
+geompy.addToStudyInFather(Partition_1,Sphere2Ref1,"Sphere2Ref1")
 # print(idSphere1Ref1,idSphere2Ref1)
 
 Groups_faces = []
 
 Groups_faces.append( getgroupFace("Sphere1", "Ref_1", None, None, None, None) )
+Groups_faces.append( getgroupFace("Sphere2", "Ref_1", None, None, None, None) )
 Groups_faces.append( getgroupFace("Sphere1", "Ref_2", None, None, None, None) )
+Groups_faces.append( getgroupFace("Sphere2", "Ref_2", None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "1"    , None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "2"    , None, None, None, None) )
-Groups_faces.append( getgroupFace("Ambient", None   , None, None, None, None) )
+Groups_faces.append( getgroupFace("Ambient", "Ambient", None, None, None, None) )
 
 for i in range(len(Groups_faces)):
 
-	if Groups_faces[i]["mainGroup"] == "Sphere1":
-		origin_of_axes = [0,0]
 
-		if Groups_faces[i]["refZone"] == "Ref_1":
-			x_tilt = [0,RSphere1 + h_s]
-		elif Groups_faces[i]["refZone"] == "Ref_2":
-			x_tilt = [0,R_refinement1_Sphere1 + h_s]
+	if Groups_faces[i]["mainGroup"] == "Sphere1":
+		pos_sphere1 = 0.5*distance
+	elif Groups_faces[i]["mainGroup"] == "Sphere2":
+		pos_sphere1 = -0.5*distance
 	elif Groups_faces[i]["mainGroup"] == "ellipse":
-		if Groups_faces[i]["refZone"] == "1":
-			x_tilt = [0,R_refinement3_Sphere1 - 2*h_s]
-		elif Groups_faces[i]["refZone"] == "2":
-			x_tilt = [0,R_refinement3_Sphere1 + 2*h_s]
+		pos_sphere1 = 0
 	elif Groups_faces[i]["mainGroup"] == "Ambient":
-		x_tilt = [ 0.5*Height_tank-h_s, h_s ]
+		pos_sphere1 = 0.5*Height_tank
+	
+	origin_of_axes = [pos_sphere1,0]
+
+	
+	if Groups_faces[i]["refZone"] == "Ref_1":
+		x_tilt =  [0,RSphere1+h_s]
+	elif Groups_faces[i]["refZone"] == "Ref_2":
+		x_tilt = [0,R_refinement1_Sphere1 + h_s]
+	elif Groups_faces[i]["refZone"] == "1":
+		x_tilt = [0,R_refinement3_Sphere1 - h_s]
+	elif Groups_faces[i]["refZone"] == "2":
+		x_tilt = [0,R_refinement4_Sphere1 - h_s]
+	elif Groups_faces[i]["refZone"] == "Ambient":
+		x_tilt = [-h_s, h_s ]
+
+
+	# if Groups_faces[i]["mainGroup"] == "Sphere1":
+	# 	origin_of_axes = [0,0]
+
+	# 	if Groups_faces[i]["refZone"] == "Ref_1":
+	# 		x_tilt = [0,RSphere1 + h_s]
+	# 	elif Groups_faces[i]["refZone"] == "Ref_2":
+	# 		x_tilt = [0,R_refinement1_Sphere1 + h_s]
+	# elif Groups_faces[i]["mainGroup"] == "ellipse":
+	# 	if Groups_faces[i]["refZone"] == "1":
+	# 		x_tilt = [0,R_refinement3_Sphere1 - 2*h_s]
+	# 	elif Groups_faces[i]["refZone"] == "2":
+	# 		x_tilt = [0,R_refinement3_Sphere1 + 2*h_s]
 
 
 	theta_degrees = 0
@@ -368,9 +464,13 @@ Mesh_1 = smesh.Mesh(Partition_1)
 # Mesh_1.Segment(geom=Sphere2).StartEndLength (Element_size_on_Sphere,Element_size_on_Sphere,[])
 
 Mesh_1.Segment(geom=Sphere1).NumberOfSegments(NumSegmentsOnSphere)
+Mesh_1.Segment(geom=Sphere2).NumberOfSegments(NumSegmentsOnSphere)
 
 Mesh_1.Segment(geom=Sphere1Ref1).NumberOfSegments(NumSegmentsOnSphere)
 Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
+
+Mesh_1.Segment(geom=Sphere2Ref1).NumberOfSegments(NumSegmentsOnSphere)
+
 
 
 Mesh_1.Segment(geom=z_ambr).StartEndLength ( Element_size_on_Ambient, Element_size_on_Ambient )
@@ -386,15 +486,18 @@ MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.1)
 Params = []
 
 Groups_faces[0]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[0]["obj"]) 
+Groups_faces[1]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[1]["obj"]) 
 j=0
-for i in range(1,len(Groups_faces)-1):
+for i in range(3,len(Groups_faces)-1):
 	# print(str(i))
 	Params = Netgen_Params[j]
 	Groups_faces[i]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[i]["obj"])
 	MeshParameters(Groups_faces[i]["mesh_obj"], Params[0], Params[1], Params[2])
 	j+=1
 
-
+Params = Netgen_Params[0]
+Groups_faces[2]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[2]["obj"])
+MeshParameters(Groups_faces[2]["mesh_obj"], Params[0], Params[1], Params[2])
 
 Groups_faces[-1]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[-1]["obj"]) 
 
@@ -420,6 +523,7 @@ Mesh_1.Segment(geom=SymmetryB2out).StartEndLength ( SymmOut_params[0], Main_maxS
 tankWall_1	 	=  Mesh_1.GroupOnGeom( tankWall 	,'tankWall'   ,SMESH.EDGE )
 Symmetry_1	 	=  Mesh_1.GroupOnGeom( Symmetry 	,'Symmetry'	  ,SMESH.EDGE )
 Sphere1_1	 		=  Mesh_1.GroupOnGeom( Sphere1 		,'Bubble1' 	  ,SMESH.EDGE )
+Sphere2_1	 		=  Mesh_1.GroupOnGeom( Sphere2 		,'Bubble2' 	  ,SMESH.EDGE )
 rightPlane_1 	=  Mesh_1.GroupOnGeom( rightPlane ,'Ambient' 		,SMESH.EDGE )
 
 
