@@ -65,9 +65,17 @@ module newton_bulk_call
 
             xERROR_NR          = 1.D+0*ERROR_NR
             TL                 = TLp
-            Pressure_Bubble    = Pressure_Bubbleo
-            mol_Bubble         = mol_Bubbleo
+           
 
+            Pressure_bubble = Pressure_bubbleo
+            mol_bubble = mol_bubbleo
+            volume_bubble = volume_bubbleo
+            velocity_bubble = velocity_bubbleo
+
+            Pressure_bubble2 = Pressure_bubble2o
+            mol_bubble2 = mol_bubble2o
+            volume_bubble2 = volume_bubble2o
+            velocity_bubble2 = velocity_bubble2o
 
             WRITE(*,*) 'xF=', xF
         ELSE
@@ -132,7 +140,7 @@ module newton_bulk_call
            !$OMP END PARALLEL DO
               
             
-            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble, Volume_bubble, Velocity_bubble )
+            call applyBCs_solveExtraConstraints( FLAG_NR, Pressure_bubble, mol_Bubble, Volume_bubble, Velocity_bubble, Pressure_bubble2, mol_Bubble2, Volume_bubble2, Velocity_bubble2 )
 
 
             ! CALCULATE RESIDUAL NORM
@@ -355,12 +363,16 @@ module newton_bulk_call
             mol_bubble      = mol_bubble      - xF*Se_f(2)
             Volume_bubble   = Volume_bubble   - xF*Se_f(3)
             Velocity_bubble = Velocity_bubble - xF*Se_f(4)
+
+            Pressure_bubble2 = Pressure_bubble2 - xF*Se_f(5)
+            mol_bubble2      = mol_bubble2      - xF*Se_f(6)
+            Volume_bubble2   = Volume_bubble2   - xF*Se_f(7)
+            Velocity_bubble2 = Velocity_bubble2 - xF*Se_f(8)
             ! print*, 'pressure = ', Pressure_bubble,'pressure correction',Se_f(1)/COR_NORM_NEW_f
             ! print*, 'mol = ', mol_bubble,'mol correction',Se_f(2)/COR_NORM_NEW_f
 
             ! call bubble%setPressure(Pressure_bubble)
             ! call bubble%setmol(mol_bubble)
-            write(400,'(i3,3x,4(f25.15,3x))') iter_f, Pressure_bubble, mol_bubble, Volume_bubble, Velocity_bubble
 
             filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 
 
@@ -378,6 +390,12 @@ module newton_bulk_call
         Call bubble%setVolume  ( Volume_bubble   )
         Call bubble%setVelocity( Velocity_bubble )
         Call bubble%setZcenter_o()
+
+        call bubble2%setPressure( Pressure_bubble2 )
+        call bubble2%setmol     ( mol_bubble2      )
+        Call bubble2%setVolume  ( Volume_bubble2   )
+        Call bubble2%setVelocity( Velocity_bubble2 )
+        Call bubble2%setZcenter_o()
 
         ! If convergence is achieved, remove iteration_*.plt
         call execute_command_line("rm -f Iteration_*.plt")

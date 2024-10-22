@@ -6,7 +6,7 @@ echo $NEXE
 #----------------------------------------------------------------------------
 
 
-OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
+# OPT="-O0 -cpp -g -traceback -check all -check bounds -check uninit -ftrapuv -gen-interfaces -debug all -implicitnone -fstack-protector"
 
 OPT="-O3 -cpp -traceback -standard-realloc-lhs"
 # OPT="-O2 -cpp -traceback -standard-realloc-lhs"

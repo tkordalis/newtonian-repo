@@ -127,7 +127,8 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        FLAG_NR = 'NRP'
+        ! FLAG_NR = 'NRP'
+        if (iter .eq. 1) FLAG_NR = 'NRP'
         ! if (increment .lt. 3) FLAG_NR = 'NRP'
 
         if (ITER.gt.MITER) then
@@ -195,16 +196,27 @@ module solution_check_update
         mol_bubbleo          = mol_bubble
         volume_bubbleo       = volume_bubble
         velocity_bubbleo     = velocity_bubble
+
+        Pressure_bubble2o     = Pressure_bubble2
+        mol_bubble2o          = mol_bubble2
+        volume_bubble2o       = volume_bubble2
+        velocity_bubble2o     = velocity_bubble2
         
 
 
         ambient_position_o = ambient_position_o + dt*vm_ambient
         
-        call bubble%setPressure_o(Pressure_bubbleo)
+        call bubble%setPressure_o(Pressure_bubble )
         call bubble%setmol_o     (mol_bubble      )
-        call bubble%setVolume_o  (volume_bubbleo  )
-        call bubble%setVelocity_o(velocity_bubbleo)
+        call bubble%setVolume_o  (volume_bubble   )
+        call bubble%setVelocity_o(velocity_bubble )
         call bubble%setZcenter_o ()
+
+        call bubble2%setPressure_o(Pressure_bubble2 )
+        call bubble2%setmol_o     (mol_bubble2      )
+        call bubble2%setVolume_o  (volume_bubble2   )
+        call bubble2%setVelocity_o(velocity_bubble2 )
+        call bubble2%setZcenter_o ()
 
         if (INCREMENT.GT.2) then 
             CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)

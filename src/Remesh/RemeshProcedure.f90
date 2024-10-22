@@ -193,6 +193,12 @@ module RemeshProcedure
 
             call getVariableFromBoundaryNodes(TL, bnd4_elements, bnd4_faces, "Z", Z)
             call getVariableFromBoundaryNodes(TL, bnd4_elements, bnd4_faces, "R", R)
+            call new_mesh%writeBoundaryNodes("Bubble2.dat", Z, R)
+            deallocate(Z)
+            deallocate(R)
+
+            call getVariableFromBoundaryNodes(TL, bnd5_elements, bnd5_faces, "Z", Z)
+            call getVariableFromBoundaryNodes(TL, bnd5_elements, bnd5_faces, "R", R)
             call new_mesh%writeBoundaryNodes("Ambient.dat", Z, R)
             deallocate(Z)
             deallocate(R)

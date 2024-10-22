@@ -3,10 +3,10 @@ Module IO_module
     Type Solution
         Real(8)                              :: time
         Real(8), Dimension(:,:), Allocatable :: TL
-        Real(8)                              :: Pressure_Bubble
-        Real(8)                              :: mol_Bubble
-        Real(8)                              :: volume_bubble
-        Real(8)                              :: velocity_bubble
+        Real(8)                              :: Pressure_Bubble, Pressure_Bubble2
+        Real(8)                              :: mol_Bubble, mol_Bubble2
+        Real(8)                              :: volume_bubble, volume_bubble2
+        Real(8)                              :: velocity_bubble, velocity_bubble2
 
         Integer                              :: Increment
 
@@ -92,11 +92,16 @@ Module IO_module
         ! print*, strGlobal(3)
         ! print*, toDouble( remove( strGlobal(3), ["Bubble_Pressure_1 ", "="]) )
 
-        this%increment         = toInt   ( remove( strGlobal(1), ["Increment        ", "="]) )
-        this%Pressure_Bubble   = toDouble( remove( strGlobal(2), ["Pressure_Bubble", "="])   )
-        this%mol_Bubble        = toDouble( remove( strGlobal(3), ["mol__Bubble", "="])       )
+        this%increment         = toInt   ( remove( strGlobal(1), ["increment        ", "="]) )
+        this%Pressure_Bubble   = toDouble( remove( strGlobal(2), ["pressure_bubble", "="])   )
+        this%mol_Bubble        = toDouble( remove( strGlobal(3), ["mol_bubble", "="])       )
         this%volume_bubble     = toDouble( remove( strGlobal(4), ["volume_bubble", "="])     )
         this%velocity_bubble   = toDouble( remove( strGlobal(5), ["velocity_bubble", "="])   )
+
+        this%Pressure_Bubble2   = toDouble( remove( strGlobal(6), ["pressure_bubble2", "="])   )
+        this%mol_Bubble2        = toDouble( remove( strGlobal(7), ["mol_bubble2", "="])       )
+        this%volume_bubble2     = toDouble( remove( strGlobal(8), ["volume_bubble2", "="])     )
+        this%velocity_bubble2   = toDouble( remove( strGlobal(9), ["velocity_bubble2", "="])   )
 
       
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -184,8 +189,10 @@ Module IO_module
                 tecfile  = Tecplot_File( datapacking = datapack, femtype = "FETRIANGLE")
         
                 title = "" 
-                title = replace("Increment = *, Pressure_Bubble = *, mol_Bubble = *, volume_bubble = *, velocity_bubble = *", "*", &
-                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble), toStr(volume_bubble), toStr(velocity_bubble) ] )
+                title = replace("increment = *, pressure_bubble = *, mol_bubble = *, volume_bubble = *, velocity_bubble = *,&
+                                    pressure_bubble2 = *, mol_bubble2 = *, volume_bubble2 = *, velocity_bubble2 = *", "*", &
+                       [ toStr(Increment), toStr(Pressure_Bubble), toStr(mol_Bubble), toStr(volume_bubble), toStr(velocity_bubble), &
+                        toStr(Pressure_Bubble2), toStr(mol_Bubble2), toStr(volume_bubble2), toStr(velocity_bubble2)] )
                 
         
                 call tecfile%setTitle   (title)

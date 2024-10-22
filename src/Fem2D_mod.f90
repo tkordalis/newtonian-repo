@@ -187,6 +187,7 @@ MODULE PHYSICAL_MODULE
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
     Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble, mol_bubbleo, mol_bubble, volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo
+    Real(8)                  :: Pressure_bubble2o, Pressure_bubble2, mol_bubble2o, mol_bubble2, volume_bubble2, volume_bubble2o, velocity_bubble2, velocity_bubble2o
     Real(8)                  :: ambient_position_o, ambient_position, vm_ambient
   
     Contains
@@ -232,7 +233,7 @@ MODULE PHYSICAL_MODULE
         ! pause
         eo = [0.1d0, 0.d0]
         ! eo = [0.d0, 0.1d0]
-        e_bnd = - 1.0D+5
+        e_bnd = - 1.0D+3
         
 
     END SUBROUTINE DIMENSIONLESS_NUMBERS
@@ -299,7 +300,7 @@ Module ELEMENTS_MODULE
 
     !   NUMBER OF EQUATIONS
     Integer, Parameter:: NEQ_f = 6             ! NUMBER OF PDEs SYSTEM TO SOLVE FOR FLOW
-    Integer, Parameter:: NEX_f = 4 
+    Integer, Parameter:: NEX_f = 8 
 
     !   NUMBER OF ELEMENTS
     Integer :: NEL_1d                 ! TOTAL NUMBER OF 1D ELEMENTS
@@ -1403,7 +1404,8 @@ MODULE BOUNDARY_ENUMERATION_MODULE
         call commitBoundary(unvfile, 'tankWall'    , 1, bnd1_elements, bnd1_faces)
         call commitBoundary(unvfile, 'Symmetry'    , 2, bnd2_elements, bnd2_faces)
         call commitBoundary(unvfile, 'Bubble1'     , 3, bnd3_elements, bnd3_faces)
-        call commitBoundary(unvfile, 'Ambient'     , 4, bnd4_elements, bnd4_faces)
+        call commitBoundary(unvfile, 'Bubble2'     , 4, bnd4_elements, bnd4_faces)
+        call commitBoundary(unvfile, 'Ambient'     , 5, bnd5_elements, bnd5_faces)
 
 
         ! call WriteBoundaryNodesAt(101, bnd1_elements, bnd1_faces)

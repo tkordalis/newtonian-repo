@@ -31,8 +31,6 @@ blockage_ratio = 0.02
 RSphere1 		= 1.0
 RSphere2 		= 1.0
 
-distance 		= 5
-
 Radius_tank  	= RSphere1/blockage_ratio
 Height_tank 	= 200
 
@@ -54,10 +52,10 @@ dR_ref2 = 3*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
 
-dR_ref3 = R_refinement2_Sphere1 + 2
+dR_ref3 = R_refinement2_Sphere1 + 1
 dR_ref4 = dR_ref3 + 1
-R_refinement3_Sphere1 = 0.5*distance + dR_ref3
-R_refinement4_Sphere1 = 0.5*distance + dR_ref4
+R_refinement3_Sphere1 = RSphere1 + dR_ref3
+R_refinement4_Sphere1 = RSphere1 + dR_ref4
 
 dZ_refAmb = 3.0*Element_size_on_Ambient_cb
 dZ_refAmb = 0.5*Height_tank - dZ_refAmb
@@ -97,8 +95,8 @@ check_drRef1_compatibility = int(dR_ref1/Element_size_on_Sphere)
 Netgen_Params.append([ 2*Element_size_on_Sphere,  2*Element_size_on_Sphere, 0.1])
 # Netgen_Params.append([ 4*Element_size_on_Sphere,  4*Element_size_on_Sphere, 0.1])
 
-Netgen_Params.append([ 16*Element_size_on_Sphere,  16*Element_size_on_Sphere, 0.1])
-Netgen_Params.append([ 32*Element_size_on_Sphere,  32*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 8*Element_size_on_Sphere,  8*Element_size_on_Sphere, 0.1])
+Netgen_Params.append([ 24*Element_size_on_Sphere,  24*Element_size_on_Sphere, 0.1])
 
 # # --------------------------- End of Geometry --------------------------- #
 
