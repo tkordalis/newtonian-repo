@@ -5,7 +5,7 @@
 *.obj
 *.a
 *.lib
-exe
+exe_newtonian
 *.dll
 *.so
 *.dylib
@@ -15,6 +15,9 @@ exe
 fort.*
 Iteration_*.plt
 Iteration_*.plt_
+Bubble1.dat_*
+Bubble2.dat_*
+Ambient.dat_*
 
 # Compiled executables
 *.out
@@ -28,6 +31,7 @@ Iteration_*.plt_
 # ignore folders also
 1_results_dat/
 mesh/__pycache__/
+mesh/remesh.py_*
 sol/
 tecplot/
 meshq/
