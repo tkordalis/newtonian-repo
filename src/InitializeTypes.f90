@@ -69,7 +69,7 @@ Module InitialConditions
         Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
         Pressure_Bubble  = Pressure_Bubbleo
 
-        ! TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
+        TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
         TLb = TLo
         TL  = TLo
         TLp = TL

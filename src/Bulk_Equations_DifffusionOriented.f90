@@ -217,7 +217,7 @@ Module BulkEquations
 
                 BIFN = BFN   (IW) ; gradW = gradW_(:,:,iw) ; gradq = gradq_(:,iw) ; gradk = gradk_(:,iw) ; gradm = gradm_(:,iw)
 
-                SBFN = BIFN!+tlsmt*dot_product((Ugp-dXdt),gradm)
+                SBFN = BIFN+tlsmt*dot_product((Ugp-dXdt),gradm)
 
                 Ptot_d_gradW       = matmul(Ptot,gradW)
 
