@@ -3,10 +3,10 @@ module pressure_variation
     use time_integration
     implicit none
 
-    private :: transientPressureChange, areConditionsSteady
-    public ::  PressureChamber
-    Real(8), dimension(6), parameter :: crit_times = [800.d0, &
-                                                    2100.d0,  &
+    private :: transientPressureChange
+    public ::  PressureChamber, areConditionsSteady
+    Real(8), dimension(6), parameter :: crit_times = [500.5d0, &
+                                                    24.4d0,  &
                                                     4100.d0,  & 
                                                     6100.d0,  &
                                                     8100.d0,  &
@@ -15,16 +15,16 @@ module pressure_variation
  
     
     Real(8), dimension(7), parameter :: Pressure_before_crit_times = [Pambient/gravity_stress,    &
-                                                                      32000.d0/gravity_stress, &
-                                                                      27000.d0/gravity_stress, &
-                                                                      19000.d0/gravity_stress, &
-                                                                      16000.d0/gravity_stress, &
-                                                                      13000.d0/gravity_stress, &
-                                                                      11000.d0/gravity_stress]
+                                                                      Pambient/gravity_stress, &
+                                                                      Pambient/gravity_stress, &
+                                                                      20000.d0/gravity_stress, &
+                                                                      17000.d0/gravity_stress, &
+                                                                      14000.d0/gravity_stress, &
+                                                                      12000.d0/gravity_stress]
 
 
     ! Real(8), parameter       :: deltat_transientPressure = 60.d0
-    Real(8), parameter       :: deltat_transientPressure = 10.d0
+    Real(8), parameter       :: deltat_transientPressure = 30.d0
     integer                  :: crit_times_counter, pressure_change_counter
     logical                  :: isThePressureTransient = .false.
     logical                  :: rampUpDt   = .false.
@@ -102,71 +102,68 @@ module pressure_variation
         real(8)            :: rampUpDt_time_period
         real(8)            :: rampDownDt_time_period
         
-        ! initial_time_period         = 60.d0
-        ! rampUpDt_time_period        = 60.d0 ! regulates the slope of the linear function increasing timestep
-        ! before_critTime_time_period = 10.d0
-        ! rampDownDt_time_period      = 30.d0 ! regulates the slope of the linear function decreasing timestep
-        ! fine_timestep_time          = 70.d0
-        initial_time_period         = 5.d0
-        rampUpDt_time_period        = 5.d0 ! regulates the slope of the linear function increasing timestep
-        before_critTime_time_period = 5.d0
-        rampDownDt_time_period      = 5.d0 ! regulates the slope of the linear function decreasing timestep
-        fine_timestep_time          = 5.d0
+        initial_time_period         = 0.5d0
+        rampUpDt_time_period        = 0.3d0 ! regulates the slope of the linear function increasing timestep
+        before_critTime_time_period = 0.1d0
+        rampDownDt_time_period      = 0.1d0 ! regulates the slope of the linear function decreasing timestep
+        fine_timestep_time          = 8.d0
 
 
         if ( crit_times_counter .eq. 1 ) then 
-            if ( abs(time - initial_time_period) .lt. 1.d-1 ) then
+            if ( abs(time - initial_time_period) .lt. 0.499d0*dt ) then
                 rampUpDt        = .true.
                 time_for_dto = time
                 time_for_dt1 = time + rampUpDt_time_period
-            elseif ( abs(time - crit_times(crit_times_counter) + rampDownDt_time_period + before_critTime_time_period) .lt. 0.4d0 ) then
+            elseif ( abs(time - crit_times(crit_times_counter) + rampDownDt_time_period + before_critTime_time_period) .lt. 0.499d0*dt ) then
                 rampDownDt     = .true.
                 time_for_dto = time
                 time_for_dt1 = time + rampDownDt_time_period
             endif
         else
-            if ( abs(time - crit_times(crit_times_counter-1) - fine_timestep_time ) .lt. 0.02d0 ) then
+            if ( abs(time - crit_times(crit_times_counter-1) - fine_timestep_time ) .lt. 0.499d0*dt ) then
+
                 rampUpDt        = .true.
                 time_for_dto = time
                 time_for_dt1 = time + rampUpDt_time_period
-            elseif ( abs(time - crit_times(crit_times_counter) + rampDownDt_time_period + before_critTime_time_period) .lt. 0.5d0 ) then
+            elseif ( abs(time - crit_times(crit_times_counter) + rampDownDt_time_period + before_critTime_time_period) .lt. 0.499d0*dt ) then
+
                 rampDownDt     = .true.
                 time_for_dto = time
                 time_for_dt1 = time + rampDownDt_time_period
             endif
         endif
-          if (rampUpDt) then
-              time_previous_dt = time_for_dto
-              time_next_dt     = time_for_dt1
-              previous_dt      = Dt_constant
-              next_dt          = Dt_max
-  
-              DTb = Dto
-              Dto = DT
-              DT = previous_dt * ( time - time_next_dt    )  / ( time_previous_dt - time_next_dt ) &
-                  + next_dt    * ( time - time_previous_dt ) / ( time_next_dt - time_previous_dt )
-              
-              if (dt .gt. dt_max) then
-                  dt = dt_max
-                  rampUpDt = .false.
-              endif
-          elseif (rampDownDt) then
-              time_previous_dt = time_for_dto
-              time_next_dt     = time_for_dt1
-              previous_dt      = Dt_max
-              next_dt          = Dt_constant
-  
-              DTb = Dto
-              Dto = DT
-              DT = previous_dt * ( time - time_next_dt    )  / ( time_previous_dt - time_next_dt ) &
-                  + next_dt    * ( time - time_previous_dt ) / ( time_next_dt - time_previous_dt )
+        
+        if (rampUpDt) then
+            time_previous_dt = time_for_dto
+            time_next_dt     = time_for_dt1
+            previous_dt      = Dt_constant
+            next_dt          = Dt_max
 
-              if (dt .lt. dt_constant) then
-                  dt = dt_constant
-                  rampDownDt = .false.
-              endif
-          endif
+            DTb = Dto
+            Dto = DT
+            DT = previous_dt * ( time - time_next_dt    )  / ( time_previous_dt - time_next_dt ) &
+            + next_dt    * ( time - time_previous_dt ) / ( time_next_dt - time_previous_dt )
 
+            if (dt .gt. dt_max) then
+                dt = dt_max
+                rampUpDt = .false.
+            endif
+        elseif (rampDownDt) then
+            time_previous_dt = time_for_dto
+            time_next_dt     = time_for_dt1
+            previous_dt      = Dt_max
+            next_dt          = Dt_constant
+
+            DTb = Dto
+            Dto = DT
+            DT = previous_dt * ( time - time_next_dt    )  / ( time_previous_dt - time_next_dt ) &
+            + next_dt    * ( time - time_previous_dt ) / ( time_next_dt - time_previous_dt )
+
+            if (dt .lt. dt_constant) then
+                dt = dt_constant
+                rampDownDt = .false.
+            endif
+        endif
     end subroutine areConditionsSteady
 
 

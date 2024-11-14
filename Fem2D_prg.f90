@@ -152,9 +152,7 @@ PROGRAM FEM2D
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         ! Check Criteria for Remeshing  
         !<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-        if ((increment .gt. 249) .and. (mod(increment, 250) .eq. 0)) then
         call checkAndRemesh( TL, NM_MESH,  Xm, Ym, Increment, ReallocateForRemesh )
-        endif   
 
         call UPDATE_SOLUTION( INCREMENT )
 

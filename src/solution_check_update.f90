@@ -179,10 +179,11 @@ module solution_check_update
     SUBROUTINE UPDATE_SOLUTION( INCREMENT )
         use BoundaryConditions
         USE GLOBAL_ARRAYS_MODULE
-        USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb
+        USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb, time
         USE physical_module, only: Pressure_bubble, Pressure_bubbleo, mol_bubble, mol_bubbleo, &
                                     volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo, &
                                     ambient_position_o, vm_ambient
+        use pressure_variation, only: areConditionsSteady
 
         IMPLICIT NONE
         ! ARGUMENTS
@@ -206,7 +207,10 @@ module solution_check_update
         call bubble%setVelocity_o(velocity_bubbleo)
         call bubble%setZcenter_o ()
 
-        if (INCREMENT.GT.2) then 
+        if (INCREMENT.GT.2) then
+
+            call areConditionsSteady(time)
+             
             CALL LAGRANGE_EXTRAPOLATION(TIME+dt, TIME-(dtb+DTo), TIME-dto, TIME, Lb, Lo, L)
 
             TLp = Lb*TLb + Lo*TLo + L*TL

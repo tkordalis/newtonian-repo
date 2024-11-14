@@ -3,13 +3,14 @@ Module FieldFunctions
 
 contains
 
-    function minimumAngleOfTriangle(Solution_, elements) Result(output)
+    function minimumAngleOfTriangle(Xnodes, Ynodes, elements) Result(output)
         Use VariableMapping, only: getVariableId
         Use geometry
         Implicit None 
-        Real(8), Dimension(:,:), Intent(In) :: Solution_
+        Real(8), Dimension(:), Intent(In) :: Xnodes
+        Real(8), Dimension(:), Intent(In) :: Ynodes
         Integer, Dimension(:,:), Intent(In) :: elements
-                
+
         Real(8), Dimension(:)  , Allocatable:: output
 
         Integer                             :: ielem
@@ -29,12 +30,15 @@ contains
         if (allocated(output) ) deallocate(output)
         nelem  = size(elements,1)
         nbf_2d = size(elements,2)
-        nnodes = size(Solution_,1)
+        nnodes = size(Xnodes)
 
         allocate( X( nnodes) )
         allocate( Y( nnodes) )
-        X = Solution_(:, getVariableId("Z"))
-        Y = Solution_(:, getVariableId("R"))
+        ! X = Solution_(:, getVariableId("Z"))
+        ! Y = Solution_(:, getVariableId("R"))
+        X = Xnodes
+        Y = Ynodes
+
 
 
         allocate( nm (nbf_2d) )
@@ -205,88 +209,74 @@ contains
 
     end function CanalyticLandau
 
-   ! Function YieldedRegion(Stresses_nodes) Result(output)
-   !      Use VariableMapping, only: getVariableId
-   !      Use PHYSICAL_MODULE, Only: BnN, WiN
-   !      Implicit None 
-   !      Real(8), Dimension(:,:), Intent(In) :: Stresses_nodes
-   !      Real(8), Dimension(:), Allocatable  :: output
-   !      Integer                             :: nodtol_ 
+    Function YieldedRegion(Stresses_nodes) Result(output)
+        Use VariableMapping, only: getVariableId
+        use geometry,        only: trace, secondInvariant
 
-   !      Integer                             :: j
-   !      Real(8), Dimension(3,3)             :: Deviatoric_Stress_Tensor
-   !      Real(8)                             :: Trace_Stress_Tensor
-   !      Real(8)                             :: Magn_Stress_Dev
-   !      Real(8)                             :: Trace_Deviatoric_Stress_Tensor
-   !      Real(8)                             :: TraceStress
-   !      Real(8)                             :: Magnitude
-   !      Real(8)                             :: Trr, Trz, Tzz, Ttt
-   !      Real(8), Dimension(3,3)             :: unity_tensor, SM, CM, Stress_Tensor, Stress_dot_Stress
-        
+        Implicit None 
+        Real(8), Dimension(:,:), Intent(In) :: Stresses_nodes
+        Real(8), Dimension(:), Allocatable  :: output
+        Integer                             :: nodtol_ 
 
-   !      unity_tensor = 0.d0
-   !      do j=1,3
-   !          unity_tensor(j,j) = 1.d0
-   !      enddo
+        Integer                             :: j
+        Real(8), Dimension(3,3)             :: I1, Stress_Tensor
 
-   !      nodtol_ = size(Stresses_nodes,1)
-   !      Allocate( output (nodtol_) )
+        I1 = 0.d0
+        do j=1,3
+            I1(j,j) = 1.d0
+        enddo
 
-   !      do j = 1, nodtol_
+        nodtol_ = size(Stresses_nodes,1)
+        Allocate( output (nodtol_) )
 
-   !          Stress_Tensor = 0.d0
+        do j = 1, nodtol_
 
-   !          Stress_Tensor(1,1) = Stresses_nodes(j,1)
+            Stress_Tensor = 0.d0
 
-   !          Stress_Tensor(1,2) = Stresses_nodes(j,2)
-   !          Stress_Tensor(2,1) = Stresses_nodes(j,2)
+            Stress_Tensor(1,1) = Stresses_nodes(j,1)
 
-   !          Stress_Tensor(2,2) = Stresses_nodes(j,3)
+            Stress_Tensor(1,2) = Stresses_nodes(j,2)
+            Stress_Tensor(2,1) = Stresses_nodes(j,2)
 
-   !          Stress_Tensor(3,3) = Stresses_nodes(j,4)
+            Stress_Tensor(2,2) = Stresses_nodes(j,3)
+
+            Stress_Tensor(3,3) = Stresses_nodes(j,4)
+
+            output(J) = sqrt( secondInvariant( Stress_Tensor - (trace(Stress_Tensor)/3.d0)*I1 ) )
+        end do
+
+    End Function YieldedRegion
 
 
-   !          Trace_Stress_Tensor = Stress_Tensor(1,1) + Stress_Tensor(2,2) + Stress_Tensor(3,3)
+    Function dynamicPressure(time, Solution_) Result(output)
+        Use VariableMapping, only: getVariableId
+        Use PHYSICAL_MODULE, Only: Pambient_o_Pchar, initial_position, ratio_of_pressures
+        use pressure_variation, only: PressureChamber
+        Implicit None 
+        Real(8), Intent(In)  :: time
+        Real(8), Dimension(:,:), Intent(In) :: Solution_
+        Real(8), Dimension(:), Allocatable  :: output
+        Integer                             :: nodtol_
 
-   !          Deviatoric_Stress_Tensor = Stress_Tensor - (Trace_Stress_Tensor/3.0d0)*Unity_Tensor
-
-   !          Stress_dot_Stress = matmul(Deviatoric_Stress_Tensor,Deviatoric_Stress_Tensor)
-
-   !          Magnitude = sqrt( 0.5d0*(Stress_dot_Stress(1,1) + Stress_dot_Stress(2,2) + Stress_dot_Stress(3,3)) )
-
-   !          output(J)  =  0.d0 !max(0.0d0, Magnitude - BnN)
-   !      end do
-
-   !  End Function YieldedRegion
-
-
-    ! Function dynamicPressure(Solution_) Result(output)
-    !     Use VariableMapping, only: getVariableId
-    !     Use PHYSICAL_MODULE, Only: Pambient_o_Pchar, position, ratio_of_pressures
-    !     Implicit None 
-    !     Real(8), Dimension(:,:), Intent(In) :: Solution_
-    !     Real(8), Dimension(:), Allocatable  :: output
-    !     Integer                             :: nodtol_
-
-    !     Real(8)                             :: Pressure, Dynamic_Pressure, Z_coord
-    !     Integer                             :: j
+        Real(8)                             :: Pressure, Dynamic_Pressure, Z_coord
+        Integer                             :: j
 
 
-    !     nodtol_ = size(Solution_,1)
-    !     Allocate( output (nodtol_) )
+        nodtol_ = size(Solution_,1)
+        Allocate( output (nodtol_) )
 
 
-    !     do j = 1, nodtol_
+        do j = 1, nodtol_
 
-    !         Pressure = Solution_(j, getVariableId("P"))
+            Pressure = Solution_(j, getVariableId("P"))
 
-    !         Z_coord  = Solution_(j, getVariableId("Z"))
+            Z_coord  = Solution_(j, getVariableId("Z"))
             
-    !         Dynamic_Pressure   =   Pressure - ( Pambient_o_Pchar + ratio_of_pressures*(position + Z_coord) )
+            Dynamic_Pressure   =   Pressure - ( PressureChamber(time) + ratio_of_pressures*(initial_position -  Z_coord) )
 
-    !         output(j)  =  Dynamic_Pressure
+            output(j)  =  Dynamic_Pressure
 
-    !     enddo
-    ! end function dynamicPressure
+        enddo
+    end function dynamicPressure
 
 End Module FieldFunctions
