@@ -28,7 +28,7 @@ from salome.geom import geomtools
 from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2,  dR_ref3, dR_ref4, R_refinement1_Sphere1, R_refinement2_Sphere1, R_refinement3_Sphere1, R_refinement4_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
-dZ_refAmb, Element_size_on_Ambient_cb
+dZ_refAmb, Element_size_on_Ambient_cb, NodeDensityFunction_Sym_rem
 
 def min_distance_index_value(p_o, p_rest):
     # creates a list of the distances of all point to our reference point
@@ -145,7 +145,7 @@ def CurveCoordinatesScaling(CoordsOfCurve_input, DistanceFactor):
 geompy = geomBuilder.New()
 
 segment_length_from_NumberOfSegments = 3.14159265359/NumSegmentsOnSphere
-cb1NumSegments = 6*int(dR_ref1/segment_length_from_NumberOfSegments)
+cb1NumSegments = 5*int(dR_ref1/segment_length_from_NumberOfSegments)
 
 
 # Base Vectors
@@ -167,6 +167,12 @@ for p in read_datfile.readBoundaryNodes("Ambient.dat"):
 
 result_B1 = sortCoordinatesOfBoundary(Bubble1PointCoordinates, 1)
 Bubble1PointCoordinatesSorted = result_B1[0]
+
+
+
+NewNumSegmentsOnSphere = int(result_B1[1]/segment_length_from_NumberOfSegments)
+
+
 
 result_Amb = sortCoordinatesOfBoundary(AmbientPointCoordinates, 2)
 AmbientPointCoordinatesSorted = result_Amb[0]
@@ -250,9 +256,13 @@ geompy.addToStudy(Scaled_Curve_Bubble1_Ref4,'Scaled_Curve_Bubble1_Ref4')
 Centroid        = geompy.MakeVertexOnCurve(B1_line, 0.5, True)
 Centroid_coords = geompy.PointCoordinates(Centroid)
 
+vertex_dZ_amb1  = geompy.MakeVertex(dZ_refAmb, 0, 0)
+vertex_dZ_amb2  = geompy.MakeVertex(dZ_refAmb, Radius_tank, 0)
+
+line_dZ_amb     = geompy.MakeLineTwoPnt(vertex_dZ_amb1, vertex_dZ_amb2)
 
 
-partition_line_list = [ Scaled_Curve_Bubble1_Ref1, Scaled_Curve_Bubble1_Ref2, Scaled_Curve_Bubble1_Ref3, Scaled_Curve_Bubble1_Ref4 ]
+partition_line_list = [ Scaled_Curve_Bubble1_Ref1, Scaled_Curve_Bubble1_Ref2, Scaled_Curve_Bubble1_Ref3, Scaled_Curve_Bubble1_Ref4, line_dZ_amb ]
 
 partition_tool = geompy.MakeFuseList( partition_line_list, True, True)
 
@@ -311,6 +321,21 @@ idtankWall.append( returnIDofShape( 0, [ 0.5*Height_tank-h_s,Radius_tank ], [0, 
 tankWall_union = geompy.UnionIDs(tankWall , idtankWall  )
 
 
+idz_ambr     = []
+z_ambr       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+idz_ambr.append( returnIDofShape( 0, [ dZ_refAmb, +h_s ], [0, 0], "EDGE" ) )
+idz_ambr.append( returnIDofShape( 0, [ (AmbientPointCoordinatesSorted[-1])[0], +h_s ], [0, 0], "EDGE" ) )
+idz_ambr_union = geompy.UnionIDs(z_ambr , idz_ambr  )
+
+
+idz_ambz     = []
+z_ambz       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+idz_ambz.append( returnIDofShape( 0, [ (AmbientPointCoordinatesSorted[ 0])[0]-h_s,Radius_tank ], [0, 0], "EDGE" ) )
+idz_ambz.append( returnIDofShape( 0, [ (AmbientPointCoordinatesSorted[-1])[0]-h_s,0 ], [0, 0], "EDGE" ) )
+idz_ambz_union = geompy.UnionIDs(z_ambz , idz_ambz  )
+
+
+
 idrightPlane = [] 
 rightPlane   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 idrightPlane.append( returnIDofShape(0, [ (AmbientPointCoordinates[0])[0], +h_s ], [0, 0], "EDGE") )
@@ -321,6 +346,12 @@ idSphere1.append(returnIDofShape( 0, [(geompy.PointCoordinates(Bubble1Points[5])
 Sphere1       = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Sphere1_union = geompy.UnionIDs( Sphere1 , idSphere1 )
 print(idSphere1)
+
+idSphere1_n_opposite    = []
+idSphere1_n_opposite.append( returnIDofShape( 0, [(geompy.PointCoordinates(Bubble1Points[5]))[0], (geompy.PointCoordinates(Bubble1Points[5]))[1]], [0,0], "EDGE" ) )
+idSphere1_n_opposite.append( returnIDofShape( 0, [(geompy.PointCoordinates(Scaled_Curve_Bubble1_Ref1_points[5]))[0], (geompy.PointCoordinates(Scaled_Curve_Bubble1_Ref1_points[5]))[1]], [0,0], "EDGE" ) )
+Sphere1_n_opposite      = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+Sphere1_n_opposite_union= geompy.UnionIDs( Sphere1_n_opposite , idSphere1_n_opposite )
 # print(Bubble1PointCoordinatesSorted[10])
 
 idSymmetry = []
@@ -428,6 +459,8 @@ for i in range(len(Symmetry_groups)):
         SymmetryB2out = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
         SymmetryB2out_union = geompy.UnionIDs( SymmetryB2out, [ Symmetry_groups[i]["id"] ] )
 
+idSymmetry.append( returnIDofShape( 0, [ (AmbientPointCoordinatesSorted[-1])[0]-h_s,0 ], [0, 0], "EDGE" ) )
+
 
 Symmetry   = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Symmetry_union = geompy.UnionIDs(Symmetry , idSymmetry )
@@ -460,7 +493,7 @@ Groups_faces.append( getgroupFace("Sphere1", "Ref_1", None, None, None, None) )
 Groups_faces.append( getgroupFace("Sphere1", "Ref_2", None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "1"    , None, None, None, None) )
 Groups_faces.append( getgroupFace("ellipse", "2"    , None, None, None, None) )
-# Groups_faces.append( getgroupFace("Ambient", None   , None, None, None, None) )
+Groups_faces.append( getgroupFace("Ambient", None   , None, None, None, None) )
 
 for i in range(len(Groups_faces)):
 
@@ -486,8 +519,8 @@ for i in range(len(Groups_faces)):
             x_tilt_dumy = Scaled_Curve_Bubble1_Ref3_coords[5]
             x_tilt[0] = x_tilt_dumy[0]+h_s
             x_tilt[1] = x_tilt_dumy[1]+h_s
-    # elif Groups_faces[i]["mainGroup"] == "Ambient":
-    #     x_tilt = [ 0.5*Height_tank-h_s, h_s ]
+    elif Groups_faces[i]["mainGroup"] == "Ambient":
+        x_tilt = [ (AmbientPointCoordinatesSorted[-1])[0]+h_s, h_s ]
 
 
     theta_degrees = 0
@@ -546,10 +579,20 @@ def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: floa
 
 
 Mesh_1 = smesh.Mesh(Partition_1)
-Mesh_1.Segment(geom=Sphere1).NumberOfSegments(NumSegmentsOnSphere)
 
-Mesh_1.Segment(geom=Sphere1Ref1).NumberOfSegments(NumSegmentsOnSphere)
-Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
+Regular_1D_Bubble1 = Mesh_1.Segment(geom=Sphere1_n_opposite)
+Number_of_Segments_1 = Regular_1D_Bubble1.NumberOfSegments(NewNumSegmentsOnSphere)
+Number_of_Segments_1.SetExpressionFunction(NodeDensityFunction_Sym_rem)
+Number_of_Segments_1.SetConversionMode( 1 )
+Number_of_Segments_1.SetReversedEdges( [] )
+Number_of_Segments_1.SetObjectEntry( "Partition_1" )
+# Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
+Mesh_1.Segment(geom=horizontalsSphere1).StartEndLength (0.25*segment_length_from_NumberOfSegments,0.5*(Netgen_Params[0])[0],[idhorizontalsSphere1[0]])
+
+Mesh_1.Segment(geom=z_ambr).StartEndLength ( Element_size_on_Ambient, Element_size_on_Ambient, [] )
+
+Mesh_1.Segment(geom=z_ambz).StartEndLength ( Main_maxSize_element, 0.25*Main_maxSize_element, [idz_ambz[0]] )
+
 NETGEN_1D_2D   = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D)
 MeshParameters(NETGEN_1D_2D  ,Main_maxSize_element, Main_minSize_element, 0.1)
 
@@ -557,13 +600,14 @@ Params = []
 
 Groups_faces[0]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[0]["obj"]) 
 j=0
-for i in range(1,len(Groups_faces)):
+for i in range(1,len(Groups_faces)-1):
     # print(str(i))
     Params = Netgen_Params[j]
     Groups_faces[i]["mesh_obj"] = Mesh_1.Triangle(algo = smeshBuilder.NETGEN_1D2D, geom = Groups_faces[i]["obj"])
     MeshParameters(Groups_faces[i]["mesh_obj"], Params[0], Params[1], Params[2])
     j+=1
 
+Groups_faces[-1]["mesh_obj"] = Mesh_1.Quadrangle(geom = Groups_faces[-1]["obj"]) 
 
 SymmOut_params = Netgen_Params[-1]
 Mesh_1.Segment(geom=SymmetryB1out).StartEndLength ( Main_maxSize_element, SymmOut_params[0] )

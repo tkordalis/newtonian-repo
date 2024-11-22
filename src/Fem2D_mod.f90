@@ -151,7 +151,8 @@ MODULE PHYSICAL_MODULE
     Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
 
   
-    Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
+    ! Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
+    Real(8), parameter       :: velocity_char       =  sqrt(g_grav*length_char)  ! m/s
   
 
 
@@ -198,7 +199,9 @@ MODULE PHYSICAL_MODULE
         Implicit None
       
         ReN   =  inertial_stress/inertial_stress
-        ArN   =  inertial_stress/Pchar
+        ! In this nondim I use ArN as 
+        ! ArN   =  inertial_stress/Pchar
+        ArN   =  Pchar/viscous_stress
         BoN   =  gravity_stress/capillary_stress
         
         IdN    =  IdG_pressure/gravity_stress
@@ -267,9 +270,9 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.002d0
+        Dt_constant = 0.0001d0
 
-        Dt_max = 0.02d0
+        Dt_max = 0.01d0
 
     end subroutine set_DT
 
@@ -523,7 +526,7 @@ END MODULE GLOBAL_ARRAYS_MODULE
 MODULE NRAPSHON_MODULE
 
     INTEGER, PARAMETER :: NITER     = 50
-    REAL(8), PARAMETER :: ERROR_NR  = 2.d-7
+    REAL(8), PARAMETER :: ERROR_NR  = 1.d-6
     
 
     REAL(8), PARAMETER :: EP_RES   = 1.0D-9

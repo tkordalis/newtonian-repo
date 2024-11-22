@@ -38,14 +38,14 @@ from salome.geom import geomtools
 from Geometry_Mesh_Parameters import Radius_tank, Height_tank, RSphere1, dR_ref1, dR_ref2, dR_ref3, dR_ref4, R_refinement1_Sphere1, R_refinement2_Sphere1,R_refinement3_Sphere1, R_refinement4_Sphere1, \
 ellipse_position, ellipse_Minor_Radius, ellipse_Major_Radius, outer_ellipse_Major_Radius, outer_ellipse_Minor_Radius, h_s, \
 Main_maxSize_element, Main_minSize_element, Element_size_on_Sphere, Netgen_Params, NumSegmentsOnSphere, Element_size_on_Ambient, NodeDensityFunction_Sym, NumSegmentsOnAmbient, \
-dZ_refAmb, Element_size_on_Ambient_cb
+dZ_refAmb, Element_size_on_Ambient_cb, NodeDensityFunction_Sym
 
 
 
 geompy = geomBuilder.New()
 
 segment_length_from_NumberOfSegments = 3.14159265359/NumSegmentsOnSphere
-cb1NumSegments = 6*int(dR_ref1/segment_length_from_NumberOfSegments)
+cb1NumSegments = 5*int(dR_ref1/segment_length_from_NumberOfSegments)
 
 
 # Base Vectors
@@ -286,6 +286,12 @@ idSphere1Ref1     = [returnIDofShape( 1, [RSphere1+dR_ref1, 0], [-0,0], "EDGE" )
 Sphere1Ref1 	    = geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
 Sphere1_unionRef1 = geompy.UnionIDs( Sphere1Ref1 , idSphere1Ref1 )
 
+idSphere1_n_opposite 	= []
+idSphere1_n_opposite.append( returnIDofShape( 1, [RSphere1, 0], [-0,0], "EDGE" ) )
+idSphere1_n_opposite.append( returnIDofShape( 1, [RSphere1+dR_ref1, 0], [-0,0], "EDGE" ) )
+Sphere1_n_opposite 	  	= geompy.CreateGroup(Partition_1, geompy.ShapeType["EDGE"])
+Sphere1_n_opposite_union= geompy.UnionIDs( Sphere1_n_opposite , idSphere1_n_opposite )
+
 geompy.addToStudyInFather(Partition_1,Sphere1Ref1,"Sphere1Ref1")
 # print(idSphere1Ref1,idSphere2Ref1)
 
@@ -366,17 +372,34 @@ def MeshParameters( Properties, maxsize: float, minsize: float, growthRate: floa
 Mesh_1 = smesh.Mesh(Partition_1)
 # Mesh_1.Segment(geom=Sphere1).StartEndLength (Element_size_on_Sphere,Element_size_on_Sphere,[])
 # Mesh_1.Segment(geom=Sphere2).StartEndLength (Element_size_on_Sphere,Element_size_on_Sphere,[])
+# Regular_1D_Bubble1 = Mesh_1.Segment(geom=Sphere1_n_opposite)
 
-Mesh_1.Segment(geom=Sphere1).NumberOfSegments(NumSegmentsOnSphere)
+# Regular_1D_Bubble1 = Mesh_1.Segment(geom=Sphere1)
+# Number_of_Segments_1 = Regular_1D_Bubble1.NumberOfSegments(NumSegmentsOnSphere)
+# Number_of_Segments_1.SetExpressionFunction(NodeDensityFunction_Sym)
+# Number_of_Segments_1.SetConversionMode( 1 )
+# Number_of_Segments_1.SetReversedEdges( [] )
+# Number_of_Segments_1.SetObjectEntry( "Partition_1" )
 
-Mesh_1.Segment(geom=Sphere1Ref1).NumberOfSegments(NumSegmentsOnSphere)
-Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
+Regular_1D_Bubble1 = Mesh_1.Segment(geom=Sphere1_n_opposite)
+Number_of_Segments_1 = Regular_1D_Bubble1.NumberOfSegments(NumSegmentsOnSphere)
+Number_of_Segments_1.SetExpressionFunction(NodeDensityFunction_Sym)
+Number_of_Segments_1.SetConversionMode( 1 )
+Number_of_Segments_1.SetReversedEdges( [] )
+Number_of_Segments_1.SetObjectEntry( "Partition_1" )
+
+
+
+# Mesh_1.Segment(geom=Sphere1Ref1).NumberOfSegments(NumSegmentsOnSphere)
+# Mesh_1.Segment(geom=horizontalsSphere1).NumberOfSegments(cb1NumSegments)
+Mesh_1.Segment(geom=horizontalsSphere1).StartEndLength (0.25*segment_length_from_NumberOfSegments,0.5*(Netgen_Params[0])[0],[idhorizontalsSphere1[0]])
 
 
 Mesh_1.Segment(geom=z_ambr).StartEndLength ( Element_size_on_Ambient, Element_size_on_Ambient )
 # Mesh_1.Segment(geom=z_ambr).PropagationOfDistribution()
 
-Mesh_1.Segment(geom=z_ambz).StartEndLength ( Element_size_on_Ambient_cb, Element_size_on_Ambient_cb )
+# Mesh_1.Segment(geom=z_ambz).StartEndLength ( Element_size_on_Ambient_cb, Element_size_on_Ambient_cb )
+Mesh_1.Segment(geom=z_ambz).StartEndLength ( Main_maxSize_element, 0.25*Main_maxSize_element, [] )
 
 
 
@@ -423,7 +446,7 @@ Sphere1_1	 		=  Mesh_1.GroupOnGeom( Sphere1 		,'Bubble1' 	  ,SMESH.EDGE )
 rightPlane_1 	=  Mesh_1.GroupOnGeom( rightPlane ,'Ambient' 		,SMESH.EDGE )
 
 
-Priority_list = []
+Priority_list = [] 
 
 for item in Groups_faces:
 	SubMesh = item["mesh_obj"]

@@ -187,14 +187,14 @@ Module BubbleOutput
     Subroutine openBubbleFiles
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
-        character(18), dimension(14) :: title_results20
+        character(18), dimension(15) :: title_results20
         character(18), dimension(12) :: title_results21
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
         Open(21,File=fileplace//'results_dimensional.dat')
-        title_results20 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh', 'int_ndotUmUmesh', 'ChamberP', 'concentration', 'Reynolds', 'Sherwood' ]
+        title_results20 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh', 'int_ndotUmUmesh', 'ChamberP', 'concentration', 'Reynolds', 'Sherwood', 'dt' ]
         title_results21 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'ChamberP', 'Radius', 'concentration', 'Reynolds', 'Sherwood' ]
         do i=1,size(title_results20)
             write(20,'(A25,3x)', advance='no') title_results20(i)
@@ -211,14 +211,15 @@ Module BubbleOutput
         Use Physical_module, only: Pressure_Bubble
         Use BoundaryConditions
         Use Formats
+        use TIME_INTEGRATION, only:dt
         Implicit none
         Real(8), Intent(In) :: Time
         Real(8) :: dummy
 
-        write(20,'(14(f26.16,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), &
+        write(20,'(15(f26.16,3x))') TIME, bubble%getPressure(), bubble%getmol(), bubble%getVolume(), bubble%getVelocity(), &
                                     bubble%calculateZcenter(), bubble%calculatendotF(), bubble%calculatendotgradC_z()+bubble%calculatendotgradC_r(), &
                                     bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r(), &
-                                    PressureChamber(time), bubble%getmol()/bubble%getVolume(), bubble%calculateReynolds(), bubble%calculateSherwood()
+                                    PressureChamber(time), bubble%getmol()/bubble%getVolume(), bubble%calculateReynolds(), bubble%calculateSherwood(), dt
 
         write(21,'(12(f26.16,3x))') TIME*time_char, Pchar*bubble%getPressure(), nchar*bubble%getmol(), length_char**3.d0*bubble%getVolume(), velocity_char*bubble%getVelocity(), &
                                     length_char*bubble%calculateZcenter(), nchar/time_char*bubble%calculatendotF(), Pchar*PressureChamber(time), length_char*(3.d0*bubble%getVolume()/4.d0/pi)**0.333333d0, &

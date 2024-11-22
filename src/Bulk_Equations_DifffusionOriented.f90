@@ -169,7 +169,7 @@ Module BulkEquations
 
             Gdot = gradU+transpose(gradU)
 
-            Tnewt = Gdot
+            Tnewt = (1.d0/ArN)*Gdot
 
             Ptot = - Pgp*I1 + Tnewt
 
@@ -180,7 +180,7 @@ Module BulkEquations
             ! --------------------------------------------------
             dUdM = dUdt + matmul( (Ugp-dXdt) , (gradU(1:2,1:2)) )
 
-            dUdM = ArN*dUdM
+            ! dUdM = ArN*dUdM
 
             dCdM = dCdt + dot_product( (Ugp-dXdt) , dCgpdX )
 

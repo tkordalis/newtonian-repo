@@ -32,8 +32,8 @@ module RemeshProcedure
         Real(8), Dimension(:)  , Allocatable  :: Stretch, minimumAnglesAllTriangles, minimumAnglesAllTrianglesComputational, delta_minAngles
         Real(8)                               :: maxSkewness, deltaMaxSkewness
 
-        Real(8), parameter  :: theta_degrees_threshold     = 10.d0  ! degrees
-        Real(8), parameter  :: deltatheta_degrees_threshold= 10.d0  ! degrees
+        Real(8), parameter  :: theta_degrees_threshold     = 13.d0  ! degrees
+        Real(8), parameter  :: deltatheta_degrees_threshold= 20.d0  ! degrees
 
         Real(8), parameter  :: remeshThreshold     = theta_degrees_threshold !* (3.1415926535d0/180.d0)
         Real(8), parameter  :: deltaremeshThreshold= deltatheta_degrees_threshold !* (3.1415926535d0/180.d0)

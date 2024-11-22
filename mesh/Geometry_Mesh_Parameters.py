@@ -32,12 +32,12 @@ RSphere1 		= 1.0
 RSphere2 		= 1.0
 
 Radius_tank  	= RSphere1/blockage_ratio
-Height_tank 	= 200
+Height_tank 	= 1200
 
 Sphere_position = 0.
 
 
-NumSegmentsOnSphere = 400
+NumSegmentsOnSphere = 300
 # NumSegmentsOnSphere  = 1200
 NumSegmentsOnAmbient = 30
 
@@ -47,7 +47,7 @@ Element_size_on_Ambient= Radius_tank/NumSegmentsOnAmbient
 Element_size_on_Ambient_cb = 1*Element_size_on_Ambient
 
 
-dR_ref1 = 3*Element_size_on_Sphere
+dR_ref1 = 0.2
 dR_ref2 = 3*dR_ref1
 R_refinement1_Sphere1 = RSphere1 + dR_ref1
 R_refinement2_Sphere1 = RSphere1 + dR_ref2
@@ -83,7 +83,8 @@ h_s = 0.0001
 Main_maxSize_element = 2
 Main_minSize_element = 0.1
 
-NodeDensityFunction_Sym   = '(2*t-0.99)^6+0.05' 
+NodeDensityFunction_Sym       = '0.9*(2*t-0.99)^4+0.2' 
+NodeDensityFunction_Sym_rem   = '0.9*(2*(1-t)-0.99)^4+0.2' 
 
 
 Netgen_Params = []
