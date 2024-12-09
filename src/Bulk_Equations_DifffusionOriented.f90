@@ -169,7 +169,7 @@ Module BulkEquations
 
             Gdot = gradU+transpose(gradU)
 
-            Tnewt = (1.d0/ArN)*Gdot
+            Tnewt = (ArN)*Gdot
 
             Ptot = - Pgp*I1 + Tnewt
 

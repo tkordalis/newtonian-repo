@@ -59,7 +59,6 @@ PROGRAM FEM2D
     else
         Remesh_counter_structuredInTheFront = 0
         Remesh_counter = 0
-        vm_ambient = 0.d0
     end if
     call unvf%info()
 
@@ -93,8 +92,6 @@ PROGRAM FEM2D
 
 
 
-    CALL DIMENSIONLESS_NUMBERS
-
     call set_num_threads
     call set_DT
 
@@ -103,7 +100,8 @@ PROGRAM FEM2D
     !  ! ----------------------------------------------------------------------
     INCREMENT      = 0
     TIME           = 0.0D0
-    DT             = Dt_constant  ;  Dto = DT  ;   Dtb = DT
+    ! DT             = Dt_constant  ;  Dto = DT  ;   Dtb = DT
+    DT             = 0.002d0  ;  Dto = DT  ;   Dtb = DT
 
     Call DefineTheBoundaries()
     call setInitalConditions()
@@ -144,7 +142,7 @@ PROGRAM FEM2D
         call WriteBubbleFiles(TIME)
 
 
-        if ( (mod(increment,1) .eq. 0) ) then
+        if ( (mod(increment,5) .eq. 0) ) then
             call exportFiles( TL,  NM_MESH, time, Increment, "POINT" )
             ! call exportFiles( TL,  NM_MESH, time, Increment, "BLOCK" )  ! mesh quality plt 
         endif

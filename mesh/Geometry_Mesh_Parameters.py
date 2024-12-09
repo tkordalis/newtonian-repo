@@ -24,7 +24,7 @@ import SALOMEDS
 
 
 
-blockage_ratio = 0.02
+blockage_ratio = 0.0135
 
 # Domain Construction
 
@@ -32,12 +32,12 @@ RSphere1 		= 1.0
 RSphere2 		= 1.0
 
 Radius_tank  	= RSphere1/blockage_ratio
-Height_tank 	= 1200
+Height_tank 	= 2*370
 
 Sphere_position = 0.
 
 
-NumSegmentsOnSphere = 300
+NumSegmentsOnSphere = 200
 # NumSegmentsOnSphere  = 1200
 NumSegmentsOnAmbient = 30
 

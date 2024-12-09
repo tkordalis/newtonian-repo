@@ -149,65 +149,7 @@ contains
     End Function relativeElementArea
 
 
-    function CanalyticLandau(Solution_) Result(output)
-        Use VariableMapping, only: getVariableId
-        use BoundaryConditions
-        Use PHYSICAL_MODULE, only: PeN, pi, KoN
-        Use geometry
-        use MESH_MODULE, only: Xm, Ym
-        use check_for_floating_point_exceptions
 
-        Implicit None 
-        Real(8), Dimension(:,:), Intent(In) :: Solution_
-                
-        Real(8), Dimension(:)  , Allocatable:: output
-        Integer                             :: nodtol_ 
-
-        Real(8), Dimension(:)  , Allocatable:: X
-        Real(8), Dimension(:)  , Allocatable:: Y
-        Real(8)                             :: Svar, heta, ksi, Cao_o_Cinf
-
-        Integer                             :: j
-        Integer                             :: nnodes
-
-
-
-         if (allocated(output) ) deallocate(output)
-        nnodes = size(Solution_,1)
-
-        allocate( X( nnodes) )
-        allocate( Y( nnodes) )
-        X = Solution_(:, getVariableId("Z"))
-        Y = Solution_(:, getVariableId("R"))
-
-        ! X = Xm
-        ! Y = Ym
-
-        ! X =  X - bubble%getCentroid()
-        X = -X
-
-        Cao_o_Cinf = KoN*bubble%getpressure()
-
-        Allocate( output (nnodes) )
-
-
-        nnodes = size(Solution_,1)
-        do j = 1, nnodes
-
-            ksi = sqrt(X(j)**2+Y(j)**2)
-            heta = cos( atan2(Y(j),X(j)) )
-
-            Svar = ( (ksi-1)*sqrt(PeN) * ( 1.d0- heta**2 +1.d-10) ) / ( sqrt(8.d0/3.d0) * (  ( sqrt(2.d0+3.d0*heta - heta**3.d0) +1.d-10) )  )
-
-            output(j)  =  1.d0 - erf(Svar)
-
-            ! call check_fp_exceptions(Svar, 'Svar')
-        enddo
-
-        output = Cao_o_Cinf + output*(Cao_o_Cinf-1.d0)
-
-
-    end function CanalyticLandau
 
     Function YieldedRegion(Stresses_nodes) Result(output)
         Use VariableMapping, only: getVariableId

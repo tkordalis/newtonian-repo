@@ -5,7 +5,7 @@ Module AmbientHenryBoundary
     Use DirichletBoundaries,         only: ApplyDirichletAtNode_
     use boundary_enumeration_module, only: getBoundaryNodesOfWholeBoundary
     use MESH_MODULE, only: Xm, Ym
-    use physical_module, only: initial_position, position_o, position, ambient_position_o, ambient_position
+    use physical_module, only: initial_position
 
 
     private 
@@ -54,14 +54,11 @@ Module AmbientHenryBoundary
 
         this%minimumZcoord = minval(  Xm( this%nodes )  )
 
-        initial_position   = this%minimumZcoord  ;  position_o = initial_position 
-        position           = position_o          ;  ambient_position_o = position 
-        ambient_position   = ambient_position_o
+        initial_position   = this%minimumZcoord  
 
     End Function NewAmbientHenry
 
     Subroutine applyBoundaryConditions(This, FlagNr, Pressure_bc, naturalBCs)
-        Use physical_module,             only: ambient_position_o, vm_ambient, Rtank, pi, KoN
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
 
@@ -118,7 +115,7 @@ Module AmbientHenryBoundary
                 node = this%nodes(inode)
                 call ApplyDirichletAtNode_(node, "R", Ym(node), FlagNr )
                 
-                call ApplyDirichletAtNode_(node, "C", KoN*this%concentrationPressure, FlagNr )
+                call ApplyDirichletAtNode_(node, "C", 0.d0, FlagNr )
             enddo
             
         endif

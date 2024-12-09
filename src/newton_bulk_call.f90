@@ -360,7 +360,7 @@ module newton_bulk_call
 
             ! call bubble%setPressure(Pressure_bubble)
             ! call bubble%setmol(mol_bubble)
-            write(400,'(i3,3x,4(f25.15,3x))') iter_f, Pressure_bubble, mol_bubble, Volume_bubble, Velocity_bubble
+            ! write(400,'(i3,3x,4(f25.15,3x))') iter_f, Pressure_bubble, mol_bubble, Volume_bubble, Velocity_bubble
 
             filename = replace("Iteration_*.plt","*", toStr(ITER_f) ) 
 

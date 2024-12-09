@@ -72,6 +72,7 @@ Module BubbleDiffusionStaticCSBoundary
             procedure :: calculatendotgradC_r
             procedure :: calculateSherwood
             procedure :: calculateReynolds
+            procedure :: calculate_kL
             
             procedure :: printEachContributionOfKinematicBC
 
@@ -223,7 +224,7 @@ Module BubbleDiffusionStaticCSBoundary
         Use GLOBAL_ARRAYS_MODULE,        Only: TL
         Use ENUMERATION_MODULE,          Only: NM_MESH
         Use ELEMENTS_MODULE,             Only: NBF_2d, NEQ_f
-        use physical_module, only: Pinitial, Pchar
+        use physical_module, only: Pinitial, Pchar, deltaPN
         Implicit None 
         Class(BubbleDiffusionStaticCS)   , Intent(In)      :: This
         Character(len=3), Intent(In)         :: FlagNR 
@@ -289,7 +290,7 @@ Module BubbleDiffusionStaticCSBoundary
                 
                 do inode = 1, size(this%nodes)
                     node = this%nodes(inode)
-                    call ApplyDirichletAtNode_(node, "C", KoN*this%Pressure, FlagNr, this%gidP )
+                    call ApplyDirichletAtNode_(node, "C", ( this%Pressure - (Pinitial/Pchar) ) / deltaPN, FlagNr, this%gidP )
                 enddo
             endif
         endif
@@ -588,17 +589,30 @@ Module BubbleDiffusionStaticCSBoundary
     end Function calculatendotgradC_r
 
     Function calculateSherwood(this) Result(output)
+        use physical_module, only: Pinitial, Pchar, deltaPN
         Implicit None 
         Class(BubbleDiffusionStaticCS)              :: this
         Real(8)                                     :: output
 
-        Real(8)                                     :: Zcenter
+        Real(8)                                     :: dummy
 
-        output = PeN * ( - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_r) &
-                          - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_z) ) * (this%volume/pi4o3)**0.333333d0 &
-                            / (KoN*this%pressure - 1.d0) / integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_dS)
+        dummy = PeN * ( - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_r) - integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_n_dot_gradC_z) )/ integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_dS)
 
+        output = dummy / ( (this%Pressure - (Pinitial/Pchar))/deltaPN )
     end Function calculateSherwood
+
+    Function calculate_kL(this) Result(output)
+        use physical_module, only: Pinitial, Pchar, deltaPN, Cchar, length_char, time_char, Pchar, KHenry
+        use time_integration, only: dt
+        Implicit None 
+        Class(BubbleDiffusionStaticCS)              :: this
+        Real(8)                                     :: output
+
+        Real(8)                                     :: dummy
+
+        output = (Cchar*length_char**3/time_char * (this%mol - this%mol_o)/dt) / (length_char**2 * integrateOverAllElementsOfTheBoundary (this%elements, this%faces, int_dS)) / (KHenry*Pchar*this%Pressure  - KHenry*Pinitial)
+
+    end Function calculate_kL
 
     Function calculateReynolds(this) Result(output)
         Implicit None 

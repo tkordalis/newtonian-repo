@@ -865,6 +865,8 @@ Module ExtraEquations
         TEMP_RES = 2.d0*pi*TERM_1
 
     End Function int_n_dot_gradC_r
+    
+! ********************************************************************
 
     Function int_ds( NELEM, NED ) Result(TEMP_RES)
         use time_integration, only:dt, time

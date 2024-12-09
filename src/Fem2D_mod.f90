@@ -76,26 +76,6 @@ MODULE PHYSICAL_MODULE
     
     Real(8), parameter       :: MrBubble      = 0.032d0          ! kg/mol
     
-    ! ! !_______________________________________________________________________________
-    ! ! ! These numbers are for AIR in water
-    ! ! !-------------------------------------------------------------------------------
-    ! Real(8), parameter       :: Pambient    = 101325.d0       ! Pa
-    ! Real(8), parameter       :: Dcoef       = 2.0d-9          ! m2/s
-    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
-    ! Real(8), parameter       :: Tgas        = 298.d0           ! K
-    ! Real(8), parameter       :: KHenry      = 7.8d-6          ! mol/m3/Pa
-    ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-
-    ! Real(8), parameter       :: rho           = 1000.d0         ! kg/m3: density of water
-    ! Real(8), parameter       :: MrWater     = 28.d-3          ! kg/mol
-    ! Real(8), parameter       :: Cwater      = rho/MrWater     ! mol/m3
-
-    ! Real(8), parameter       :: surface_tension = 0.00997d-2*5.d0*4.d0
-    ! Real(8), parameter       :: viscosity = 0.1d0
-    ! !_______________________________________________________________________________
-    ! Real(8), parameter       :: length_char   =  1.d-3          ! m
-
-
     !_______________________________________________________________________________
     ! These numbers are for O2 in silicon oil - S1 - Jia et al.
     !-------------------------------------------------------------------------------
@@ -123,119 +103,148 @@ MODULE PHYSICAL_MODULE
     ! Real(8), parameter       :: length_char   =  0.36d-3          ! m
     ! Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
     
-    
     !_______________________________________________________________________________
     ! These numbers are for CO2 in deionized water - S3 - Jia et al.
     !-------------------------------------------------------------------------------
     Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
-    Real(8), parameter       :: Pinitial    = 42.d0       ! Pa
-    Real(8), parameter       :: Dcoef       = 1.78d-9          ! m2/s
+    Real(8), parameter       :: Pinitial    = 1.d0*Pambient       ! Pa
+    Real(8), parameter       :: Dcoef       = 2.2d-9          ! m2/s
     Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
     Real(8), parameter       :: Tgas        = 23.d0 +273.d0           ! K
-    ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
-    Real(8), parameter       :: KHenry      = 3.5846d-4          ! mol/m3/Pa
-    ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
-    ! Real(8), parameter       :: Cchar       = KHenry*Pambient  ! mol/m3
-    Real(8), parameter       :: Cchar       = KHenry*Pinitial  ! mol/m3
 
-    Real(8), parameter       :: rho           = 998.d0         ! kg/m3: density of fluid
+    ! Real(8), parameter       :: KHenry      = 1.246d-4          ! mol/m3/Pa
+    Real(8), parameter       :: KHenry      = 20.0d-5          ! mol/m3/Pa
+
+    Real(8), parameter       :: rho           = 950.d0         ! kg/m3: density of fluid
     Real(8), parameter       :: MrWater       = 2.d0          ! kg/mol
     Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
     
-    Real(8), parameter       :: surface_tension = 0.07206d0
+    Real(8), parameter       :: surface_tension = 0.0206d0
     
-    Real(8), parameter       :: viscosity = 9.54d-4
+    Real(8), parameter       :: viscosity = 0.0183d0
     !_______________________________________________________________________________
     
-    Real(8), parameter       :: length_char   =  1.1d-3/2.d0          ! m
-    Real(8), parameter       :: nchar         = Cchar*length_char**3  ! mol
+    Real(8), parameter       :: length_char   =  0.52d-3          ! m
+    !_______________________________________________________________________________
+    ! These numbers are for CO2 in deionized water - Kure et al.
+    !-------------------------------------------------------------------------------
+    ! Real(8), parameter       :: Pambient    = 100900.d0       ! Pa
+    ! Real(8), parameter       :: Pinitial    = (0.08d0/100d0)*Pambient
+    ! Real(8), parameter       :: Dcoef       = 2.2d-9          ! m2/s
+    ! Real(8), parameter       :: Rgas        = 8.314d0         ! Pa m3/mol/K
+    ! Real(8), parameter       :: Tgas        = 22.d0 +273.d0           ! K
+    ! ! Real(8), parameter       :: KHenry      = 1.157d-4          ! mol/m3/Pa
+    ! Real(8), parameter       :: KHenry      = 3.58d-4          ! mol/m3/Pa
+    ! ! Real(8), parameter       :: KHenry      = 1.d0*1.d0/Rgas/Tgas          ! mol/m3/Pa
+
+    ! Real(8), parameter       :: rho           = 998.d0         ! kg/m3: density of fluid
+    ! Real(8), parameter       :: MrWater       = 2.d0          ! kg/mol
+    ! Real(8), parameter       :: Cwater        = rho/MrWater     ! mol/m3
+    
+    ! Real(8), parameter       :: surface_tension = 0.07206d0
+    
+    ! !_______________________________________________________________________________
+    
+    ! Real(8), parameter       :: length_char   =  1.09d-3/2.d0          ! m
 
   
-    ! Real(8), parameter       :: velocity_char       =  rho*g_grav*length_char**2/viscosity  ! m/s
+    ! Real(8), parameter       :: viscosity = 9.54d-4
+
     Real(8), parameter       :: velocity_char       =  sqrt(g_grav*length_char)  ! m/s
   
-
-
-    
     Real(8), parameter       :: time_char           = length_char/velocity_char            ! s
-    ! Real(8), parameter       :: time_char           = length_char**2/diffusivity            ! s
-
-    !_______________________________________________________________________________
-
-    Real(8), parameter       :: viscous_stress      = viscosity/time_char
-
-    Real(8), parameter       :: inertial_stress     = rho * ( velocity_char )**2
 
     Real(8), parameter       :: gravity_stress      = rho*g_grav*length_char
-
-    Real(8), parameter       :: capillary_stress    = surface_tension/length_char
     
-    Real(8), parameter       :: IdG_pressure        = Cchar*Rgas*Tgas
-    
-    Real(8), parameter       :: Solubility_pressure = Cchar/KHenry
-    !_______________________________________________________________________________
-
-
     Real(8), parameter       :: Pchar               = gravity_stress
     Real(8), parameter       :: Pambient_o_Pchar    = Pambient/Pchar
     
-    
     Real(8), parameter       :: ratio_of_pressures  = gravity_stress/Pchar
+    !_______________________________________________________________________________
 
-    Real(8)                  :: ReN, ArN, BoN, PeN, KoN, IdN
+    Real(8)     :: Cchar
+
+    Real(8)     :: viscous_stress
+
+    Real(8)     :: inertial_stress
+
+    Real(8)     :: capillary_stress
+    
+    Real(8)     :: IdG_pressure 
+    
+    Real(8)     :: Solubility_pressure
+    !_______________________________________________________________________________
+
+
+
+    Real(8)                  :: ReN, ArN, BoN, PeN, IdN, deltaPN
     
 
     Real(8)                  :: e_bnd
     Real(8), dimension(2)    :: eo
-    Real(8)                  :: position, position_o, initial_position, Pressure_bubbleo, Pressure_bubble, mol_bubbleo, mol_bubble, volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo
-    Real(8)                  :: ambient_position_o, ambient_position, vm_ambient
+    Real(8)                  :: initial_position
+    Real(8)                  :: Pressure_bubbleo, mol_bubbleo, volume_bubbleo, velocity_bubbleo
+    Real(8)                  :: Pressure_bubble , mol_bubble , volume_bubble , velocity_bubble
+    Real(8)                  :: InitialPressure_bubble
   
     Contains
 
 
-      Subroutine DIMENSIONLESS_NUMBERS
+    Subroutine DIMENSIONLESS_NUMBERS
         use check_for_floating_point_exceptions
 
         Implicit None
-      
+        InitialPressure_bubble = Pambient + rho*g_grav*(length_char*initial_position) + 2.d0*surface_tension/length_char
+
+        !  the definition is Cchar = kH*(Pbo - Pamb)
+        Cchar  =  KHenry * ( InitialPressure_bubble - Pinitial )
+
+        viscous_stress      = viscosity/time_char
+
+        inertial_stress     = rho * ( velocity_char )**2
+
+        capillary_stress    = surface_tension/length_char
+
+        IdG_pressure        = Cchar*Rgas*Tgas 
+
+        Solubility_pressure = Cchar/KHenry
+
+
         ReN   =  inertial_stress/inertial_stress
-        ! In this nondim I use ArN as 
-        ! ArN   =  inertial_stress/Pchar
-        ArN   =  Pchar/viscous_stress
+        ArN   =  viscous_stress/Pchar
         BoN   =  gravity_stress/capillary_stress
         
         IdN    =  IdG_pressure/gravity_stress
-        KoN    =  gravity_stress/Solubility_pressure
         PeN    =  velocity_char*length_char/Dcoef
-        ! PeN    =  1.d+4!1.d-1*velocity_char*length_char/Dcoef
 
+        deltaPN = ( InitialPressure_bubble - Pinitial ) / gravity_stress
 
         write(*,*)
         write(*,"(A50)") "--------------------------------------------------"
         write(*,"(10X,A25)") "Characteristic quantities"
         write(*,"(A50)") "--------------------------------------------------"
-        write(*,"(10X,A15,2X,E11.4)") "Ro ="    , length_char
-        write(*,"(10X,A15,2X,E11.4)") "time char ="    , time_char
-        write(*,"(10X,A15,2X,E11.4)") "velocity char ="    , velocity_char
+        write(*,"(10X,A15,2X,E11.4)") "Ro =" , length_char  ;  write(*,"(10X,A15,2X,E11.4)") "time char =" , time_char  ;  write(*,"(10X,A15,2X,E11.4)") "velocity char =", velocity_char
         write(*,*)
+        write(*,"(10X,A9,2X,F16.8)") "Volume  =", 1d+9*(pi4o3*length_char**3.d0) 
+        write(*,*)
+        write(*,"(10X,A9,2X,F16.8)") "Cchar  =", Cchar 
+        write(*,*)
+
         write(*,"(A50)") "--------------------------------------------------"
         write(*,"(10X,A25)") "Dimensionless numbers"
         write(*,"(A50)") "--------------------------------------------------"
-        write(*,"(10X,A6,2X,F16.8)") "ReN  ="    , ReN
-        write(*,"(10X,A6,2X,F16.8)") "ArN  ="    , ArN
-        write(*,"(10X,A6,2X,F16.8)") "BoN  ="    , BoN
+        write(*,"(10X,A9,2X,F16.8)") "ReN  =", ReN  ;  write(*,"(10X,A9,2X,F16.8)") "ArN  =", ArN  ;  write(*,"(10X,A9,2X,F16.8)") "BoN  =", BoN
         write(*,*) ' '
-        write(*,"(10X,A6,2X,F16.8)") "IdN  ="    , IdN
-        write(*,"(10X,A6,2X,F16.8)") "KoN  ="    , KoN
-        write(*,"(10X,A6,2X,F16.8)") "PeN  ="    , PeN
+        write(*,"(10X,A9,2X,F16.8)") "IdN  =", IdN  ;  write(*,"(10X,A9,2X,F16.8)") "PeN  =", PeN  ;  write(*,"(10X,A9,2X,F16.8)") "deltaPN =", deltaPN
+        write(*,*) ' '
+        
         write(*,*) ' '
         write(*,*) ' '
         
         
         ! pause
         eo = [0.1d0, 0.d0]
-        ! eo = [0.d0, 0.1d0]
-        e_bnd = - 1.0D+5
+        e_bnd = - 1.0D+4
         
 
     END SUBROUTINE DIMENSIONLESS_NUMBERS
@@ -270,9 +279,9 @@ Module TIME_INTEGRATION
     contains
 
     subroutine set_DT
-        Dt_constant = 0.0001d0
+        Dt_constant = 0.05d0
 
-        Dt_max = 0.01d0
+        Dt_max = 0.5d0
 
     end subroutine set_DT
 
@@ -1719,7 +1728,7 @@ Module DirichletBoundaries
 
 
     Subroutine ApplyDirichletAtNode_(node, FemValueName, value, FlagNr, gid )
-        use PHYSICAL_MODULE, only: KoN
+        use PHYSICAL_MODULE, only: deltaPN
         Implicit None 
         Integer,          Intent(In)           :: node
         Character(len=*), Intent(In)           :: FemValueName
@@ -1744,11 +1753,9 @@ Module DirichletBoundaries
         if (FlagNr == "NRP") then 
             call updateJacobian(irow+v_id)
             if (isAssociatedWithGlobalVar)&
-              ! call updateExtraJacobian(gid, irow+v_id, 1.d0 )
 
-              ! since the bc residual of concentration on the bubble is c - KoN*Pb=0
-              ! the jac with respect to the Pb is -KoN
-              call updateExtraJacobian(gid, irow+v_id, -KoN )
+              call updateExtraJacobian(gid, irow+v_id, -1.d0/deltaPN )
+
         end if  
 
     End Subroutine ApplyDirichletAtNode_

@@ -315,7 +315,7 @@ Module Boundary_EquationsDO
                 SBFN         = BIFN !+ tsupg*(Term_R*tR+Term_Z*tZ)*DFDL(IW,KK)
                 TERM_RES     = 0.D0
             
-                TERM_RES(getVariableId("Z")) = SBFN * ( ( (MrWater/MrBubble)*Cwater - C )*( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) + (nR*dCdR + nZ*dCdZ)/PeN  )* R * dS
+                TERM_RES(getVariableId("Z")) = SBFN * ( ( rho/(MrBubble*Cchar) - C )*( nR * (Vr-dRdt) + nZ * (Vz-dZdt) ) + (nR*dCdR + nZ*dCdZ)/PeN  )* R * dS
 
                 !      FORM THE WORKING RESIDUAL VECTOR IN ELEMENT NELEM
                 TEMP_RES(IW,:) = TEMP_RES(IW,:) + TERM_RES * WO_1d(KK)

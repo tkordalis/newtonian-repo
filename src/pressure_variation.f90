@@ -5,7 +5,7 @@ module pressure_variation
 
     private :: transientPressureChange
     public ::  PressureChamber, areConditionsSteady
-    Real(8), dimension(6), parameter :: crit_times = [500.5d0, &
+    Real(8), dimension(6), parameter :: crit_times = [4000.5d0, &
                                                     24.4d0,  &
                                                     4100.d0,  & 
                                                     6100.d0,  &
@@ -102,10 +102,10 @@ module pressure_variation
         real(8)            :: rampUpDt_time_period
         real(8)            :: rampDownDt_time_period
         
-        initial_time_period         = 0.01d0
-        rampUpDt_time_period        = 0.5d0 ! regulates the slope of the linear function increasing timestep
-        before_critTime_time_period = 0.1d0
-        rampDownDt_time_period      = 0.1d0 ! regulates the slope of the linear function decreasing timestep
+        initial_time_period         = 0.68d0
+        rampUpDt_time_period        = 5.d0 ! regulates the slope of the linear function increasing timestep
+        before_critTime_time_period = 0.5d0
+        rampDownDt_time_period      = 2.d0 ! regulates the slope of the linear function decreasing timestep
         fine_timestep_time          = 8.d0
 
 
@@ -158,8 +158,8 @@ module pressure_variation
 
             DTb = Dto
             Dto = DT
-            DT = previous_dt * ( time - time_next_dt    )  / ( time_previous_dt - time_next_dt ) &
-            + next_dt    * ( time - time_previous_dt ) / ( time_next_dt - time_previous_dt )
+            DT = previous_dt * ( log10(time) - log10(time_next_dt)    )  / ( log10(time_previous_dt) - log10(time_next_dt) ) &
+            + next_dt    * ( log10(time) - log10(time_previous_dt) ) / ( log10(time_next_dt) - log10(time_previous_dt) )
 
             if (dt .lt. dt_constant) then
                 dt = dt_constant

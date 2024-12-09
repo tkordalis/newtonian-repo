@@ -90,7 +90,7 @@ module solution_check_update
 
             CASE('MNR')
 
-                IF( RSUM_NEW .GE. 1.0D-2 )THEN
+                IF( RSUM_NEW .GE. 5.0D-1 )THEN
 
                     FLAG_NR = 'NRP'
                     WRITE(*, 52)ITER, time_in_seconds
@@ -100,7 +100,7 @@ module solution_check_update
                     RETURN
 
                 ELSE
-                    IF(RSUM_NEW/RSUM_OLD .GE.0.5D0)THEN
+                    IF(RSUM_NEW/RSUM_OLD .GE.0.8D0)THEN
                         MNR_FAILED = .TRUE.
                         FLAG_NR = 'NRP'
                     ELSE
@@ -127,7 +127,8 @@ module solution_check_update
          
           
         ! ONLY FULL NEWTON RAPHSON 
-        FLAG_NR = 'NRP'
+        ! FLAG_NR = 'NRP'
+        if (iter .eq. 1) FLAG_NR = 'NRP'
         ! if (increment .lt. 3) FLAG_NR = 'NRP'
 
         if (ITER.gt.MITER) then
@@ -179,10 +180,9 @@ module solution_check_update
     SUBROUTINE UPDATE_SOLUTION( INCREMENT )
         use BoundaryConditions
         USE GLOBAL_ARRAYS_MODULE
-        USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb, time
+        USE TIME_INTEGRATION,     only: DT, TIME, DTo, DTb, time, dt_constant
         USE physical_module, only: Pressure_bubble, Pressure_bubbleo, mol_bubble, mol_bubbleo, &
-                                    volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo, &
-                                    ambient_position_o, vm_ambient
+                                    volume_bubble, volume_bubbleo, velocity_bubble, velocity_bubbleo
         use pressure_variation, only: areConditionsSteady
 
         IMPLICIT NONE
@@ -199,7 +199,6 @@ module solution_check_update
         
 
 
-        ambient_position_o = ambient_position_o + dt*vm_ambient
         
         call bubble%setPressure_o(Pressure_bubbleo)
         call bubble%setmol_o     (mol_bubble      )
@@ -207,7 +206,18 @@ module solution_check_update
         call bubble%setVelocity_o(velocity_bubbleo)
         call bubble%setZcenter_o ()
 
-        if (INCREMENT.GT.2) then
+        if (INCREMENT.GT.6) then
+            if (increment .lt. 12) then 
+                dtb = dto ; dto = dt ; dt = 0.004d0
+            elseif (increment .lt. 18) then 
+                dtb = dto ; dto = dt ; dt = 0.008d0
+            elseif (increment .lt. 24) then 
+                dtb = dto ; dto = dt ; dt = 0.016d0
+            elseif (increment .lt. 30) then 
+                dtb = dto ; dto = dt ; dt = 0.032d0
+            elseif (increment .lt. 36) then
+                dtb = dto ; dto = dt ; dt = dt_constant
+            endif
 
             call areConditionsSteady(time)
              

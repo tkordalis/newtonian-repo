@@ -64,12 +64,15 @@ Module InitialConditions
         TLo(:,getVariableId("Z"))   = Xm
         TLo(:,getVariableId("R"))   = Ym
         TLo(:,getVariableId("P"))   = Pambient_o_Pchar + ratio_of_pressures*( initial_position - TLo(:,getVariableId("Z")) )
-        TLo(:,getVariableId("C"))   = 1.d0
+        
+        TLo(:,getVariableId("C"))   = 0.d0
+
+        call DIMENSIONLESS_NUMBERS
 
         Pressure_Bubbleo = Pambient_o_Pchar + ratio_of_pressures*( initial_position ) + 2.d0/BoN
         Pressure_Bubble  = Pressure_Bubbleo
 
-        TLo(bubble%nodes(:),getVariableId("C"))   = KoN*Pressure_Bubble
+        TLo(bubble%nodes(:),getVariableId("C"))   = 1.d0
         TLb = TLo
         TL  = TLo
         TLp = TL
@@ -188,14 +191,14 @@ Module BubbleOutput
         Implicit None
         character(*), parameter :: fileplace  = "./1_results_dat/"
         character(18), dimension(15) :: title_results20
-        character(18), dimension(12) :: title_results21
+        character(18), dimension(13) :: title_results21
         integer :: i
         
         call check_dir(fileplace)
         Open(20,File=fileplace//'results_dimensionless.dat')
         Open(21,File=fileplace//'results_dimensional.dat')
         title_results20 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'int_ndotgradC', 'int_ndotUbmUmesh', 'int_ndotUmUmesh', 'ChamberP', 'concentration', 'Reynolds', 'Sherwood', 'dt' ]
-        title_results21 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'ChamberP', 'Radius', 'concentration', 'Reynolds', 'Sherwood' ]
+        title_results21 = [ 'time', 'pressure', 'mol','volume','velocity', 'displacement', 'int_ndotF', 'ChamberP', 'Radius', 'concentration', 'Reynolds', 'kL', 'Sherwood' ]
         do i=1,size(title_results20)
             write(20,'(A25,3x)', advance='no') title_results20(i)
         enddo
@@ -208,7 +211,6 @@ Module BubbleOutput
 
     Subroutine WriteBubbleFiles(TIME)
         use pressure_variation, only: PressureChamber
-        Use Physical_module, only: Pressure_Bubble
         Use BoundaryConditions
         Use Formats
         use TIME_INTEGRATION, only:dt
@@ -221,9 +223,9 @@ Module BubbleOutput
                                     bubble%calculatendotUbubblemUmesh_z() + bubble%calculatendotUbubblemUmesh_r(), bubble%calculatendotUmUmesh_z() + bubble%calculatendotUmUmesh_r(), &
                                     PressureChamber(time), bubble%getmol()/bubble%getVolume(), bubble%calculateReynolds(), bubble%calculateSherwood(), dt
 
-        write(21,'(12(f26.16,3x))') TIME*time_char, Pchar*bubble%getPressure(), nchar*bubble%getmol(), length_char**3.d0*bubble%getVolume(), velocity_char*bubble%getVelocity(), &
-                                    length_char*bubble%calculateZcenter(), nchar/time_char*bubble%calculatendotF(), Pchar*PressureChamber(time), length_char*(3.d0*bubble%getVolume()/4.d0/pi)**0.333333d0, &
-                                    Cchar*bubble%getmol()/bubble%getVolume(), bubble%calculateReynolds(), bubble%calculateSherwood()
+        write(21,'(13(f26.16,3x))') TIME*time_char, Pchar*bubble%getPressure(), (Cchar*length_char**3)*bubble%getmol(), length_char**3.d0*bubble%getVolume(), velocity_char*bubble%getVelocity(), &
+                                    length_char*bubble%calculateZcenter(), (Cchar*length_char**3)/time_char*bubble%calculatendotF(), Pchar*PressureChamber(time), length_char*(3.d0*bubble%getVolume()/4.d0/pi)**0.333333d0, &
+                                    Cchar*bubble%getmol()/bubble%getVolume(), bubble%calculateReynolds(), bubble%calculate_kL()  , bubble%calculate_kL()*length_char/Dcoef
 
 ! dummy = bubble%printEachContributionOfKinematicBC()
     End Subroutine WriteBubbleFiles
